@@ -345,3 +345,74 @@ def test_pistes_testees_et_correction(equipe_simulee):
     assert "compatible</b> (score 50" in texte and "Garde une part de croissance" in texte
     assert "pas des recommandations" in texte and "L'agent a aussi testé" not in texte
     assert "L'agent a corrigé son texte après vérification." in texte
+
+
+# ---------------------------------------------------------------- nouveau client
+
+def test_nouveau_client_tout_le_parcours(sans_agent):
+    from moteur import api
+    at = _demarrer()
+    at.sidebar.radio(key="persona").set_value("nouveau").run()
+    assert not at.exception, at.exception
+    texte = _textes(at)
+    assert "réponses par défaut" in texte  # aucune réponse héritée d'un exemple
+    assert at.session_state["pf_nouveau"] == {"ZST.TO": 100.0}
+
+    # Fiche : choisie à l'écran.
+    for champ, valeur in (("horizon", "15_plus"), ("fluctuations", "elevees"), ("capacite_perte", "elevees"),
+                          ("experience", "avancee"), ("objectif", "croissance_long_terme")):
+        at.selectbox(key=f"q_nouveau_{champ}").set_value(valeur).run()
+    at.radio(key="q_nouveau_theme_ecarte_esg").set_value("exclure").run()
+    assert not at.exception, at.exception
+
+    # Portefeuille : valeur totale, puis positions ; le reste en liquidités ; refus au-delà de la valeur.
+    at.number_input(key="nc_nouveau_valeur").set_value(200_000.0).run()
+    for titre, montant in (("XIU.TO", 80_000.0), ("SPY", 60_000.0)):
+        at.selectbox(key="nc_nouveau_titre").set_value(titre).run()
+        at.number_input(key="nc_nouveau_montant").set_value(montant).run()
+        at.button(key="nc_nouveau_ajouter").click().run()
+        assert not at.exception, at.exception
+    pf = at.session_state["pf_nouveau"]
+    assert pf["XIU.TO"] == pytest.approx(40.0) and pf["SPY"] == pytest.approx(30.0)
+    assert pf["ZST.TO"] == pytest.approx(30.0)
+    at.selectbox(key="nc_nouveau_titre").set_value("QQQ").run()
+    at.number_input(key="nc_nouveau_montant").set_value(70_000.0).run()
+    at.button(key="nc_nouveau_ajouter").click().run()
+    assert "Refusé : le total dépasserait la valeur du portefeuille" in _textes(at)
+    assert "QQQ" not in at.session_state["pf_nouveau"]
+    assert "200 000 $" in _textes(at)
+
+    # Ordre sur un titre hors des ordres de démonstration, analysé par le même chemin que les exemples.
+    at.selectbox(key="o_nouveau_ticker").set_value("AAPL").run()
+    at.number_input(key="o_nouveau_montant").set_value(20_000.0).run()
+    at.button(key="inspecter").click().run()
+    assert not at.exception, at.exception
+    carte = _verdict(at)
+    assert "20 000 $" in carte and "AAPL" in carte and "10,0 %" in carte
+    fiche = {"id": "nouveau", "nom": "Nouveau client",
+             "questionnaire": {"objectif": "croissance_long_terme", "horizon": "15_plus", "fluctuations": "elevees",
+                               "capacite_perte": "elevees", "besoin_liquidite": "aucun", "experience": "avancee",
+                               "themes": {"ecarte_esg": "exclure", "speculatif": "neutre", "crypto": "neutre",
+                                          "techno": "neutre", "etablie": "neutre"}},
+             "portefeuille_pct": {"ZST.TO": 30.0, "XIU.TO": 40.0, "SPY": 30.0}}
+    attendu = api.simuler_ordre(fiche, "AAPL", "achat", 10.0)
+    assert "erreur" not in attendu
+    assert attendu["verdict"]["libelle"] in carte
+    assert AVIS in _textes(at)
+
+    # Ordre simulé : appliqué au portefeuille de la session du nouveau client.
+    at.button(key="passer").click().run()
+    assert at.session_state["pf_nouveau"]["AAPL"] == pytest.approx(10.0)
+
+
+def test_fiche_d_un_nouveau_client_acceptee_par_le_moteur():
+    from moteur import api
+    fiche = {"id": "nouveau", "nom": "Nouveau client",
+             "questionnaire": {"objectif": "croissance_equilibree", "horizon": "5_8", "fluctuations": "moderees",
+                               "capacite_perte": "moderees", "besoin_liquidite": "aucun", "experience": "debutante",
+                               "themes": {}},
+             "portefeuille_pct": {"ZST.TO": 100.0}}
+    f = api.lire_fiche_client(fiche)
+    assert "erreur" not in f and f["id"] == "nouveau"
+    assert "erreur" not in api.etat_des_lieux(fiche)
+    assert "erreur" not in api.simuler_ordre(fiche, "MSFT", "achat", 5)

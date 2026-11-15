@@ -73,13 +73,19 @@ COULEURS_CLASSES = {"Actions": MARINE, "Revenu fixe": "#5B7A99", "Liquidités": 
 COULEURS_POSITIONS = [MARINE, "#3C5A75", "#5B7A99", "#8BA6BF", "#A8C1B8", "#CFE0D8", "#F6C45E",
                       "#E8A33D", "#B9A99A", "#D9D5D0", "#6E6E71", "#9A8C7E"]
 
-# Valeur fictive du portefeuille de chaque persona (hypothèse de l'interface, en dollars canadiens).
-VALEURS_PORTEFEUILLE = {"robert": 800_000, "mateo": 250_000, "amira": 50_000}
-RAISONS_VALEUR = {
-    "robert": "59 ans, proche de la retraite : épargne accumulée sur une carrière.",
-    "mateo": "41 ans, deux enfants : épargne en milieu de carrière.",
-    "amira": "26 ans, début de carrière : petite épargne qui grandit.",
-}
+# Clients enregistrés : les trois exemples de l'énoncé ont la même forme qu'un nouveau client
+# (fiche, portefeuille, valeur fictive en dollars canadiens, une ligne de description).
+EXEMPLES_ENREGISTRES = [
+    {"id": "robert", "valeur": 800_000,
+     "description": "59 ans, proche de la retraite : épargne accumulée sur une carrière."},
+    {"id": "mateo", "valeur": 250_000, "description": "41 ans, deux enfants : épargne en milieu de carrière."},
+    {"id": "amira", "valeur": 50_000, "description": "26 ans, début de carrière : petite épargne qui grandit."},
+]
+NOUVEAU = "nouveau"
+VALEUR_NOUVEAU = 100_000
+# Réponses de départ d'un nouveau client : des valeurs neutres, signalées comme réponses par défaut.
+REPONSES_PAR_DEFAUT = {"objectif": "croissance_equilibree", "horizon": "5_8", "fluctuations": "moderees",
+                       "capacite_perte": "moderees", "besoin_liquidite": "aucun", "experience": "debutante"}
 
 # Opérations et types d'ordre. Ajouter une opération (vente à découvert, achat sur marge)
 # revient à ajouter une entrée ici : le formulaire n'a pas à changer.
@@ -162,7 +168,6 @@ QUESTIONNAIRE = charger_reference("questionnaire")
 THEMES = {t["id"]: t["libelle"] for t in charger_reference("themes")["themes"]}
 CHAMPS_Q = ("objectif", "horizon", "fluctuations", "capacite_perte", "besoin_liquidite", "experience")
 PERSONAS = charger_reference("personas")["personas"]
-ORDRE_PERSONAS = ["robert", "mateo", "amira"]
 
 
 @st.cache_data
@@ -351,12 +356,43 @@ def cle_q(persona: str, champ: str) -> str:
     return f"q_{persona}_{champ}"
 
 
+def nouveau_client() -> dict:
+    """Une fiche vide et un portefeuille entièrement en liquidités, à composer à l'écran."""
+    return {"id": NOUVEAU, "nom": "Nouveau client", "exemple": False, "valeur": VALEUR_NOUVEAU,
+            "description": "Client créé à l'écran : réponses et portefeuille choisis par vous.",
+            "questionnaire": {**REPONSES_PAR_DEFAUT, "themes": {t: "neutre" for t in THEMES}},
+            "portefeuille_pct": {references.encaisse(): 100.0}, "ordre_demo": None}
+
+
+def client_de_depart(cid: str) -> dict:
+    """Le client tel qu'enregistré au départ : un exemple de l'énoncé, ou le nouveau client vierge."""
+    for e in EXEMPLES_ENREGISTRES:
+        if e["id"] == cid:
+            p = PERSONAS[cid]
+            return {"id": cid, "nom": p["nom"], "exemple": True, "valeur": e["valeur"],
+                    "description": e["description"], "questionnaire": copy.deepcopy(p["questionnaire"]),
+                    "portefeuille_pct": dict(p["portefeuille_pct"]), "ordre_demo": p.get("ordre_demo")}
+    return nouveau_client()
+
+
+def clients() -> dict:
+    """Les clients de la session : les exemples enregistrés, puis le nouveau client. Tous de la même forme."""
+    if "clients" not in st.session_state:
+        ids = [e["id"] for e in EXEMPLES_ENREGISTRES] + [NOUVEAU]
+        st.session_state["clients"] = {cid: client_de_depart(cid) for cid in ids}
+    return st.session_state["clients"]
+
+
+def client_enregistre(cid: str) -> dict:
+    return clients()[cid]
+
+
 def valeur_pf(persona: str) -> float:
-    return float(VALEURS_PORTEFEUILLE[persona])
+    return float(client_enregistre(persona)["valeur"])
 
 
 def initialiser(persona: str) -> None:
-    p = PERSONAS[persona]
+    p = client_enregistre(persona)
     q = p["questionnaire"]
     for champ in CHAMPS_Q:
         st.session_state.setdefault(cle_q(persona, champ), q[champ])
@@ -364,7 +400,7 @@ def initialiser(persona: str) -> None:
         st.session_state.setdefault(cle_q(persona, "theme_" + theme), q["themes"].get(theme, "neutre"))
     st.session_state.setdefault(f"pf_{persona}", {t: float(w) for t, w in p["portefeuille_pct"].items()})
     st.session_state.setdefault(f"ordres_{persona}", [])
-    ordre = p.get("ordre_demo", {})
+    ordre = p.get("ordre_demo") or {}
     st.session_state.setdefault(f"o_{persona}_ticker", ordre.get("ticker", "XIU.TO"))
     st.session_state.setdefault(f"o_{persona}_operation", ordre.get("sens", "achat"))
     st.session_state.setdefault(f"o_{persona}_type", "marche")
@@ -374,15 +410,18 @@ def initialiser(persona: str) -> None:
 
 def reinitialiser(persona: str) -> None:
     for cle in list(st.session_state.keys()):
-        if cle.startswith((f"q_{persona}_", f"pf_{persona}", f"o_{persona}_", f"ordres_{persona}",
+        if cle.startswith((f"q_{persona}_", f"pf_{persona}", f"o_{persona}_", f"ordres_{persona}", f"nc_{persona}_",
                            f"rapport_{persona}", f"precedent_{persona}", f"message_{persona}")):
             del st.session_state[cle]
+    clients()[persona] = client_de_depart(persona)
 
 
 def fiche_session(persona: str) -> dict:
+    """La fiche envoyée au moteur et à l'agent : la même forme pour tout client."""
     s = st.session_state
     return {
-        "persona": persona,
+        "id": persona,
+        "nom": client_enregistre(persona)["nom"],
         "questionnaire": {
             "objectif": s[cle_q(persona, "objectif")],
             "horizon": s[cle_q(persona, "horizon")],
@@ -394,8 +433,8 @@ def fiche_session(persona: str) -> dict:
 
 
 def fiche_modifiee(persona: str, fiche: dict) -> list[str]:
-    """Libellés des réponses qui diffèrent de la fiche d'origine du persona."""
-    q0 = PERSONAS[persona]["questionnaire"]
+    """Libellés des réponses qui diffèrent de la fiche enregistrée du client."""
+    q0 = client_enregistre(persona)["questionnaire"]
     q = fiche["questionnaire"]
     ecarts = []
     for champ in CHAMPS_Q:
@@ -451,9 +490,10 @@ def inspecter_moteur(persona: str, fiche: dict, ticker: str, sens: str, pourcent
                      details_ordre: dict | None = None) -> dict:
     """Le rapport structuré, appelé directement sur moteur.api, avec la trace des appels."""
     trace = []
+    enregistre = client_enregistre(persona)
     client_affiche = persona if not fiche_modifiee(persona, fiche) and \
-        fiche["portefeuille_pct"] == {t: float(w) for t, w in PERSONAS[persona]["portefeuille_pct"].items()} \
-        else f"fiche de session ({PERSONAS[persona]['nom']})"
+        fiche["portefeuille_pct"] == {t: float(w) for t, w in enregistre["portefeuille_pct"].items()} \
+        else f"fiche de session ({enregistre['nom']})"
 
     def appel(outil, fonction, *args, **arguments):
         debut = time.perf_counter()
@@ -667,10 +707,15 @@ def onglet_fiche(persona: str, fiche_client: dict) -> None:
     with gauche:
         st.subheader("Vos réponses")
         st.caption("Changez une réponse : tout le reste se met à jour.")
-        q0 = PERSONAS[persona]["questionnaire"]
-        st.caption(f"Les réponses de départ de {PERSONAS[persona]['nom']} sont fictives (hypothèse du projet). "
-                   f"Capacité à supporter une perte : même niveau que les fluctuations acceptées ; "
-                   f"besoin de liquidités : « {libelle_option('besoin_liquidite', q0['besoin_liquidite'])} ».")
+        enregistre = client_enregistre(persona)
+        if enregistre["exemple"]:
+            q0 = enregistre["questionnaire"]
+            st.caption(f"Les réponses de départ de {enregistre['nom']} sont fictives (hypothèse du projet). "
+                       f"Capacité à supporter une perte : même niveau que les fluctuations acceptées ; "
+                       f"besoin de liquidités : « {libelle_option('besoin_liquidite', q0['besoin_liquidite'])} ».")
+        else:
+            st.info("Nouveau client : choisissez chaque réponse. Les choix affichés au départ sont des "
+                    "réponses par défaut, pas les vôtres.")
         c1, c2 = st.columns(2)
         for i, champ in enumerate(CHAMPS_Q):
             options = list(QUESTIONNAIRE[champ]["options"])
@@ -712,7 +757,83 @@ def onglet_fiche(persona: str, fiche_client: dict) -> None:
 
 # ---------------------------------------------------------------- rendu : portefeuille
 
+def ajouter_position(persona: str) -> None:
+    """Ajoute au portefeuille le montant choisi, pris sur les liquidités. Refuse de dépasser la valeur totale."""
+    s = st.session_state
+    cash = references.encaisse()
+    valeur = valeur_pf(persona)
+    ticker, montant = s[f"nc_{persona}_titre"], float(s[f"nc_{persona}_montant"] or 0)
+    pf = dict(s[f"pf_{persona}"])
+    dispo = pf.get(cash, 0.0) * valeur / 100
+    if montant <= 0:
+        s[f"nc_{persona}_message"] = ("erreur", "Indiquez un montant plus grand que 0 $.")
+    elif montant > dispo + 0.005:
+        s[f"nc_{persona}_message"] = ("erreur", f"Refusé : le total dépasserait la valeur du portefeuille. "
+                                                f"Il reste {dollars(dispo)} à placer.")
+    else:
+        part = montant / valeur * 100
+        pf[cash] = pf.get(cash, 0.0) - part
+        pf[ticker] = pf.get(ticker, 0.0) + part
+        s[f"pf_{persona}"] = {t: w for t, w in pf.items() if abs(w) > 1e-9}
+        s[f"nc_{persona}_message"] = ("ok", f"{dollars(montant)} de {ticker} ajoutés.")
+    s.pop(f"rapport_{persona}", None)
+
+
+def changer_valeur(persona: str) -> None:
+    """Nouvelle valeur totale : les montants placés restent les mêmes en dollars, les liquidités font le reste."""
+    s = st.session_state
+    cash = references.encaisse()
+    ancienne, nouvelle = valeur_pf(persona), float(s[f"nc_{persona}_valeur"])
+    places = {t: w * ancienne / 100 for t, w in s[f"pf_{persona}"].items() if t != cash}
+    if sum(places.values()) > nouvelle + 0.005:
+        s[f"nc_{persona}_valeur"] = ancienne
+        s[f"nc_{persona}_message"] = ("erreur", f"Refusé : les positions placées ({dollars(sum(places.values()))}) "
+                                                "dépassent cette valeur.")
+        return
+    pf = {t: m / nouvelle * 100 for t, m in places.items()}
+    pf[cash] = 100 - sum(pf.values())
+    s[f"pf_{persona}"] = {t: w for t, w in pf.items() if abs(w) > 1e-9}
+    client_enregistre(persona)["valeur"] = nouvelle
+    s.pop(f"rapport_{persona}", None)
+
+
+def vider_portefeuille(persona: str) -> None:
+    st.session_state[f"pf_{persona}"] = {references.encaisse(): 100.0}
+    st.session_state.pop(f"rapport_{persona}", None)
+
+
+def composer_portefeuille(persona: str) -> None:
+    """Composer le portefeuille à l'écran : la valeur totale, puis chaque position et son montant."""
+    s = st.session_state
+    cash = references.encaisse()
+    univers = instruments()
+    pf = s[f"pf_{persona}"]
+    # Ouvert pour un client créé à l'écran ; replié pour un exemple, qui a déjà son portefeuille.
+    ouvert = not client_enregistre(persona)["exemple"] or set(pf) == {cash}
+    with st.expander("Composer le portefeuille", expanded=ouvert):
+        s.setdefault(f"nc_{persona}_valeur", float(valeur_pf(persona)))
+        st.number_input("Valeur totale du portefeuille ($ CA)", min_value=1_000.0, step=1_000.0, format="%.0f",
+                        key=f"nc_{persona}_valeur", on_change=changer_valeur, args=(persona,))
+        c1, c2, c3 = st.columns([2, 1.2, 1])
+        c1.selectbox("Titre", [t for t in univers if t != cash], key=f"nc_{persona}_titre",
+                     format_func=lambda t: f"{t} — {univers[t]['nom']}")
+        c2.number_input("Montant ($ CA)", min_value=0.0, step=1_000.0, value=10_000.0, format="%.0f",
+                        key=f"nc_{persona}_montant")
+        c3.markdown("&nbsp;")
+        c3.button("Ajouter", key=f"nc_{persona}_ajouter", on_click=ajouter_position, args=(persona,),
+                  width="stretch")
+        dispo = pf.get(cash, 0.0) * valeur_pf(persona) / 100
+        st.caption(f"Ce qui n'est pas placé reste en liquidités ({cash}) : {dollars(dispo)}, "
+                   f"{pct(pf.get(cash, 0.0))} du portefeuille.")
+        message = s.pop(f"nc_{persona}_message", None)
+        if message:
+            (st.success if message[0] == "ok" else st.error)(message[1])
+        st.button("Tout remettre en liquidités", key=f"nc_{persona}_vider", on_click=vider_portefeuille,
+                  args=(persona,))
+
+
 def onglet_portefeuille(persona: str, fiche: dict, fiche_client: dict) -> None:
+    composer_portefeuille(persona)
     if "erreur" in fiche_client:
         st.error(fiche_client["erreur"])
         return
@@ -721,7 +842,8 @@ def onglet_portefeuille(persona: str, fiche: dict, fiche_client: dict) -> None:
     univers = instruments()
     profil = fiche_client["deduit"]["profil"]["libelle"]
 
-    st.markdown(f"Valeur du portefeuille : **{dollars(valeur)}** (montant fictif) · profil **{profil}**")
+    nature = "montant fictif" if client_enregistre(persona)["exemple"] else "montant saisi"
+    st.markdown(f"Valeur du portefeuille : **{dollars(valeur)}** ({nature}) · profil **{profil}**")
     ordres = st.session_state.get(f"ordres_{persona}", [])
     if ordres:
         st.caption(f"Tient compte de {len(ordres)} ordre(s) simulé(s) dans cette session.")
@@ -1127,8 +1249,10 @@ def section_sources(rapport: dict, persona: str) -> None:
     st.markdown("**Hypothèses du projet**")
     for s in hypotheses:
         st.markdown(f"- {s['libelle']} — {s['source']}")
-    st.markdown(f"- Valeur du portefeuille de {PERSONAS[persona]['nom']} : {dollars(valeur_pf(persona))}, "
-                f"montant fictif choisi par l'interface. {RAISONS_VALEUR[persona]}")
+    enregistre = client_enregistre(persona)
+    origine_valeur = "montant fictif choisi par l'interface" if enregistre["exemple"] else "montant saisi à l'écran"
+    st.markdown(f"- Valeur du portefeuille de {enregistre['nom']} : {dollars(valeur_pf(persona))}, "
+                f"{origine_valeur}. {enregistre['description']}")
     st.markdown("- Le rapport suppose que l'ordre est exécuté, quel que soit son type.")
     origine = api.origine_references()
     if origine.get("message"):
@@ -1467,7 +1591,7 @@ def main() -> None:
     st.markdown(STYLE, unsafe_allow_html=True)
     st.markdown(f'<div class="bandeau-simulation">{BANDEAU}</div>', unsafe_allow_html=True)
 
-    # Streamlit oublie l'état d'un widget non affiché : on garde celui des autres personas.
+    # Streamlit oublie l'état d'un widget non affiché : on garde celui des autres clients.
     for cle in list(st.session_state.keys()):
         if isinstance(cle, str) and cle.startswith(("q_", "o_")):
             st.session_state[cle] = st.session_state[cle]
@@ -1475,8 +1599,9 @@ def main() -> None:
     with st.sidebar:
         st.title("Garder le cap")
         st.caption(SOUS_TITRE)
-        persona = st.radio("Client", ORDRE_PERSONAS, key="persona",
-                           format_func=lambda p: PERSONAS[p]["nom"])
+        tous = clients()
+        persona = st.radio("Client", list(tous), key="persona",
+                           format_func=lambda c: tous[c]["nom"] + (" (exemple)" if tous[c]["exemple"] else ""))
     initialiser(persona)
     fiche = fiche_session(persona)
     fiche_client = api.lire_fiche_client(fiche)
@@ -1501,7 +1626,8 @@ def main() -> None:
                         f"l'ordre {sens}", unsafe_allow_html=True)
         st.caption(MISSION)
 
-    st.title(PERSONAS[persona]["nom"])
+    st.title(client_enregistre(persona)["nom"])
+    st.caption(client_enregistre(persona)["description"])
     onglets = st.tabs(["Fiche", "Portefeuille", "Ordre"])
     with onglets[0]:
         onglet_fiche(persona, fiche_client)
