@@ -142,3 +142,9 @@ def solidite(client, ticker: str, sens: str, pourcentage: float) -> dict:
     return {"client": fiche["id"], "ordre": r["ordre"], "verdict": r["verdict"],
             **_solidite.solidite(r["portefeuille_apres_pct"], fiche, r["apres"]),
             "periode": _periode_donnees(), "sources": _sources(*SOURCES_NOTATION, "hypothese_solidite")}
+
+
+@_api
+def origine_references() -> dict:
+    """D'où les fichiers de référence ont été lus (Amazon S3 ou dossier local), pour la partie 8 du rapport."""
+    return {**references.origine(), "sources": _sources("hypothese_classes")}

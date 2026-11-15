@@ -91,3 +91,9 @@ Plus grande taille, par pas de 0,5 % jusqu'au montant demandé, avec un score de
 ## Données
 
 Le moteur lit `data/` ou le dossier de la variable `GLC_DATA_DIR`. `data/prices_daily.csv` n'est pas publié (conditions de Yahoo) : `python data/build_dataset.py` le régénère. Les fiches d'instruments sont en cache dans `reference/fiches_instruments.json` ; `python scripts/construire_fiches.py` les reconstruit (accès réseau pour `firstTradeDate` ; `--sans-reseau` réutilise les dates du cache).
+
+## `origine_references()`
+
+D'où les fichiers de référence ont été lus : `lieu` (`s3`, `local` ou `mixte`), `bucket_configure`, `fichiers` (par fichier : `lieu`, et `identique_au_local` pour une lecture S3, ou `repli` et `raison` si S3 n'a pas répondu) et `message`, une phrase en français pour la partie 8 du rapport.
+
+Quand la variable `GLC_BUCKET` est configurée (fichier local `glc.env`, ignoré par git ; voir `glc.env.exemple`), les fichiers de référence, fiches d'instruments comprises, sont lus dans ce bucket S3 privé, sous `reference/` ; sinon dans le dossier `reference/`. Si S3 ne répond pas, le fichier local est lu et le message le dit. `python scripts/creer_bucket.py` crée le bucket (accès public bloqué, chiffrement par défaut, accès hors TLS refusé) et y dépose les fichiers.

@@ -1,9 +1,10 @@
-"""Accès aux fiches d'instruments mises en cache (`reference/fiches_instruments.json`)."""
+"""Accès aux fiches d'instruments mises en cache (`reference/fiches_instruments.json`, lu comme les autres
+fichiers de référence : dans le bucket S3 s'il est configuré, sinon dans le dossier local)."""
 from __future__ import annotations
 
-import json
 from functools import lru_cache
 
+from . import references
 from .references import DOSSIER_REFERENCE
 
 CHEMIN_FICHES = DOSSIER_REFERENCE / "fiches_instruments.json"
@@ -15,13 +16,13 @@ class ErreurInstrument(Exception):
 
 @lru_cache(maxsize=1)
 def _cache() -> dict:
-    if not CHEMIN_FICHES.exists():
+    try:
+        return references.charger(CHEMIN_FICHES.stem)
+    except FileNotFoundError:
         raise ErreurInstrument(
             "Les fiches d'instruments sont introuvables (reference/fiches_instruments.json). "
             "Construisez-les avec `python scripts/construire_fiches.py`."
-        )
-    with open(CHEMIN_FICHES, encoding="utf-8") as f:
-        return json.load(f)
+        ) from None
 
 
 def toutes() -> dict:
