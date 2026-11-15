@@ -8,6 +8,9 @@ Chaque événement est un dictionnaire qui porte `moment` et `agent` (le nom de 
 - `fin_outil` : `etape`, `outil`, `resultat_resume` (le même résumé que dans la trace) ;
 - `redaction`, `verification`, `correction`, `fin` : sans autre champ.
 
+`agent` vaut « principal » (le chef de dossier) ou « explorateur » (le chercheur de pistes). Les numéros
+d'étape sont partagés par les deux agents d'une analyse (`Compteur`).
+
 Fils d'exécution : Strands fait tourner l'agent dans un fil à lui ; `debut_outil`, `fin_outil` et
 `redaction` sont donc appelés depuis ce fil, pas depuis celui qui a appelé `inspecter`. `verification`,
 `correction` et `fin` sont appelés depuis le fil de l'appelant. La fonction doit donc être sûre entre fils
@@ -19,8 +22,13 @@ from __future__ import annotations
 
 import threading
 
-from strands.hooks import (AfterToolCallEvent, BeforeModelCallEvent, BeforeToolCallEvent, HookProvider,
-                           HookRegistry)
+import re
+
+from strands.hooks import (AfterModelCallEvent, AfterToolCallEvent, BeforeModelCallEvent, BeforeToolCallEvent,
+                           HookProvider, HookRegistry)
+
+# Début du texte final de chaque agent : le rapport du chef de dossier, le compte rendu de l'explorateur.
+MARQUEURS_REDACTION = ("verdict", "finalité", "finalite", "intention")
 
 
 def _symbole(arguments: dict) -> str:
@@ -44,21 +52,39 @@ def libelle_outil(outil: str, arguments: dict, ticker_ordre: str | None = None) 
     if outil == "lister_instruments":
         return "Je regarde les autres instruments de la même classe."
     if outil == "simuler_scenario":
-        return "Je teste une combinaison d'ordres."
-    if outil == "expliquer_cause":
-        return "Je cherche ce qui crée la tension."
+        ordres = a.get("ordres") or []
+        if any(isinstance(o, dict) and str(o.get("sens", "")).lower() == "vente" for o in ordres):
+            return "Je teste l'achat payé par la vente d'une autre position."
+        return "Je teste un achat partagé avec un fonds diversifié."
+    if outil == "envoyer_explorateur":
+        return "J'envoie l'explorateur chercher des pistes."
     return "J'appelle un outil du moteur."
+
+
+class Compteur:
+    """Numéros d'étape partagés par les agents d'une même analyse (sûr entre fils)."""
+
+    def __init__(self):
+        self._numeros: dict = {}
+        self._verrou = threading.Lock()
+
+    def numero(self, cle) -> int:
+        with self._verrou:
+            if cle not in self._numeros:
+                self._numeros[cle] = len(self._numeros) + 1
+            return self._numeros[cle]
 
 
 class Suivi(HookProvider):
     """Relaie les étapes d'un agent Strands à `sur_etape` ; ne lève jamais d'exception."""
 
-    def __init__(self, sur_etape=None, agent: str = "principal", ticker_ordre: str | None = None):
+    def __init__(self, sur_etape=None, agent: str = "principal", ticker_ordre: str | None = None,
+                 compteur: Compteur | None = None):
         self.sur_etape, self.agent = sur_etape, agent
         self.ticker_ordre = str(ticker_ordre or "").strip().upper() or None
-        self._etapes: dict = {}
-        self._verrou = threading.Lock()
+        self.compteur = compteur or Compteur()
         self._redaction_annoncee = False
+        self._texte = ""
 
     def emettre(self, moment: str, **champs) -> None:
         if self.sur_etape is None:
@@ -74,13 +100,10 @@ class Suivi(HookProvider):
         registry.add_callback(BeforeToolCallEvent, self._debut_outil)
         registry.add_callback(AfterToolCallEvent, self._fin_outil)
         registry.add_callback(BeforeModelCallEvent, self._appel_modele)
+        registry.add_callback(AfterModelCallEvent, self._fin_appel_modele)
 
     def _etape(self, tool_use: dict) -> int:
-        cle = tool_use.get("toolUseId") or id(tool_use)
-        with self._verrou:
-            if cle not in self._etapes:
-                self._etapes[cle] = len(self._etapes) + 1
-            return self._etapes[cle]
+        return self.compteur.numero((self.agent, tool_use.get("toolUseId") or id(tool_use)))
 
     def _debut_outil(self, event: BeforeToolCallEvent) -> None:
         try:
@@ -104,10 +127,27 @@ class Suivi(HookProvider):
             pass
 
     def _appel_modele(self, event: BeforeModelCallEvent) -> None:
-        self._redaction_annoncee = False
+        self._texte = ""
+
+    def _fin_appel_modele(self, event: AfterModelCallEvent) -> None:
+        """Filet : une réponse finale qui n'a pas commencé par un marqueur annonce quand même la rédaction."""
+        try:
+            arret = getattr(getattr(event, "stop_response", None), "stop_reason", None)
+            if arret == "end_turn" and self._texte.strip() and not self._redaction_annoncee:
+                self._redaction_annoncee = True
+                self.emettre("redaction")
+        except Exception:
+            pass
 
     def rappel(self, **kwargs) -> None:
-        """`callback_handler` Strands : annonce la rédaction au premier morceau de texte d'une réponse."""
-        if kwargs.get("data") and not self._redaction_annoncee:
+        """`callback_handler` Strands : annonce la rédaction quand le texte final commence (« Verdict »…).
+
+        Un texte écrit entre deux appels d'outils n'est pas la rédaction et n'annonce rien.
+        """
+        if not kwargs.get("data") or self._redaction_annoncee:
+            return
+        self._texte += str(kwargs["data"])
+        debut = re.sub(r"^[\W_]+", "", self._texte).lower()
+        if debut.startswith(MARQUEURS_REDACTION):
             self._redaction_annoncee = True
             self.emettre("redaction")

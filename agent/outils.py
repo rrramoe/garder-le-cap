@@ -142,3 +142,110 @@ def creer_outil_decrire_apport(client):
         return api.decrire_apport(client, ticker, pourcentage)
 
     return decrire_apport
+# --- Équipe de deux agents -----------------------------------------------------------------------
+
+NOMS_OUTILS_PRINCIPAL = ("lire_fiche_client", "lire_fiche_instrument", "simuler_ordre", "envoyer_explorateur")
+NOMS_OUTILS_EXPLORATEUR = ("lire_fiche_client", "lire_fiche_instrument", "lister_instruments", "simuler_ordre",
+                           "simuler_scenario", "chercher_taille_compatible")
+LIMITE_PISTES = 4     # pistes rendues au chef de dossier, au plus
+LIMITE_ESSAIS = 6     # essais de l'explorateur, au plus (il en garde quatre)
+
+
+def creer_outils_principal(client, envoyer) -> list:
+    """Outils du chef de dossier : les trois lectures et `envoyer_explorateur`.
+
+    `envoyer(mission)` est fourni par l'analyse : il vérifie les règles (ordre en tension, un seul envoi), fait
+    travailler l'explorateur et renvoie son compte rendu, ou `{"erreur": ...}`.
+    """
+    communs = {t.tool_name: t for t in creer_outils(client)}
+    id_lie = identifiant_client(client)
+
+    @tool(name="envoyer_explorateur")
+    def envoyer_explorateur(client_id: str, mission: str) -> dict:
+        """Envoie l'agent explorateur chercher des pistes pour un ordre « en tension » (refusé sinon, et une seule
+        fois par analyse). Il renvoie son hypothèse sur ce que l'ordre apporte, la cause, et 2 à 4 pistes testées
+        par le moteur, chacune avec sa raison et son résultat (verdict, score, direction).
+
+        Args:
+            client_id: Identifiant du client de l'analyse.
+            mission: Ta lecture du cas en 2 ou 3 phrases : la règle en cause, ce que ce client cherche, évite ou
+                exclut, et ce que l'ordre semble viser.
+        """
+        if str(client_id).strip().lower() != id_lie:
+            return {"erreur": f"Cette analyse porte sur le client « {id_lie} » : utilisez client_id=\"{id_lie}\"."}
+        return envoyer(str(mission or "").strip())
+
+    return [communs["lire_fiche_client"], communs["lire_fiche_instrument"], communs["simuler_ordre"],
+            envoyer_explorateur]
+
+
+def creer_outils_explorateur(client, limite_essais: int = LIMITE_ESSAIS) -> list:
+    """Outils de l'explorateur. Chaque essai porte sa `raison` et reçoit un numéro (`essai`) ; le code borne les
+    essais à `limite_essais`."""
+    id_lie = identifiant_client(client)
+    essais = {"n": 0}
+
+    def verifier(client_id):
+        if str(client_id).strip().lower() != id_lie:
+            return {"erreur": f"Cette analyse porte sur le client « {id_lie} » : utilisez client_id=\"{id_lie}\"."}
+        if essais["n"] >= limite_essais:
+            return {"erreur": f"Limite de {limite_essais} essais atteinte : rends ton compte rendu."}
+        return None
+
+    def numeroter(resultat: dict) -> dict:
+        if isinstance(resultat, dict) and "erreur" not in resultat:
+            essais["n"] += 1
+            return {"essai": essais["n"], **resultat}
+        return resultat
+
+    communs = {t.tool_name: t for t in creer_outils(client)}
+
+    @tool(name="simuler_ordre")
+    def simuler_ordre(client_id: str, ticker: str, sens: str, pourcentage: float, raison: str,
+                      operation: str = "comptant") -> dict:
+        """Teste une piste d'un seul ordre (un autre instrument, ou un autre montant) : verdict, score, direction,
+        cause. Compte dans la limite de six essais.
+
+        Args:
+            client_id: Identifiant du client de l'analyse.
+            ticker: Symbole de l'instrument.
+            sens: « achat » ou « vente ».
+            pourcentage: Montant en % du portefeuille.
+            raison: Une phrase : ce que la piste garde de la finalité supposée, et comment elle répond à la cause.
+            operation: « comptant » (par défaut), « marge » ou « decouvert ».
+        """
+        return verifier(client_id) or numeroter(api.simuler_ordre(client, ticker, sens, pourcentage, operation))
+
+    @tool(name="simuler_scenario")
+    def simuler_scenario(client_id: str, ordres: list[dict], raison: str) -> dict:
+        """Teste une piste de plusieurs ordres appliqués ensemble (1 à 4), seule ou en combinaison : un achat
+        partagé entre l'instrument et un fonds diversifié, un montant plus petit plus un complément, un achat payé
+        en partie par la vente d'une autre position. Les ventes sont versées à l'encaisse et ne peuvent pas dépasser
+        le total des achats. Compte dans la limite de six essais.
+
+        Args:
+            client_id: Identifiant du client de l'analyse.
+            ordres: Liste d'ordres {"ticker": ..., "sens": "achat" ou "vente", "pourcentage": ...}.
+            raison: Une phrase : ce que la piste garde de la finalité supposée, et comment elle répond à la cause.
+        """
+        return verifier(client_id) or numeroter(api.simuler_scenario(client, ordres))
+
+    @tool(name="chercher_taille_compatible")
+    def chercher_taille_compatible(client_id: str, ticker: str, sens: str, pourcentage: float, raison: str,
+                                   operation: str = "comptant") -> dict:
+        """Teste la piste d'un montant plus petit : la plus grande taille (pas de 0,5 %, jusqu'au montant demandé)
+        dont le score atteint 50, avec la courbe. Compte dans la limite de six essais.
+
+        Args:
+            client_id: Identifiant du client de l'analyse.
+            ticker: Symbole de l'instrument.
+            sens: « achat » ou « vente ».
+            pourcentage: Montant demandé en % du portefeuille.
+            raison: Une phrase : pourquoi cette piste répond à la cause.
+            operation: « comptant » (par défaut), « marge » ou « decouvert ».
+        """
+        return verifier(client_id) or numeroter(api.chercher_taille_compatible(client, ticker, sens, pourcentage,
+                                                                              operation))
+
+    return [communs["lire_fiche_client"], communs["lire_fiche_instrument"], communs["lister_instruments"],
+            simuler_ordre, simuler_scenario, chercher_taille_compatible]
