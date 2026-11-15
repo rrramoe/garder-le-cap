@@ -181,11 +181,55 @@ def creer_outils_principal(client, envoyer) -> list:
             envoyer_explorateur]
 
 
-def creer_outils_explorateur(client, limite_essais: int = LIMITE_ESSAIS) -> list:
+def compacter_simulation(r: dict) -> dict:
+    """Ce dont l'explorateur a besoin pour décider de l'essai suivant ; le résultat complet reste dans la trace."""
+    if not isinstance(r, dict) or "erreur" in r:
+        return r
+    cause = {k: v for k, v in (r.get("cause") or {}).items() if k != "autres_mesures_sous_le_seuil"}
+    return {"verdict": (r.get("verdict") or {}).get("code"), "score": r.get("score"),
+            "direction": (r.get("direction") or {}).get("cas"), "cause": cause,
+            "solidite": (r.get("solidite") or {}).get("statut"),
+            "contraintes_violees": (r.get("contraintes_strictes") or {}).get("themes_violes"),
+            "portefeuille_apres_pct": r.get("portefeuille_apres_pct")}
+
+
+def compacter_taille(r: dict) -> dict:
+    if not isinstance(r, dict) or "erreur" in r:
+        return r
+    taille = r.get("taille_compatible_pct")
+    point = next((p for p in r.get("courbe") or [] if p.get("taille_pct") == taille), None)
+    meilleur = max(r.get("courbe") or [{}], key=lambda p: p.get("score", -1))
+    return {"lancee": r.get("lancee", True), "raison": r.get("raison"), "taille_compatible_pct": taille,
+            "taille_demandee_pct": r.get("taille_demandee_pct"), "issue": r.get("issue"),
+            "score_a_cette_taille": (point or {}).get("score"),
+            "meilleur_point": {k: meilleur.get(k) for k in ("taille_pct", "score", "mesure_min")}}
+
+
+def compacter_apport(r: dict, candidats: int = 8) -> dict:
+    """`decrire_apport` sans libellés, périodes ni sources, et ses candidats les plus proches seulement."""
+    if not isinstance(r, dict) or "erreur" in r:
+        return r
+
+    def nettoyer(x):
+        if isinstance(x, dict):
+            return {k: nettoyer(v) for k, v in x.items() if k not in ("libelle", "periode", "sources", "nom")}
+        if isinstance(x, list):
+            return [nettoyer(v) for v in x]
+        return x
+    c = nettoyer({k: v for k, v in r.items() if k not in ("candidats", "sources", "periode", "frequence")})
+    c["candidats"] = [{**{k: v for k, v in x.items() if k not in ("etiquettes", "nom")},
+                       "etiquettes_vraies": [e for e, v in (x.get("etiquettes") or {}).items() if v is True]}
+                      for x in (r.get("candidats") or [])[:candidats]]
+    return c
+
+
+def creer_outils_explorateur(client, limite_essais: int = LIMITE_ESSAIS, registre: dict | None = None) -> list:
     """Outils de l'explorateur. Chaque essai porte sa `raison` et reçoit un numéro (`essai`) ; le code borne les
-    essais à `limite_essais`."""
+    essais à `limite_essais`. L'explorateur reçoit un résultat compact ; le résultat complet de chaque essai va dans
+    `registre` (numéro d'essai → résultat), pour la trace et le rapport."""
     id_lie = identifiant_client(client)
     essais = {"n": 0}
+    registre = {} if registre is None else registre
 
     def verifier(client_id):
         if str(client_id).strip().lower() != id_lie:
@@ -194,10 +238,11 @@ def creer_outils_explorateur(client, limite_essais: int = LIMITE_ESSAIS) -> list
             return {"erreur": f"Limite de {limite_essais} essais atteinte : rends ton compte rendu."}
         return None
 
-    def numeroter(resultat: dict) -> dict:
+    def numeroter(resultat: dict, compacter=compacter_simulation) -> dict:
         if isinstance(resultat, dict) and "erreur" not in resultat:
             essais["n"] += 1
-            return {"essai": essais["n"], **resultat}
+            registre[essais["n"]] = {"essai": essais["n"], **resultat}
+            return {"essai": essais["n"], **compacter(resultat)}
         return resultat
 
     communs = {t.tool_name: t for t in creer_outils(client)}
@@ -247,7 +292,22 @@ def creer_outils_explorateur(client, limite_essais: int = LIMITE_ESSAIS) -> list
             operation: « comptant » (par défaut), « marge » ou « decouvert ».
         """
         return verifier(client_id) or numeroter(api.chercher_taille_compatible(client, ticker, sens, pourcentage,
-                                                                              operation))
+                                                                              operation), compacter_taille)
 
-    return [communs["lire_fiche_client"], communs["lire_fiche_instrument"], creer_outil_decrire_apport(client),
+    apport = creer_outil_decrire_apport(client)
+
+    @tool(name=NOM_OUTIL_APPORT)
+    def decrire_apport(client_id: str, ticker: str, pourcentage: float | None = None) -> dict:
+        """Décrit ce qu'un autre instrument apporterait au portefeuille (faits seulement, aucune note) : corrélations,
+        exposition actuelle à sa classe, son secteur et ses étiquettes, part du risque après l'achat, et les
+        candidats de la même classe classés du plus proche au plus éloigné. Celui de l'ordre t'est déjà donné.
+
+        Args:
+            client_id: Identifiant du client de l'analyse.
+            ticker: Symbole de l'instrument.
+            pourcentage: Facultatif. Achat envisagé en % du portefeuille.
+        """
+        return compacter_apport(apport._tool_func(client_id, ticker, pourcentage))
+
+    return [communs["lire_fiche_client"], communs["lire_fiche_instrument"], decrire_apport,
             communs["lister_instruments"], simuler_ordre, simuler_scenario, chercher_taille_compatible]

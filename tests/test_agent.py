@@ -647,7 +647,8 @@ def test_pas_de_correction_quand_le_texte_est_juste():
 def test_explorateur_a_l_outil_decrire_apport():
     from agent.outils import creer_outils_explorateur
     o = {t.tool_name: t for t in creer_outils_explorateur("robert")}
-    assert o["decrire_apport"]("robert", "TSLA", 15) == api.decrire_apport("robert", "TSLA", 15)
+    from agent.outils import compacter_apport
+    assert o["decrire_apport"]("robert", "TSLA", 15) == compacter_apport(api.decrire_apport("robert", "TSLA", 15))
     assert "erreur" in o["decrire_apport"]("mateo", "TSLA", 15)
     from agent.suivi import libelle_outil
     assert libelle_outil("decrire_apport", {"ticker": "TSLA"}) == "Je regarde ce que TSLA apporterait à votre portefeuille."
@@ -661,3 +662,24 @@ def test_correction_d_un_texte_trop_long():
     assert r["correction"]["faite"] and r["correction"]["reussie"]
     assert "la limite absolue est de 180 mots" in r["correction"]["motifs"][0]
     assert r["explication"] == "**Verdict** : en tension."
+
+
+
+def test_explorateur_recoit_des_resultats_compacts_et_la_trace_les_complets():
+    from agent.explorateur import entete
+    from agent.outils import creer_outils_explorateur
+    registre = {}
+    o = {t.tool_name: t for t in creer_outils_explorateur("robert", registre=registre)}
+    compact = o["simuler_scenario"]("robert", PARTAGE, "essai")
+    complet = api.simuler_scenario("robert", PARTAGE)
+    assert compact["essai"] == 1 and compact["score"] == complet["score"] and "avant" not in compact
+    assert registre[1] == {"essai": 1, **complet}
+    assert len(json.dumps(compact)) < len(json.dumps(complet)) / 5
+    texte = entete("robert", {"ticker": "TSLA", "sens": "achat", "pourcentage": 15.0, "operation": "comptant"},
+                   "Mission.", api.simuler_ordre("robert", "TSLA", "achat", 15))
+    for cle in ('"apport"', '"instrument"', '"fourchettes_pct"', '"portefeuille_deja_hors_politique":false'):
+        assert cle in texte
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(PRINCIPAL_ROBERT), equipe=True,
+                             modele_explorateur=ModeleSimule(EXPLORATEUR_ROBERT))
+    etape = next(e for e in r["trace"] if e["outil"] == "simuler_scenario")
+    assert etape["resultat"]["avant"] and etape["resultat_resume"].startswith("Scénario : achat de 7,5 % de TSLA")

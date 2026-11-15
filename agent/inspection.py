@@ -30,6 +30,9 @@ LIMITE_TOURS = 10            # agent seul : 7 tours dans le chemin le plus long 
 LIMITE_TOURS_PRINCIPAL = 8   # équipe : 3 lectures, l'envoi de l'explorateur, le rapport, avec une marge
 # Équipe de deux agents (chef de dossier + explorateur). GLC_EQUIPE=0 revient à l'agent seul d'avant.
 EQUIPE = os.environ.get("GLC_EQUIPE", "1").strip() != "0"
+# Profondeur de raisonnement (output_config.effort) : « medium » garde les preuves de l'équipe et divise le temps
+# de chaque tour ; GLC_EFFORT=high revient au défaut du modèle.
+EFFORT = os.environ.get("GLC_EFFORT", "medium").strip() or None
 TENTATIVES_SDK = {"max_attempts": 4, "mode": "adaptive"}   # mode de tentatives de botocore (ThrottlingException)
 PROMPT_SYSTEME = Path(__file__).parent / "prompts" / "systeme.md"        # agent seul
 PROMPT_PRINCIPAL = Path(__file__).parent / "prompts" / "principal.md"    # chef de dossier de l'équipe
@@ -55,11 +58,13 @@ def options_garde_fou() -> dict:
             "guardrail_latest_message": True}
 
 
-def creer_modele(model_id: str):
+def creer_modele(model_id: str, effort: str | None = None):
     from botocore.config import Config
     from strands.models import BedrockModel
 
-    return BedrockModel(model_id=model_id, region_name=REGION, max_tokens=JETONS_SORTIE,
+    effort = EFFORT if effort is None else effort
+    extra = {"additional_request_fields": {"output_config": {"effort": effort}}} if effort and effort != "high" else {}
+    return BedrockModel(model_id=model_id, region_name=REGION, max_tokens=JETONS_SORTIE, **extra,
                         boto_client_config=Config(retries=TENTATIVES_SDK, read_timeout=120, connect_timeout=10),
                         **options_garde_fou())
 

@@ -81,10 +81,11 @@ class Suivi(HookProvider):
     """Relaie les étapes d'un agent Strands à `sur_etape` ; ne lève jamais d'exception."""
 
     def __init__(self, sur_etape=None, agent: str = "principal", ticker_ordre: str | None = None,
-                 compteur: Compteur | None = None):
+                 compteur: Compteur | None = None, complet=None):
         self.sur_etape, self.agent = sur_etape, agent
         self.ticker_ordre = str(ticker_ordre or "").strip().upper() or None
         self.compteur = compteur or Compteur()
+        self.complet = complet     # rend le résultat complet d'un outil qui renvoie au modèle un résultat compact
         self._redaction_annoncee = False
         self._texte = ""
 
@@ -123,6 +124,8 @@ class Suivi(HookProvider):
             tu = event.tool_use or {}
             outil = tu.get("name")
             resultat = _contenu_resultat(event.result)
+            if self.complet is not None:
+                resultat = self.complet(resultat)
             self.emettre("fin_outil", etape=self._etape(tu), outil=outil,
                          resultat_resume=resume_etape(outil, tu.get("input") or {}, resultat, self.ticker_ordre))
         except Exception:
