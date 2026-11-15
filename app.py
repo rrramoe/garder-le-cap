@@ -1140,19 +1140,16 @@ def afficher_rapport(persona: str, rapport: dict, fiche_actuelle: dict) -> None:
 
 # ---------------------------------------------------------------- analyse en direct
 
-def rendu_en_direct(etapes: list[dict], phases: list[str], phase_en_cours: str | None) -> str:
-    """Liste des étapes : « … » pendant l'étape, « ✓ » et son résultat en une ligne quand elle finit."""
+def rendu_en_direct(etapes: list[dict]) -> str:
+    """Liste des étapes, dans l'ordre : « … » pendant l'étape, « ✓ » et son résultat quand elle finit."""
     lignes = []
     for e in etapes:
-        agent = f" :gray[({e['agent']})]" if e.get("agent") else ""
+        agent = f" :gray[({e['agent']})]" if e.get("agent") and e["agent"] != "principal" else ""
         if e["fini"]:
             resume = f"  \n  :gray[{e['resume']}]" if e.get("resume") else ""
             lignes.append(f"- ✓ {e['libelle']}{agent}{resume}")
         else:
             lignes.append(f"- … **{e['libelle']}**{agent}")
-    for ph in phases:
-        texte = LIBELLES_PHASES.get(ph, "")
-        lignes.append(f"- … **{texte}**" if ph == phase_en_cours else f"- ✓ {texte}")
     return "\n".join(lignes) if lignes else "- … **Je commence l'analyse.**"
 
 
@@ -1181,13 +1178,17 @@ def analyser_en_direct(rapport: dict, niveau: str) -> bool:
     fil = threading.Thread(target=travail, name="analyse-agent", daemon=True)
     debut = time.monotonic()
     fil.start()
-    etapes: list[dict] = []
+    etapes: list[dict] = []  # outils et phases, dans l'ordre où ils arrivent
     par_numero: dict = {}
-    phases: list[str] = []
-    phase_en_cours = None
+
+    def clore_phases():
+        for x in etapes:
+            if x.get("phase") and not x["fini"]:
+                x["fini"] = True
+
     with st.status(EN_DIRECT_AGENT, expanded=True) as statut:
         zone = st.empty()
-        zone.markdown(rendu_en_direct(etapes, phases, phase_en_cours))
+        zone.markdown(rendu_en_direct(etapes))
         while fil.is_alive() or not file.empty():
             if time.monotonic() - debut > DELAI_MAX_AGENT_S:
                 break
@@ -1199,23 +1200,25 @@ def analyser_en_direct(rapport: dict, niveau: str) -> bool:
                 continue
             moment = ev.get("moment")
             if moment == "debut_outil":
-                phase_en_cours = None
+                clore_phases()
                 e = {"libelle": ev.get("libelle") or LIBELLES_OUTILS.get(ev.get("outil"), f"J'appelle {ev.get('outil')}."),
                      "agent": ev.get("agent"), "fini": False, "resume": ""}
                 etapes.append(e)
                 par_numero[ev.get("etape", len(etapes))] = e
             elif moment == "fin_outil":
-                e = par_numero.get(ev.get("etape")) or next((x for x in reversed(etapes) if not x["fini"]), None)
+                e = par_numero.get(ev.get("etape")) or next(
+                    (x for x in reversed(etapes) if not x["fini"] and not x.get("phase")), None)
                 if e is not None:
                     e["fini"], e["resume"] = True, str(ev.get("resultat_resume") or "")
             elif moment in LIBELLES_PHASES:
-                phases.append(moment)
-                phase_en_cours = moment
+                clore_phases()
+                etapes.append({"libelle": LIBELLES_PHASES[moment], "phase": True, "fini": False,
+                               "agent": ev.get("agent")})
             elif moment == "fin":
-                phase_en_cours = None
+                clore_phases()
             else:
                 continue
-            zone.markdown(rendu_en_direct(etapes, phases, phase_en_cours))
+            zone.markdown(rendu_en_direct(etapes))
         r = sortie.get("r")
         if r is None:
             r = {"explication": None, "trace": [], "erreur": "l'agent a dépassé le temps prévu"}
@@ -1224,7 +1227,8 @@ def analyser_en_direct(rapport: dict, niveau: str) -> bool:
         zone.empty()
         section_etapes(rapport, niveau)
         duree = time.monotonic() - debut
-        statut.update(label=f"{TITRE_ETAPES} · {len(etapes)} étape(s) en {nombre(duree, 0)} s",
+        nb_outils = sum(1 for x in etapes if not x.get("phase"))
+        statut.update(label=f"{TITRE_ETAPES} · {nb_outils} étape(s) en {nombre(duree, 0)} s",
                       state="complete", expanded=False)
     return True
 

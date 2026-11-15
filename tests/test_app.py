@@ -296,9 +296,10 @@ def test_rendu_en_direct_marque_les_etapes():
     espace: dict = {}
     exec(compile(ast.Module(body=noeuds, type_ignores=[]), APP, "exec"), espace)
     rendu = espace["rendu_en_direct"](
-        [{"libelle": "Je lis votre fiche.", "fini": True, "resume": "Profil lu.", "agent": None},
-         {"libelle": "Je simule l'ordre.", "fini": False, "resume": "", "agent": None}],
-        ["verification"], "verification")
-    assert "- ✓ Je lis votre fiche." in rendu and "Profil lu." in rendu
-    assert "- … **Je simule l'ordre.**" in rendu
-    assert "- … **Je vérifie mon texte.**" in rendu
+        [{"libelle": "Je lis votre fiche.", "fini": True, "resume": "Profil lu.", "agent": "principal"},
+         {"libelle": "Je rédige l'explication.", "phase": True, "fini": True},
+         {"libelle": "Je simule l'ordre.", "fini": False, "resume": "", "agent": "chercheur"}])
+    lignes = rendu.splitlines()
+    assert lignes[0].rstrip() == "- ✓ Je lis votre fiche." and "Profil lu." in rendu and "principal" not in rendu
+    assert lignes[-1] == "- … **Je simule l'ordre.** :gray[(chercheur)]"  # ordre d'arrivée gardé
+    assert "- ✓ Je rédige l'explication." in lignes
