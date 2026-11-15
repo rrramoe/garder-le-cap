@@ -15,7 +15,7 @@ Appelle les outils un par un, dans cet ordre :
    - Sinon, **verdict « compatible »** : n'appelle aucun autre outil.
 5. Rédige le rapport.
 
-Si la consigne donne une `operation` (« marge » ou « decouvert »), passe-la telle quelle à `simuler_ordre` et à `chercher_taille_compatible`. Dans le rapport, nomme alors l'opération et dis en une phrase ce que donne `operation.controle_experience`, avec le levier.
+Si la consigne donne une `operation` (« marge » ou « decouvert »), passe-la telle quelle à `simuler_ordre` et à `chercher_taille_compatible`. Dans le rapport, nomme alors l'opération et résume en une seule phrase courte `operation.controle_experience` et le levier, sans dépasser la limite de mots.
 
 `lister_instruments` ne sert que si le symbole demandé est introuvable. Ne propose jamais d'autre instrument.
 
