@@ -142,11 +142,13 @@ def creer_outil_decrire_apport(client):
         return api.decrire_apport(client, ticker, pourcentage)
 
     return decrire_apport
+
+
 # --- Équipe de deux agents -----------------------------------------------------------------------
 
 NOMS_OUTILS_PRINCIPAL = ("lire_fiche_client", "lire_fiche_instrument", "simuler_ordre", "envoyer_explorateur")
-NOMS_OUTILS_EXPLORATEUR = ("lire_fiche_client", "lire_fiche_instrument", "lister_instruments", "simuler_ordre",
-                           "simuler_scenario", "chercher_taille_compatible")
+NOMS_OUTILS_EXPLORATEUR = ("lire_fiche_client", "lire_fiche_instrument", NOM_OUTIL_APPORT, "lister_instruments",
+                           "simuler_ordre", "simuler_scenario", "chercher_taille_compatible")
 LIMITE_PISTES = 4     # pistes rendues au chef de dossier, au plus
 LIMITE_ESSAIS = 6     # essais de l'explorateur, au plus (il en garde quatre)
 
@@ -247,5 +249,5 @@ def creer_outils_explorateur(client, limite_essais: int = LIMITE_ESSAIS) -> list
         return verifier(client_id) or numeroter(api.chercher_taille_compatible(client, ticker, sens, pourcentage,
                                                                               operation))
 
-    return [communs["lire_fiche_client"], communs["lire_fiche_instrument"], communs["lister_instruments"],
-            simuler_ordre, simuler_scenario, chercher_taille_compatible]
+    return [communs["lire_fiche_client"], communs["lire_fiche_instrument"], creer_outil_decrire_apport(client),
+            communs["lister_instruments"], simuler_ordre, simuler_scenario, chercher_taille_compatible]

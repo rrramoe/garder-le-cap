@@ -56,6 +56,8 @@ def libelle_outil(outil: str, arguments: dict, ticker_ordre: str | None = None) 
         if any(isinstance(o, dict) and str(o.get("sens", "")).lower() == "vente" for o in ordres):
             return "Je teste l'achat payé par la vente d'une autre position."
         return "Je teste un achat partagé avec un fonds diversifié."
+    if outil == "decrire_apport":
+        return f"Je regarde ce que {symbole or 'l’instrument'} apporterait à votre portefeuille."
     if outil == "envoyer_explorateur":
         return "J'envoie l'explorateur chercher des pistes."
     return "J'appelle un outil du moteur."

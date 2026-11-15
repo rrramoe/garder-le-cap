@@ -642,3 +642,12 @@ def test_pas_de_correction_quand_le_texte_est_juste():
     r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(SCENARIO_ROBERT), equipe=False)
     assert r["correction"] == {"faite": False, "motifs": []}
     assert all(e["outil"] != "corriger_le_texte" for e in r["trace"])
+
+
+def test_explorateur_a_l_outil_decrire_apport():
+    from agent.outils import creer_outils_explorateur
+    o = {t.tool_name: t for t in creer_outils_explorateur("robert")}
+    assert o["decrire_apport"]("robert", "TSLA", 15) == api.decrire_apport("robert", "TSLA", 15)
+    assert "erreur" in o["decrire_apport"]("mateo", "TSLA", 15)
+    from agent.suivi import libelle_outil
+    assert libelle_outil("decrire_apport", {"ticker": "TSLA"}) == "Je regarde ce que TSLA apporterait à votre portefeuille."

@@ -15,6 +15,8 @@ Ton objectif : que le client comprenne, avec ses propres mots, si l'ordre le gar
    - **« incompatible »** (contrainte stricte violée) ou **« compatible »** : n'envoie personne. Rien ne répare une contrainte stricte ; un ordre compatible n'a pas besoin de piste.
 6. Rédige le rapport.
 
+L'explorateur rend une `finalite_supposee` : c'est son hypothèse sur ce que l'achat vise. Si tu la cites, garde-la comme une hypothèse (« l'achat semble viser… »), jamais comme un fait sur le client.
+
 Si l'explorateur revient avec `statut` = `repli`, il n'a pas pu finir : dis en une phrase que seule la taille compatible calculée par le code est montrée.
 
 Si un outil renvoie `erreur`, rapporte-la telle quelle et n'invente pas le résultat manquant.
