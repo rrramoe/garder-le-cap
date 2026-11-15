@@ -91,8 +91,13 @@ def prix_cad() -> pd.DataFrame:
     return _prix_cad_cache(str(dossier_donnees()))
 
 
+@lru_cache(maxsize=4)
+def _rendements_cache(dossier: str) -> pd.DataFrame:
+    return _prix_cad_cache(dossier).pct_change().iloc[1:]
+
+
 def rendements_cad() -> pd.DataFrame:
-    return prix_cad().pct_change().iloc[1:]
+    return _rendements_cache(str(dossier_donnees()))
 
 
 def periode() -> dict:

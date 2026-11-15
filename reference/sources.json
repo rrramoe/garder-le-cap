@@ -39,7 +39,8 @@
     "libelle": "Date de première cotation (étiquette « établie »)",
     "source": "Yahoo Finance via yfinance, champ firstTradeDate",
     "date": "voir fiches_instruments.json",
-    "nature": "publie"
+    "nature": "publie",
+    "limite": "Yahoo peut donner le début de son propre historique plutôt que la vraie date d'inscription (ex. plusieurs titres du TSX au 1995-01-12)."
   },
   "hypothese_personas": {
     "libelle": "Association de chaque persona à un profil, réponses aux thèmes, portefeuilles de départ fictifs",
@@ -98,6 +99,12 @@
   "hypothese_conventions_calcul": {
     "libelle": "Rendements sur adj_close, tout en CAD, calendrier XIU.TO ou SPY avec report en avant, poids constants rééquilibrés chaque jour",
     "source": "Hypothèse du projet (simplification)",
+    "date": "2026-11-15",
+    "nature": "hypothese"
+  },
+  "hypothese_coherence_objectif": {
+    "libelle": "Profils jugés cohérents avec chaque objectif (signalement seulement, sans effet sur le score)",
+    "source": "Hypothèse du projet",
     "date": "2026-11-15",
     "nature": "hypothese"
   }
