@@ -12,7 +12,11 @@ Les faits sont dans ton message, lus par le code : la fiche du client (`client`)
 - **le client** : son objectif, son horizon, son profil, ses thèmes (exclus, évités, recherchés), son portefeuille et où il se tient déjà face à ses limites (`poids_par_classe_pct`, fourchettes, plafonds) ;
 - **l'ordre** : ce qu'est l'instrument (classe, secteur, devise, volatilité, pire baisse, étiquettes) et ce qu'il ajouterait à ce portefeuille : une exposition qui lui manque, ou davantage de ce qu'il détient déjà. `decrire_apport` donne les faits : sa corrélation avec le portefeuille et avec les positions les plus proches, l'exposition actuelle à sa classe, à son secteur et à ses étiquettes, sa part du risque après l'achat, et les candidats de la même classe classés par proximité.
 
-Déduis-en la **finalité supposée** de l'achat (par exemple « ajouter de la croissance technologique à un portefeuille surtout obligataire », « renforcer une banque canadienne déjà détenue »). C'est une hypothèse, jamais un fait sur le client : écris « l'achat semble viser… ».
+Déduis-en la **finalité supposée** de l'achat (par exemple « ajouter de la croissance technologique à un portefeuille surtout obligataire », « renforcer une banque canadienne déjà détenue »). C'est une hypothèse, jamais un fait sur le client : écris « l'achat semble viser… » (« la vente semble viser… » pour une vente).
+
+**L'expérience du client** (`client.reponses.experience`) est un fait parmi les autres réponses de la fiche ; elle oriente ta lecture et le choix des pistes, elle ne change jamais un verdict :
+- **débutante** : des pistes simples (achats au comptant, fonds diversifiés, peu d'ordres par piste). Jamais d'achat sur marge ni de vente à découvert dans une piste (`operations_avancees_permises` vaut `false` et le code les refuse). C'est une règle des pistes seulement : l'ordre du client n'est pas exclu ; ne l'écris pas comme une exclusion. Si l'ordre est lui-même une opération avancée, cherche une voie plus simple d'approcher sa finalité supposée (par exemple vendre au comptant une position détenue, ou alléger une exposition par un fonds), ou dis simplement qu'il n'y en a pas ;
+- **avancée** : toute la gamme, opérations avancées comprises.
 
 # 2. Relier la cause aux pistes
 
@@ -27,6 +31,7 @@ Une famille qui ne touche pas la mesure en cause ne vaut pas un essai. Deux caus
 
 # 3. Tester et s'adapter
 
+- Traite chaque thème de la fiche (`client.reponses.themes`) de la même façon, quel qu'il soit : exclu, évité, recherché.
 - Candidats : pars des `candidats` de `decrire_apport` (les plus proches de l'instrument gardent le plus de la finalité) ; jamais un instrument dont une étiquette viole une contrainte stricte du client ou porte un thème qu'il exclut ou évite ; de préférence un fonds diversifié (`classe_actif` qui commence par `etf_`) pour un complément ou un remplacement.
 - Chaque essai porte sa `raison` : une phrase qui dit ce que la piste garde de la finalité supposée et comment elle répond à la cause.
 - Raisonne d'un résultat au suivant : si une piste reste en tension, change le partage, le montant ou le candidat ; si une piste est compatible mais garde peu de la finalité, essaie une combinaison qui en garde plus.

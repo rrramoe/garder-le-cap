@@ -428,7 +428,7 @@ def simuler(fiche: dict, ticker: str, sens: str, pourcentage: float, operation: 
     dirn = direction(avant["score"], apres["score"])
     if cs["violee"]:
         dirn["remarque"] = "Direction lue sur les notes seulement : une contrainte stricte est violée, l'ordre est incompatible."
-    return {
+    resultat = {
         "ordre": ordre,
         "portefeuille_avant_pct": port_avant,
         "portefeuille_apres_pct": port_apres,
@@ -441,6 +441,8 @@ def simuler(fiche: dict, ticker: str, sens: str, pourcentage: float, operation: 
         "operation": bloc_operation(port_avant, port_apres, operation, fiche, apres),
         "cause": cause(fiche, [ordre], cs, apres, port_apres),
     }
+    resultat["points_attention"] = points_attention(fiche, resultat["operation"])
+    return resultat
 
 
 def taille_compatible(fiche: dict, ticker: str, sens: str, pourcentage: float, operation: str = "comptant") -> dict:
@@ -585,7 +587,7 @@ def simuler_scenario(fiche: dict, ordres: list) -> dict:
     if cs["violee"]:
         dirn["remarque"] = "Direction lue sur les notes seulement : une contrainte stricte est violée, l'ordre est incompatible."
     operation = next((j["operation"] for j in jambes if j["operation"] != "comptant"), "comptant")
-    return {
+    resultat = {
         "ordre": jambes[0],
         "ordres": jambes,
         "portefeuille_avant_pct": port_avant,
@@ -599,3 +601,40 @@ def simuler_scenario(fiche: dict, ordres: list) -> dict:
         "operation": bloc_operation(port_avant, port_apres, operation, fiche, apres),
         "cause": cause(fiche, jambes, cs, apres, port_apres),
     }
+    resultat["points_attention"] = points_attention(fiche, resultat["operation"])
+    return resultat
+
+
+# ---------------------------------------------------------------- points d'attention (faits, aucune note)
+
+RISQUES_OPERATIONS = {
+    "marge": "une partie de l'achat est payée avec de l'argent emprunté : les gains comme les pertes portent sur plus "
+             "que la valeur nette du portefeuille",
+    "decouvert": "la perte n'a pas de plafond si le prix de l'instrument monte",
+}
+
+
+def points_attention(fiche: dict, bloc_op: dict) -> list:
+    """Faits à garder en vue pour lire l'ordre, sans note ni verdict : l'opération avancée et son risque (avec le
+    levier calculé), l'expérience, l'objectif et l'horizon déclarés, et les limites déjà dites par le moteur."""
+    q = references.charger("questionnaire")
+    reponses = fiche["questionnaire"]
+
+    def libelle(champ):
+        option = q[champ]["options"].get(reponses.get(champ), reponses.get(champ))
+        return option.get("libelle") if isinstance(option, dict) else option
+
+    points = []
+    code = bloc_op.get("code", "comptant")
+    if code != "comptant":
+        levier = f"{bloc_op.get('levier_apres', 1.0):.2f}".replace(".", ",")
+        points.append({"type": "operation", "operation": code,
+                       "texte": f"{LIBELLES_OPERATIONS[code]} : opération avancée ; {RISQUES_OPERATIONS[code]}. "
+                                f"Levier après l'ordre : {levier}."})
+    points.append({"type": "profil_declare", "experience": reponses.get("experience"),
+                   "objectif": reponses.get("objectif"), "horizon": reponses.get("horizon"),
+                   "texte": f"Profil déclaré : expérience « {libelle('experience')} », objectif « {libelle('objectif')} », "
+                            f"horizon « {libelle('horizon')} »."})
+    for limite in bloc_op.get("limites") or []:
+        points.append({"type": "limite", "texte": limite})
+    return points

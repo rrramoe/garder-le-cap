@@ -951,16 +951,28 @@ def bloc_operation(sim: dict) -> None:
     ce = op.get("controle_experience", {})
     exp = libelle_option("experience", ce.get("experience", "intermediaire"))
     nom = op["libelle"].lower()
+    # Par défaut l'expérience ne change pas le verdict (reference/operations_experience.json, tout « neutre ») ;
+    # une phrase n'apparaît que si le tableau de référence la fait compter.
     if ce.get("effet") == "contrainte_stricte":
-        phrase = f"Votre expérience ({exp}) exclut la {nom}."
+        st.markdown(f"**Expérience.** Votre expérience ({exp}) exclut la {nom}.")
     elif ce.get("effet") == "preference_souple":
-        phrase = f"Votre expérience ({exp}) : la {nom} est à éviter. Note : {note_txt(ce.get('note'))} sur 100."
-    else:
-        phrase = f"Votre expérience ({exp}) : la {nom} ne change pas le score."
-    st.markdown(f"**Expérience.** {phrase}")
+        st.markdown(f"**Expérience.** Votre expérience ({exp}) : la {nom} est à éviter. "
+                    f"Note : {note_txt(ce.get('note'))} sur 100.")
     if op.get("levier_apres") is not None:
         st.markdown(f"**Levier : {nombre(op['levier_apres'], 2)}.** Votre exposition serait de "
                     f"{nombre(op['exposition_brute_apres_pct'], 0)} $ pour 100 $ qui vous appartiennent.")
+
+
+def section_points_attention(sim: dict) -> None:
+    """Les faits à garder en vue (calculés par le moteur, sans note) : opération avancée, profil déclaré, limites."""
+    points = sim.get("points_attention") or []
+    if not any(p.get("type") == "operation" for p in points):
+        profil = next((p["texte"] for p in points if p.get("type") == "profil_declare"), None)
+        if profil:
+            st.caption(profil)
+        return
+    st.markdown("**Points d'attention**")
+    st.markdown("\n".join(f"- {p['texte']}" for p in points))
 
 
 SOLIDITE_TEXTE = {
@@ -1292,6 +1304,7 @@ def afficher_rapport(persona: str, rapport: dict, fiche_actuelle: dict) -> None:
 
     bloc_verdict(sim, rapport, valeur)
     bloc_operation(sim)
+    section_points_attention(sim)
     bloc_changements(rapport, st.session_state.get(f"precedent_{persona}"))
     section_possible(rapport["taille"], valeur)
     zone_substitut = st.container()  # remplie après la réponse de l'agent, qui choisit le substitut

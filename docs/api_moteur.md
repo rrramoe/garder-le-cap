@@ -81,6 +81,7 @@ Notes du portefeuille actuel, sans ordre : `score`, `dimension_min`, `mesure_min
 | `operation` | `{code, libelle, levier_avant, levier_apres, exposition_brute_apres_pct, exposition_empruntee_apres_pct, hypotheses, limites, controle_experience}` (voir plus bas) |
 | `solidite` | Voir `solidite` ci-dessous : le score après l'ordre sur 2022 seule et sur la période sans 2022 |
 | `cause` | Ce qui décide du verdict, lu dans les notes déjà calculées (voir `cause` ci-dessous) |
+| `points_attention` | Des faits, sans note : `{type, texte}` avec `type` = `operation` (opération avancée, son risque et le levier après l'ordre), `profil_declare` (expérience, objectif et horizon déclarés, avec leurs codes) et `limite` (les limites déjà dites dans `operation.limites`). Aussi dans `simuler_scenario`. |
 | `periode` | Période des données, devise CAD |
 
 ### `cause`
@@ -162,13 +163,15 @@ Une autre combinaison renvoie une erreur (`marge` avec `vente`, `decouvert` avec
 - **Levier** = exposition brute (somme des poids en valeur absolue, emprunt exclu) / valeur nette. Il vaut 1 sans marge ni découvert. Affiché, non noté.
 - **Limites**, dans `operation.limites` : le coût de l'emprunt au-delà du rendement des liquidités est ignoré ; la perte d'une vente à découvert n'a pas de plafond et l'historique montre seulement ce qui s'est produit ; ni appel de marge ni frais d'emprunt de titres ne sont simulés.
 
-**Contrôle de l'expérience.** `reference/operations_experience.json` (hypothèse du projet) donne, pour chaque opération avancée et chaque expérience, un niveau de l'échelle des thèmes. On le change dans ce fichier, sans toucher au code. Valeurs actuelles, identiques pour les deux opérations :
+**L'expérience : un repère, pas une pénalité.** L'outil ne baisse jamais un verdict seulement parce que le client débute : le verdict d'un achat sur marge ou d'une vente à découvert vient de ce que le moteur mesure sur le portefeuille après l'ordre (notes de risque avec le levier ou le poids négatif, plafonds en exposition absolue), comme pour tout ordre. L'expérience, l'objectif et l'horizon déclarés arrivent dans `points_attention` et guident la lecture des agents.
 
-| Expérience | Niveau | Effet |
-|---|---|---|
-| Débutante | `exclure` | Contrainte stricte : entrée `achat_sur_marge` ou `vente_a_decouvert` dans `contraintes_strictes` (avec `controle: "experience_operation"`), verdict « incompatible », aucune taille cherchée. |
-| Intermédiaire | `eviter` | Préférence souple : mesure `achat_sur_marge` ou `vente_a_decouvert` dans `notes.preferences`, notée `max(0, 100 - 50 * e / 15)`, où `e` est le poids détenu à découvert ou acheté avec de l'argent emprunté après l'ordre. |
-| Avancée | `neutre` | Aucun effet. |
+Le mécanisme reste dans `reference/operations_experience.json` (hypothèse du projet) : pour chaque opération avancée et chaque expérience, un niveau de l'échelle des thèmes, modifiable sans toucher au code. **Valeur actuelle : `neutre` pour les trois expériences et les deux opérations.** Les autres niveaux, s'ils étaient choisis :
+
+| Niveau | Effet |
+|---|---|
+| `exclure` | Contrainte stricte : entrée `achat_sur_marge` ou `vente_a_decouvert` dans `contraintes_strictes` (avec `controle: "experience_operation"`), verdict « incompatible », aucune taille cherchée. |
+| `eviter` | Préférence souple : mesure `achat_sur_marge` ou `vente_a_decouvert` dans `notes.preferences`, notée `max(0, 100 - 50 * e / 15)`, où `e` est le poids détenu à découvert ou acheté avec de l'argent emprunté après l'ordre. |
+| `neutre` | Aucun effet (valeur actuelle). |
 
 `operation.controle_experience` résume le contrôle : `{id, experience, niveau, effet, raison, source}`, avec `effet` = `contrainte_stricte`, `preference_souple` (plus `note` et `poids_expose`) ou `aucun`.
 

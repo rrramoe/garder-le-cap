@@ -20,9 +20,11 @@ from .outils import (LIMITE_PISTES, compacter_apport, compacter_simulation, cree
 from .suivi import Suivi
 
 PROMPT_EXPLORATEUR = Path(__file__).parent / "prompts" / "explorateur.md"
-LIMITE_TOURS_EXPLORATEUR = 6     # deux tours d'essais (en parallèle), le compte rendu, avec une marge
+LIMITE_TOURS_EXPLORATEUR = 8     # deux tours d'essais (en parallèle), un essai refusé à corriger, le compte rendu
 DELAI_EXPLORATEUR_S = 150
 AVIS_REPLI = ("L'explorateur n'a pas pu finir : seule la taille compatible calculée par le code est montrée.")
+AVIS_REPLI_SANS_PISTE = ("L'explorateur n'a pas pu finir, et une taille réduite de cette opération avancée n'est pas "
+                         "proposée à un client débutant : aucune piste n'est montrée.")
 
 
 def _theme_lisible(themes: dict) -> dict:
@@ -33,17 +35,25 @@ def _valeur(element):
     return element.get("valeur") if isinstance(element, dict) and "valeur" in element else element
 
 
+def _sans_meta(x):
+    """Une valeur déduite sans son origine ni sa source : {valeur, origine, source} → valeur."""
+    if isinstance(x, dict) and "valeur" in x:
+        return _sans_meta(x["valeur"])
+    if isinstance(x, dict):
+        return {k: _sans_meta(v) for k, v in x.items() if k not in ("origine", "source", "sources")}
+    if isinstance(x, list):
+        return [_sans_meta(v) for v in x]
+    return x
+
+
 def faits_client(fiche: dict) -> dict:
-    d = fiche.get("deduit") or {}
-    q = fiche.get("questionnaire") or {}
-    return {"objectif": q.get("objectif"), "experience": q.get("experience"),
-            "profil": (d.get("profil") or {}).get("libelle") or _valeur(d.get("profil")),
-            "horizon_annees": _valeur(d.get("horizon_annees")),
-            "themes": _theme_lisible(q.get("themes")),
-            "fourchettes_pct": _valeur(d.get("fourchettes_pct")),
-            "plafonds_concentration_pct": _valeur(d.get("plafonds_concentration_pct")),
-            "crypto_pct": _valeur(d.get("crypto_pct")),
-            "portefeuille_pct": fiche.get("portefeuille_pct"), "poids_par_classe_pct": fiche.get("poids_par_classe_pct")}
+    """Tout ce que l'outil sait du client, de façon générique : chaque réponse de la fiche, la politique qui en est
+    déduite et le portefeuille. Une réponse ajoutée à la fiche arrive ici sans changer ce code."""
+    exclus = {"sources", "questionnaire", "deduit"}
+    faits = {k: _sans_meta(v) for k, v in fiche.items() if k not in exclus}
+    faits["reponses"] = fiche.get("questionnaire") or {}
+    faits["politique_deduite"] = _sans_meta(fiche.get("deduit") or {})
+    return faits
 
 
 def faits_instrument(f: dict) -> dict:
@@ -54,20 +64,29 @@ def faits_instrument(f: dict) -> dict:
             "etiquettes": {k: v.get("valeur") for k, v in (f.get("etiquettes") or {}).items()}}
 
 
+def operations_avancees_permises(fiche: dict) -> bool:
+    """Règle du code : pour un client débutant, aucune piste n'utilise l'achat sur marge ou la vente à découvert."""
+    return (fiche.get("questionnaire") or {}).get("experience") != "debutante"
+
+
 def entete(client, ordre: dict, mission: str, simulation: dict) -> str:
     """Message de l'explorateur : les faits lus par le code (client, instrument, apport, résultat de l'ordre), puis
     la mission écrite par le chef de dossier. L'explorateur n'a pas à relire ce que le chef de dossier a déjà lu."""
     op = ordre.get("operation") or "comptant"
+    fiche = api.lire_fiche_client(client)
+    avancees = operations_avancees_permises(fiche)
     resultat = compacter_simulation(simulation)
     resultat["score_avant"] = (simulation.get("avant") or {}).get("score")
     resultat["portefeuille_deja_hors_politique"] = resultat["score_avant"] is not None and resultat["score_avant"] < 50
     resultat["autres_mesures_sous_le_seuil"] = (simulation.get("cause") or {}).get("autres_mesures_sous_le_seuil")
     resultat.pop("portefeuille_apres_pct", None)
+    resultat["points_attention"] = [p.get("texte") for p in simulation.get("points_attention") or []]
     faits = {
         "client_id": identifiant_client(client),
         "ordre": {k: ordre[k] for k in ("ticker", "sens", "pourcentage")} | ({"operation": op} if op != "comptant" else {}),
         "resultat_de_l_ordre": resultat,
-        "client": faits_client(api.lire_fiche_client(client)),
+        "client": faits_client(fiche),
+        "operations_avancees_permises": avancees,
         "instrument": faits_instrument(api.lire_fiche_instrument(ordre["ticker"])),
         "apport": compacter_apport(api.decrire_apport(client, ordre["ticker"], ordre["pourcentage"])),
     }
@@ -112,6 +131,12 @@ def repli(client, ordre: dict, simulation: dict, raison: str) -> dict:
     from .inspection import extraire_pistes
 
     op = ordre.get("operation") or "comptant"
+    if op != "comptant" and not operations_avancees_permises(api.lire_fiche_client(client)):
+        # Règle du code : pas de piste avancée pour un client débutant, même en repli.
+        avis = AVIS_REPLI_SANS_PISTE
+        return {"statut": "repli", "avis": avis, "raison_du_repli": raison, "intention": None, "cause_lue": None,
+                "bilan": None, "cause": simulation.get("cause"), "pistes": [], "trace": [], "taille": None,
+                "retour": {"statut": "repli", "avis": avis, "cause": simulation.get("cause"), "pistes": []}}
     taille = api.chercher_taille_compatible(client, ordre["ticker"], ordre["sens"], ordre["pourcentage"], op)
     trace = [{"etape": 0, "outil": "simuler_ordre", "arguments": {}, "resultat": simulation},
              {"etape": 0, "outil": "chercher_taille_compatible",
@@ -148,7 +173,9 @@ def explorer(client, ordre: dict, mission: str, simulation: dict, modele=None, s
         if m is None or isinstance(m, str):
             identifiants.charger_identifiants()
             m = creer_modele(nom_modele(m))
-        agent = Agent(model=m, tools=creer_outils_explorateur(client, registre=registre),
+        avancees = operations_avancees_permises(api.lire_fiche_client(client))
+        agent = Agent(model=m, tools=creer_outils_explorateur(client, registre=registre,
+                                                              operations_avancees=avancees),
                       system_prompt=PROMPT_EXPLORATEUR.read_text(encoding="utf-8"), callback_handler=suivi.rappel,
                       hooks=[suivi], name="explorateur",
                       retry_strategy=ModelRetryStrategy(max_attempts=3, initial_delay=2, max_delay=16))
@@ -181,7 +208,7 @@ def explorer(client, ordre: dict, mission: str, simulation: dict, modele=None, s
         pistes = retenir([(essais.get(p["etape"]), p) for p in testees], cr["retenues"])
     except Exception as e:
         return repli(client, ordre, simulation, f"compte rendu illisible ({type(e).__name__})")
-    if not pistes:
+    if not pistes and not cr["bilan"]:
         return repli(client, ordre, simulation, "aucune piste testée")
     return {"statut": "termine", "intention": cr["intention"], "cause_lue": cr["cause"], "bilan": cr["bilan"],
             "cause": simulation.get("cause"), "pistes": pistes, "nombre_essais": len(testees), "trace": trace,

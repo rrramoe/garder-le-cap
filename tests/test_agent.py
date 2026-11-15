@@ -323,16 +323,19 @@ def test_6_cas_2_mateo_xom_ne_cherche_pas_de_taille():
 
 
 @bedrock
-def test_decouvert_debutante_ne_cherche_pas_de_taille():
+def test_decouvert_debutante_verdict_mesure_sans_piste_avancee():
+    # L'expérience ne baisse pas le verdict : il vient des notes. Les pistes d'une débutante restent au comptant.
     fiche = {"persona": "robert", "questionnaire": {"experience": "debutante"}}
-    r = inspection.inspecter(fiche, "TSLA", "vente", 5, operation="decouvert")
+    r = inspection.inspecter(fiche, "TSLA", "vente", 10, operation="decouvert")
     _verifier_rapport(r)
     outils = [e["outil"] for e in r["trace"]]
     assert _sous_suite(["lire_fiche_client", "lire_fiche_instrument", "simuler_ordre"], outils), outils
-    assert "chercher_taille_compatible" not in outils and "envoyer_explorateur" not in outils
     simulation = next(e for e in r["trace"] if e["outil"] == "simuler_ordre")
     assert simulation["arguments"].get("operation") == "decouvert"
-    assert simulation["resultat"]["verdict"]["code"] == "incompatible"
+    assert simulation["resultat"]["verdict"] == api.simuler_ordre(fiche, "TSLA", "vente", 10, "decouvert")["verdict"]
+    assert not simulation["resultat"]["contraintes_strictes"]["violee"]
+    assert all(o.get("operation", "comptant") == "comptant" for p in r["pistes"] for o in p["ordres"])
+    assert "exclu" not in r["explication"].lower()
     assert len(r["explication"].split()) <= 200  # limite de 180 mots dans le prompt, marge pour les marqueurs **
 
 
@@ -683,3 +686,60 @@ def test_explorateur_recoit_des_resultats_compacts_et_la_trace_les_complets():
                              modele_explorateur=ModeleSimule(EXPLORATEUR_ROBERT))
     etape = next(e for e in r["trace"] if e["outil"] == "simuler_scenario")
     assert etape["resultat"]["avant"] and etape["resultat_resume"].startswith("Scénario : achat de 7,5 % de TSLA")
+
+
+# --- Expérience : un repère pour les agents, pas une pénalité --------------------------------------
+
+def test_explorateur_debutant_sans_operation_avancee():
+    from agent.outils import creer_outils_explorateur
+    o = {t.tool_name: t for t in creer_outils_explorateur("robert", operations_avancees=False)}
+    for r in (o["simuler_ordre"]("robert", "TSLA", "vente", 5, "essai", "decouvert"),
+              o["chercher_taille_compatible"]("robert", "TSLA", "vente", 10, "essai", "decouvert"),
+              o["simuler_scenario"]("robert", [{"ticker": "SPY", "sens": "achat", "pourcentage": 20,
+                                                "operation": "marge"}], "essai")):
+        assert "Client débutant" in r["erreur"]
+    assert "erreur" not in o["simuler_ordre"]("robert", "SPY", "achat", 5, "au comptant")
+    avance = {t.tool_name: t for t in creer_outils_explorateur("robert")}
+    assert "erreur" not in avance["simuler_ordre"]("robert", "TSLA", "vente", 5, "essai", "decouvert")
+
+
+def test_faits_du_client_generiques():
+    from agent.explorateur import entete, faits_client, operations_avancees_permises
+    fiche = api.lire_fiche_client({"persona": "robert", "questionnaire": {"experience": "debutante"}})
+    fiche["questionnaire"]["perte_supportable"] = "faible"          # une réponse ajoutée plus tard à la fiche
+    faits = faits_client(fiche)
+    assert faits["reponses"]["perte_supportable"] == "faible" and faits["reponses"]["experience"] == "debutante"
+    assert faits["politique_deduite"]["horizon_annees"] == 3 and "portefeuille_pct" in faits
+    assert "origine" not in json.dumps(faits["politique_deduite"])
+    assert not operations_avancees_permises(fiche)
+    client = {"persona": "robert", "questionnaire": {"experience": "debutante"}}
+    texte = entete(client, {"ticker": "TSLA", "sens": "vente", "pourcentage": 10.0, "operation": "decouvert"},
+                   "Mission.", api.simuler_ordre(client, "TSLA", "vente", 10, "decouvert"))
+    assert '"operations_avancees_permises":false' in texte and "la perte n'a pas de plafond" in texte
+
+
+def test_repli_sans_piste_avancee_pour_un_debutant():
+    from botocore.exceptions import ClientError
+    client = {"persona": "robert", "questionnaire": {"experience": "debutante"}}
+    ordre = {"client_id": "robert", "ticker": "TSLA", "sens": "vente", "pourcentage": 10, "operation": "decouvert"}
+    principal = [[("lire_fiche_client", {"client_id": "robert"}), ("simuler_ordre", ordre)],
+                 [("envoyer_explorateur", {"client_id": "robert", "mission": "Débutante, préserver le capital."})],
+                 "**Verdict** : en tension."]
+    e = ClientError({"Error": {"Code": "ThrottlingException", "Message": "trop"}}, "ConverseStream")
+    r = inspection.inspecter(client, "TSLA", "vente", 10, operation="decouvert", modele=ModeleSimule(principal),
+                             equipe=True, modele_explorateur=ModeleSimule([], erreur=e))
+    assert r["agents"][1]["statut"] == "repli" and r["pistes"] == []
+    assert "n'est pas proposée à un client débutant" in r["agents"][1]["avis"]
+
+
+def test_explorateur_qui_conclut_sans_piste():
+    explorateur = ["Finalité supposée : la vente semble viser une baisse de Tesla.\nCause : l'encaisse monterait trop.\n"
+                   "Pistes retenues : aucune\nBilan : aucun ajustement raisonnable au comptant n'approche cette finalité."]
+    client = {"persona": "robert", "questionnaire": {"experience": "debutante"}}
+    ordre = {"client_id": "robert", "ticker": "TSLA", "sens": "vente", "pourcentage": 10, "operation": "decouvert"}
+    principal = [[("simuler_ordre", ordre)],
+                 [("envoyer_explorateur", {"client_id": "robert", "mission": "Débutante."})], "**Verdict** : x."]
+    r = inspection.inspecter(client, "TSLA", "vente", 10, operation="decouvert", modele=ModeleSimule(principal),
+                             equipe=True, modele_explorateur=ModeleSimule(explorateur))
+    assert r["agents"][1]["statut"] == "termine" and r["pistes"] == []
+    assert r["agents"][1]["bilan"].startswith("aucun ajustement raisonnable")

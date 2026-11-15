@@ -132,16 +132,18 @@ def test_vente_a_decouvert_debutante_puis_avancee(sans_agent):
     at.button(key="inspecter").click().run()
     assert not at.exception, at.exception
     texte = _textes(at)
-    assert "Incompatible" in _verdict(at) and "vente à découvert est exclue" in _verdict(at)
-    assert "Votre expérience (Débutante) exclut la vente à découvert." in texte
+    # L'expérience seule ne baisse pas le verdict : il vient des notes mesurées sur le portefeuille.
+    assert "Incompatible" not in _verdict(at) and "exclue" not in _verdict(at)
+    assert "exclut la vente à découvert" not in texte
+    assert "Points d'attention" in texte and "la perte n'a pas de plafond" in texte
+    assert "expérience « Débutante », objectif « Préserver mon capital »" in texte
     assert "Levier : 1,10." in texte
-    assert "Aucune taille n'est proposée" in texte
-    assert "plafond" in texte  # limite de la vente à découvert, dans les sources
+    verdict_debutante = _verdict(at)
     at.selectbox(key="q_robert_experience").set_value("avancee").run()
     at.button(key="inspecter").click().run()
     assert not at.exception, at.exception
-    assert "Incompatible" not in _verdict(at)
-    assert "la vente à découvert ne change pas le score" in _textes(at)
+    assert _verdict(at) == verdict_debutante
+    assert "expérience « Avancée »" in _textes(at)
     at.button(key="passer").click().run()
     assert "non ajoutée au portefeuille" in _textes(at)
     assert "TSLA" not in at.session_state["pf_robert"]

@@ -119,10 +119,54 @@ def test_erreurs_des_operations(args, mot):
         assert set(r) == {"erreur"} and mot in r["erreur"], r
 
 
-# --- Contrôle de l'expérience : trois niveaux pour chaque opération -----------------------------
+# --- Expérience : un repère, pas une pénalité ---------------------------------------------------
 
 @pytest.mark.parametrize("ordre", [MARGE, DECOUVERT], ids=["marge", "decouvert"])
-def test_debutante_exclut_et_ne_cherche_pas_de_taille(ordre):
+def test_experience_ne_change_pas_le_verdict(ordre):
+    # Les trois expériences sont « neutre » : le verdict vient de ce que le moteur mesure sur le portefeuille.
+    resultats = {e: api.simuler_ordre(_client(e), *ordre) for e in ("debutante", "intermediaire", "avancee")}
+    for e, r in resultats.items():
+        assert not r["contraintes_strictes"]["violee"], e
+        assert IDS[ordre[3]] not in r["apres"]["notes"]["preferences"]["mesures"]
+        assert r["operation"]["controle_experience"]["effet"] == "aucun"
+        assert r["score"] == resultats["avancee"]["score"] and r["verdict"] == resultats["avancee"]["verdict"]
+    t = api.chercher_taille_compatible(_client("debutante"), *ordre)
+    assert t["lancee"] is True and all("levier" in p for p in t["courbe"])
+
+
+@pytest.mark.parametrize("ordre", [MARGE, DECOUVERT], ids=["marge", "decouvert"])
+def test_points_d_attention(ordre):
+    r = api.simuler_ordre(_client("debutante"), *ordre)
+    types = [p["type"] for p in r["points_attention"]]
+    assert types[:2] == ["operation", "profil_declare"] and "limite" in types
+    operation = r["points_attention"][0]["texte"]
+    assert "opération avancée" in operation and "Levier après l'ordre" in operation
+    assert ("pas de plafond" in operation) == (ordre[3] == "decouvert")
+    assert "expérience « Débutante »" in r["points_attention"][1]["texte"]
+    assert all("note" not in p and "score" not in p for p in r["points_attention"])
+    comptant = api.simuler_ordre("robert", "TSLA", "achat", 15)["points_attention"]
+    assert [p["type"] for p in comptant] == ["profil_declare"]
+
+
+# --- Le mécanisme reste : le tableau se change dans reference/, sans toucher au code ----------------
+
+def _table_modifiee(monkeypatch, niveaux):
+    vrai = references.charger
+
+    def charger(nom):
+        d = vrai(nom)
+        if nom != "operations_experience":
+            return d
+        d = json.loads(json.dumps(d))
+        for op in d["operations"].values():
+            op["niveau_par_experience"].update(niveaux)
+        return d
+    monkeypatch.setattr(references, "charger", charger)
+
+
+@pytest.mark.parametrize("ordre", [MARGE, DECOUVERT], ids=["marge", "decouvert"])
+def test_mecanisme_exclure(monkeypatch, ordre):
+    _table_modifiee(monkeypatch, {"debutante": "exclure"})
     r = api.simuler_ordre(_client("debutante"), *ordre)
     assert r["verdict"]["code"] == "incompatible"
     assert IDS[ordre[3]] in r["contraintes_strictes"]["themes_violes"]
@@ -132,7 +176,8 @@ def test_debutante_exclut_et_ne_cherche_pas_de_taille(ordre):
 
 
 @pytest.mark.parametrize("ordre,e", [(MARGE, 12.0), (DECOUVERT, 5.0)], ids=["marge", "decouvert"])
-def test_intermediaire_preference_souple(ordre, e):
+def test_mecanisme_eviter(monkeypatch, ordre, e):
+    _table_modifiee(monkeypatch, {"intermediaire": "eviter"})
     r = api.simuler_ordre(_client("intermediaire"), *ordre)
     assert not r["contraintes_strictes"]["violee"]
     m = r["apres"]["notes"]["preferences"]["mesures"][IDS[ordre[3]]]
@@ -141,53 +186,17 @@ def test_intermediaire_preference_souple(ordre, e):
     assert r["operation"]["controle_experience"]["effet"] == "preference_souple"
     assert r["operation"]["controle_experience"]["note"] == pytest.approx(m["note"])
     assert IDS[ordre[3]] not in r["avant"]["notes"]["preferences"]["mesures"]
-    t = api.chercher_taille_compatible(_client("intermediaire"), *ordre)
-    assert t["lancee"] is True and all("levier" in p for p in t["courbe"])
 
 
-@pytest.mark.parametrize("ordre", [MARGE, DECOUVERT], ids=["marge", "decouvert"])
-def test_avancee_neutre_sans_effet(ordre):
-    r = api.simuler_ordre(_client("avancee"), *ordre)
-    assert not r["contraintes_strictes"]["violee"]
-    assert IDS[ordre[3]] not in r["apres"]["notes"]["preferences"]["mesures"]
-    assert r["operation"]["controle_experience"]["effet"] == "aucun"
-    # Mêmes notes qu'un client intermédiaire, sans la mesure d'expérience.
-    i = api.simuler_ordre(_client("intermediaire"), *ordre)
-    assert r["apres"]["notes"]["risque"] == i["apres"]["notes"]["risque"]
-    assert r["apres"]["notes"]["diversification"] == i["apres"]["notes"]["diversification"]
-
-
-def test_intermediaire_note_exactement_au_repere():
+def test_mecanisme_eviter_exactement_au_repere(monkeypatch):
     # Mateo (10 % d'encaisse) achète 25 % de XIU.TO sur marge : 15 % empruntés, note 50.
+    _table_modifiee(monkeypatch, {"intermediaire": "eviter"})
     r = api.simuler_ordre("mateo", "XIU.TO", "achat", 25, "marge")
     assert r["apres"]["notes"]["preferences"]["mesures"]["achat_sur_marge"]["note"] == pytest.approx(50.0)
 
 
-# --- Le tableau se change dans reference/, sans toucher au code ---------------------------------
-
-def _table_modifiee(monkeypatch, niveau_debutante):
-    vrai = references.charger
-
-    def charger(nom):
-        d = vrai(nom)
-        if nom != "operations_experience":
-            return d
-        d = json.loads(json.dumps(d))
-        for op in d["operations"].values():
-            op["niveau_par_experience"]["debutante"] = niveau_debutante
-        return d
-    monkeypatch.setattr(references, "charger", charger)
-
-
-def test_niveau_change_dans_le_fichier(monkeypatch):
-    _table_modifiee(monkeypatch, "neutre")
-    r = api.simuler_ordre(_client("debutante"), *DECOUVERT)
-    assert not r["contraintes_strictes"]["violee"]
-    assert r["operation"]["controle_experience"]["effet"] == "aucun"
-
-
 def test_niveau_invalide_dans_le_fichier(monkeypatch):
-    _table_modifiee(monkeypatch, "obligatoire")
+    _table_modifiee(monkeypatch, {"debutante": "obligatoire"})
     r = api.simuler_ordre(_client("debutante"), *DECOUVERT)
     assert set(r) == {"erreur"} and "operations_experience.json" in r["erreur"]
 

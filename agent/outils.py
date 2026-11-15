@@ -52,7 +52,7 @@ def creer_outils(client) -> list:
         (valeur, règle, déclencheur, source ; une valeur peut être « indetermine ») et période des données.
 
         Args:
-            ticker: Symbole de l'instrument, par exemple TSLA ou XIU.TO.
+            ticker: Symbole de l'instrument (tel qu'il figure dans l'univers).
         """
         return api.lire_fiche_instrument(ticker)
 
@@ -134,7 +134,7 @@ def creer_outil_decrire_apport(client):
 
         Args:
             client_id: Identifiant du client de l'analyse.
-            ticker: Symbole de l'instrument, par exemple TSLA.
+            ticker: Symbole de l'instrument (tel qu'il figure dans l'univers).
             pourcentage: Facultatif. Achat envisagé en % du portefeuille (15 = 15 %).
         """
         if str(client_id).strip().lower() != id_lie:
@@ -223,7 +223,8 @@ def compacter_apport(r: dict, candidats: int = 8) -> dict:
     return c
 
 
-def creer_outils_explorateur(client, limite_essais: int = LIMITE_ESSAIS, registre: dict | None = None) -> list:
+def creer_outils_explorateur(client, limite_essais: int = LIMITE_ESSAIS, registre: dict | None = None,
+                             operations_avancees: bool = True) -> list:
     """Outils de l'explorateur. Chaque essai porte sa `raison` et reçoit un numéro (`essai`) ; le code borne les
     essais à `limite_essais`. L'explorateur reçoit un résultat compact ; le résultat complet de chaque essai va dans
     `registre` (numéro d'essai → résultat), pour la trace et le rapport."""
@@ -231,9 +232,12 @@ def creer_outils_explorateur(client, limite_essais: int = LIMITE_ESSAIS, registr
     essais = {"n": 0}
     registre = {} if registre is None else registre
 
-    def verifier(client_id):
+    def verifier(client_id, operations=()):
         if str(client_id).strip().lower() != id_lie:
             return {"erreur": f"Cette analyse porte sur le client « {id_lie} » : utilisez client_id=\"{id_lie}\"."}
+        if not operations_avancees and any(str(o or "comptant").strip().lower() != "comptant" for o in operations):
+            return {"erreur": "Client débutant : une piste n'utilise ni l'achat sur marge ni la vente à découvert. "
+                              "Cherche une voie au comptant, ou dis qu'il n'y en a pas."}
         if essais["n"] >= limite_essais:
             return {"erreur": f"Limite de {limite_essais} essais atteinte : rends ton compte rendu."}
         return None
@@ -261,7 +265,8 @@ def creer_outils_explorateur(client, limite_essais: int = LIMITE_ESSAIS, registr
             raison: Une phrase : ce que la piste garde de la finalité supposée, et comment elle répond à la cause.
             operation: « comptant » (par défaut), « marge » ou « decouvert ».
         """
-        return verifier(client_id) or numeroter(api.simuler_ordre(client, ticker, sens, pourcentage, operation))
+        return verifier(client_id, [operation]) or numeroter(api.simuler_ordre(client, ticker, sens, pourcentage,
+                                                                                 operation))
 
     @tool(name="simuler_scenario")
     def simuler_scenario(client_id: str, ordres: list[dict], raison: str) -> dict:
@@ -275,7 +280,8 @@ def creer_outils_explorateur(client, limite_essais: int = LIMITE_ESSAIS, registr
             ordres: Liste d'ordres {"ticker": ..., "sens": "achat" ou "vente", "pourcentage": ...}.
             raison: Une phrase : ce que la piste garde de la finalité supposée, et comment elle répond à la cause.
         """
-        return verifier(client_id) or numeroter(api.simuler_scenario(client, ordres))
+        jambes = [o.get("operation") for o in ordres or [] if isinstance(o, dict)]
+        return verifier(client_id, jambes) or numeroter(api.simuler_scenario(client, ordres))
 
     @tool(name="chercher_taille_compatible")
     def chercher_taille_compatible(client_id: str, ticker: str, sens: str, pourcentage: float, raison: str,
@@ -291,8 +297,8 @@ def creer_outils_explorateur(client, limite_essais: int = LIMITE_ESSAIS, registr
             raison: Une phrase : pourquoi cette piste répond à la cause.
             operation: « comptant » (par défaut), « marge » ou « decouvert ».
         """
-        return verifier(client_id) or numeroter(api.chercher_taille_compatible(client, ticker, sens, pourcentage,
-                                                                              operation), compacter_taille)
+        return verifier(client_id, [operation]) or numeroter(
+            api.chercher_taille_compatible(client, ticker, sens, pourcentage, operation), compacter_taille)
 
     apport = creer_outil_decrire_apport(client)
 
