@@ -2,3 +2,5 @@ pandas
 numpy
 pytest
 yfinance
+strands-agents
+boto3
