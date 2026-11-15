@@ -1,4 +1,4 @@
-"""Fiche du client : le questionnaire de 9 champs et tout ce qui en est déduit (section 5)."""
+"""Fiche du client : le questionnaire et tout ce qui en est déduit (section 5)."""
 from __future__ import annotations
 
 import copy
@@ -10,7 +10,11 @@ class ErreurClient(Exception):
     pass
 
 
-CHAMPS = ("objectif", "horizon", "fluctuations", "experience")
+CHAMPS = ("objectif", "horizon", "fluctuations", "capacite_perte", "experience")
+
+# Ordre des profils, du plus prudent au plus exposé : le profil retenu est le plus prudent
+# de ce que le client accepte (fluctuations) et de ce que sa situation permet (capacité).
+ORDRE_PROFILS = ("revenu", "conservateur", "equilibre", "croissance", "croissance_maximale")
 
 # Hypothèse : profils jugés cohérents avec chaque objectif. Sert seulement à signaler
 # une incohérence apparente ; n'entre pas dans le score.
@@ -43,7 +47,10 @@ def _base(client) -> dict:
     else:
         base = {"id": base_id or "personnalise", "nom": client.get("nom", "Client"), "questionnaire": {"themes": {}},
                 "portefeuille_pct": {}}
-    q = client.get("questionnaire", {})
+    q = dict(client.get("questionnaire", {}))
+    # Réponse neutre par défaut : sans réponse explicite, la capacité suit les fluctuations.
+    if "fluctuations" in q and "capacite_perte" not in q:
+        q["capacite_perte"] = q["fluctuations"]
     for champ in CHAMPS:
         if champ in q:
             base["questionnaire"][champ] = q[champ]
@@ -58,6 +65,8 @@ def _base(client) -> dict:
 def construire_fiche(client) -> dict:
     b = _base(client)
     q = b["questionnaire"]
+    if "fluctuations" in q:
+        q.setdefault("capacite_perte", q["fluctuations"])
     ref_q = references.charger("questionnaire")
     for champ in CHAMPS:
         if champ not in q:
@@ -90,7 +99,8 @@ def construire_fiche(client) -> dict:
         raise ErreurClient(f"Les poids du portefeuille totalisent {total:.2f} % au lieu de 100 %.")
 
     fluct = ref_q["fluctuations"]["options"][q["fluctuations"]]
-    profil_id = fluct["profil"]
+    capa = ref_q["capacite_perte"]["options"][q["capacite_perte"]]
+    profil_id = min(fluct["profil"], capa["profil"], key=ORDRE_PROFILS.index)
     profil = references.charger("profils")["profils"][profil_id]
     horizon = ref_q["horizon"]["options"][q["horizon"]]
     crypto = references.charger("crypto")["par_profil"][profil_id]
@@ -99,10 +109,25 @@ def construire_fiche(client) -> dict:
     contraintes = [{"theme": t, "reponse": r} for t, r in themes.items() if r in ("exclure", "obligatoire")]
     preferences = [{"theme": t, "reponse": r} for t, r in themes.items() if r in ("eviter", "rechercher")]
 
+    profils_ref = references.charger("profils")["profils"]
+    lib_accepte, lib_permis = profils_ref[fluct["profil"]]["libelle"], profils_ref[capa["profil"]]["libelle"]
+    if fluct["profil"] == capa["profil"]:
+        decide, phrase = "les_deux", f"Ce que vous acceptez et ce que votre situation permet donnent le même profil, {profil['libelle']}."
+    elif profil_id == capa["profil"]:
+        decide, phrase = "capacite", (f"Vous acceptez le profil {lib_accepte}, votre situation permet le profil {lib_permis} : "
+                                      f"le plus prudent, {profil['libelle']}, est retenu.")
+    else:
+        decide, phrase = "fluctuations", (f"Vous acceptez le profil {lib_accepte}, votre situation permet le profil {lib_permis} : "
+                                          f"le plus prudent, {profil['libelle']}, est retenu.")
     deduit = {
         "profil": {"valeur": profil_id, "libelle": profil["libelle"],
-                   "origine": f"Fluctuations acceptées « {fluct['libelle']} » → profil {profil['libelle']}.",
-                   "source": "fbngp_profils_2024"},
+                   "origine": f"Fluctuations acceptées « {fluct['libelle']} » → profil {lib_accepte}. "
+                              f"Capacité à supporter une perte « {capa['libelle']} » → profil {lib_permis}. "
+                              "Le plus prudent des deux est retenu.",
+                   "accepte": {"valeur": fluct["profil"], "libelle": lib_accepte},
+                   "permis": {"valeur": capa["profil"], "libelle": lib_permis},
+                   "decide_par": decide, "phrase": phrase,
+                   "source": "fbngp_profils_2024", "regle": "acvm_capacite_perte", "hypothese": "hypothese_capacite_libelles"},
         "fourchettes_pct": {"valeur": profil["fourchettes"], "origine": f"Fourchettes et cibles du profil {profil['libelle']}.",
                             "source": "fbngp_profils_2024"},
         "horizon_annees": {"valeur": horizon["borne_basse_annees"],

@@ -160,6 +160,7 @@ def charger_reference(nom: str) -> dict:
 
 QUESTIONNAIRE = charger_reference("questionnaire")
 THEMES = {t["id"]: t["libelle"] for t in charger_reference("themes")["themes"]}
+CHAMPS_Q = ("objectif", "horizon", "fluctuations", "capacite_perte", "experience")
 PERSONAS = charger_reference("personas")["personas"]
 ORDRE_PERSONAS = ["robert", "mateo", "amira"]
 
@@ -357,7 +358,7 @@ def valeur_pf(persona: str) -> float:
 def initialiser(persona: str) -> None:
     p = PERSONAS[persona]
     q = p["questionnaire"]
-    for champ in ("objectif", "horizon", "fluctuations", "experience"):
+    for champ in CHAMPS_Q:
         st.session_state.setdefault(cle_q(persona, champ), q[champ])
     for theme in THEMES:
         st.session_state.setdefault(cle_q(persona, "theme_" + theme), q["themes"].get(theme, "neutre"))
@@ -385,8 +386,7 @@ def fiche_session(persona: str) -> dict:
         "questionnaire": {
             "objectif": s[cle_q(persona, "objectif")],
             "horizon": s[cle_q(persona, "horizon")],
-            "fluctuations": s[cle_q(persona, "fluctuations")],
-            "experience": s[cle_q(persona, "experience")],
+            **{c: s[cle_q(persona, c)] for c in CHAMPS_Q if c not in ("objectif", "horizon")},
             "themes": {t: s[cle_q(persona, "theme_" + t)] for t in THEMES},
         },
         "portefeuille_pct": dict(s[f"pf_{persona}"]),
@@ -398,7 +398,7 @@ def fiche_modifiee(persona: str, fiche: dict) -> list[str]:
     q0 = PERSONAS[persona]["questionnaire"]
     q = fiche["questionnaire"]
     ecarts = []
-    for champ in ("objectif", "horizon", "fluctuations", "experience"):
+    for champ in CHAMPS_Q:
         if q[champ] != q0[champ]:
             ecarts.append(f"{QUESTIONNAIRE[champ]['libelle']} : {libelle_option(champ, q[champ])}")
     for t in THEMES:
@@ -409,7 +409,7 @@ def fiche_modifiee(persona: str, fiche: dict) -> list[str]:
 
 def ecarts_questionnaire(q_avant: dict, q_apres: dict) -> list[str]:
     ecarts = []
-    for champ in ("objectif", "horizon", "fluctuations", "experience"):
+    for champ in CHAMPS_Q:
         if q_avant[champ] != q_apres[champ]:
             ecarts.append(f"{QUESTIONNAIRE[champ]['libelle']} : {libelle_option(champ, q_avant[champ])} "
                           f"→ {libelle_option(champ, q_apres[champ])}")
@@ -665,7 +665,7 @@ def onglet_fiche(persona: str, fiche_client: dict) -> None:
         st.subheader("Vos réponses")
         st.caption("Changez une réponse : tout le reste se met à jour.")
         c1, c2 = st.columns(2)
-        for i, champ in enumerate(("objectif", "horizon", "fluctuations", "experience")):
+        for i, champ in enumerate(CHAMPS_Q):
             options = list(QUESTIONNAIRE[champ]["options"])
             (c1 if i % 2 == 0 else c2).selectbox(
                 QUESTIONNAIRE[champ]["libelle"], options, key=cle_q(persona, champ),
@@ -686,9 +686,14 @@ def onglet_fiche(persona: str, fiche_client: dict) -> None:
         for cle, e in fiche_client["deduit"].items():
             lib = LIBELLES_DEDUIT.get(cle, cle)
             origine = libelle_source(e.get("source", ""), sources)
+            if e.get("regle"):
+                origine += " · " + libelle_source(e["regle"], sources)
             if e.get("hypothese"):
                 origine += " · " + libelle_source(e["hypothese"], sources)
-            if cle == "fourchettes_pct":
+            if cle == "profil" and e.get("phrase"):
+                st.markdown(f"**{lib}** : {valeur_deduite(cle, e)}")
+                st.markdown(e["phrase"])
+            elif cle == "fourchettes_pct":
                 st.markdown(f"**{lib}**")
                 df = pd.DataFrame([{"Classe": CLASSES[c], "Minimum (%)": f["min"], "Cible (%)": f["cible"],
                                     "Maximum (%)": f["max"]} for c, f in e["valeur"].items()])

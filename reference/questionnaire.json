@@ -63,6 +63,32 @@
       }
     }
   },
+  "capacite_perte": {
+    "libelle": "Capacité à supporter une perte",
+    "options": {
+      "faibles": {
+        "libelle": "Cet argent servira bientôt et je n'ai pas d'autre épargne",
+        "profil": "revenu"
+      },
+      "faibles_moderees": {
+        "libelle": "Cet argent est une grande part de mon épargne et mes revenus sont incertains",
+        "profil": "conservateur"
+      },
+      "moderees": {
+        "libelle": "J'ai une autre épargne, mais une grosse perte retarderait mes projets",
+        "profil": "equilibre"
+      },
+      "moderees_elevees": {
+        "libelle": "J'ai une épargne de côté et des revenus stables",
+        "profil": "croissance"
+      },
+      "elevees": {
+        "libelle": "Ce portefeuille est une petite part de mon patrimoine et mes revenus sont stables",
+        "profil": "croissance_maximale"
+      }
+    },
+    "note": "Même échelle que « Fluctuations acceptées ». Le profil retenu est le plus prudent des deux. Les situations décrites sont une formulation du projet (hypothèse)."
+  },
   "experience": {
     "libelle": "Expérience",
     "options": {

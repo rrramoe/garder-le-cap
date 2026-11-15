@@ -20,7 +20,7 @@ from . import donnees, instruments, notation, references, solidite as _solidite
 
 SOURCES_FICHE_CLIENT = ("fbngp_profils_2024", "fbngp_politique_2022", "fidelity_crypto_2026", "hypothese_personas",
                         "hypothese_crypto_correspondance", "hypothese_plafonds_tous_profils", "hypothese_classes",
-                        "hypothese_coherence_objectif")
+                        "hypothese_coherence_objectif", "acvm_capacite_perte", "hypothese_capacite_libelles")
 SOURCES_NOTATION = ("donnees_marche", "hypothese_conventions_calcul", "fbngp_profils_2024", "fbngp_politique_2022",
                     "fidelity_crypto_2026", "hypothese_etalons", "hypothese_echelle", "hypothese_classes",
                     "hypothese_crypto_correspondance", "hypothese_plafonds_tous_profils", "hypothese_mecanique_ordre")

@@ -7,6 +7,7 @@
         "objectif": "croissance_long_terme",
         "horizon": "15_plus",
         "fluctuations": "elevees",
+        "capacite_perte": "elevees",
         "experience": "intermediaire",
         "themes": {"ecarte_esg": "neutre", "speculatif": "neutre", "crypto": "rechercher", "techno": "rechercher", "etablie": "neutre"}
       },
@@ -19,6 +20,7 @@
         "objectif": "croissance_equilibree",
         "horizon": "8_12",
         "fluctuations": "moderees",
+        "capacite_perte": "moderees",
         "experience": "intermediaire",
         "themes": {"ecarte_esg": "exclure", "speculatif": "eviter", "crypto": "eviter", "techno": "neutre", "etablie": "neutre"}
       },
@@ -31,6 +33,7 @@
         "objectif": "preserver_capital",
         "horizon": "3_5",
         "fluctuations": "faibles_moderees",
+        "capacite_perte": "faibles_moderees",
         "experience": "avancee",
         "themes": {"ecarte_esg": "neutre", "speculatif": "eviter", "crypto": "eviter", "techno": "neutre", "etablie": "rechercher"}
       },

@@ -15,17 +15,19 @@ api.simuler_ordre("robert", "TSLA", "achat", 15)
 - **Sens** : `"achat"` ou `"vente"`. **Pourcentage** : en % du portefeuille (15 = 15 %). Un achat est payé par l'encaisse (`ZST.TO`), une vente y est versée.
 - **Opération** (argument facultatif `operation`, voir plus bas) : `"comptant"` par défaut, `"marge"` ou `"decouvert"`. Au comptant, un achat plus gros que l'encaisse ou une vente plus grosse que la position renvoie une erreur.
 - Les notes vont de 0 à 100 (100 = sur la cible, 50 = limite de la politique). Les pires baisses sont des fractions négatives (−0,18 = −18 %). Les poids sont en %.
-- Les réponses possibles au questionnaire sont dans `reference/questionnaire.json` (`objectif`, `horizon`, `fluctuations`, `experience`, et l'échelle des thèmes `exclure / eviter / neutre / rechercher / obligatoire`). Les thèmes sont dans `reference/themes.json`.
+- Les réponses possibles au questionnaire sont dans `reference/questionnaire.json` (`objectif`, `horizon`, `fluctuations`, `capacite_perte`, `experience`, et l'échelle des thèmes `exclure / eviter / neutre / rechercher / obligatoire`). Les thèmes sont dans `reference/themes.json`.
 
 ## `lire_fiche_client(client)`
 
 | Champ | Contenu |
 |---|---|
 | `id`, `nom` | Identifiant et nom |
-| `questionnaire` | Les 9 réponses : `objectif`, `horizon`, `fluctuations`, `experience`, `themes` (5 thèmes) |
+| `questionnaire` | Les réponses : `objectif`, `horizon`, `fluctuations`, `capacite_perte`, `experience`, `themes` (5 thèmes) |
 | `portefeuille_pct` | Positions, ticker → % |
 | `poids_par_classe_pct` | `liquidites`, `revenu_fixe`, `actions`, `alternatifs` |
-| `deduit` | `profil`, `fourchettes_pct`, `horizon_annees`, `plafonds_concentration_pct`, `crypto_pct`, `contraintes_strictes`, `preferences_souples`, `niveau_detail`, `coherence_objectif`. Chaque élément : `{valeur, origine, source}` (+ `hypothese` au besoin) |
+| `deduit` | `profil`, `fourchettes_pct`, `horizon_annees`, `plafonds_concentration_pct`, `crypto_pct`, `contraintes_strictes`, `preferences_souples`, `niveau_detail`, `coherence_objectif`. Chaque élément : `{valeur, origine, source}` (+ `regle`, `hypothese` au besoin) |
+
+**Capacité à supporter une perte** (`capacite_perte`). Même échelle que `fluctuations` (`faibles` … `elevees`), chaque niveau décrit par une situation. Le profil retenu est le plus prudent des deux : ce que le client accepte (`fluctuations`) et ce que sa situation permet (`capacite_perte`). Tout ce qui suit le profil suit le profil retenu : fourchettes et cibles, portefeuilles étalons de la note de risque, plafond des cryptoactifs, cohérence avec l'objectif. `deduit.profil` ajoute `accepte`, `permis` (`{valeur, libelle}`), `decide_par` (`fluctuations`, `capacite` ou `les_deux`) et `phrase`. Sans réponse, `capacite_perte` prend la valeur de `fluctuations` : rien ne change. Règle : `acvm_capacite_perte` ; formulation des situations : `hypothese_capacite_libelles`.
 
 ## `lire_fiche_instrument(ticker)`
 

@@ -139,5 +139,17 @@
     "source": "Hypothèse du projet",
     "date": "2026-11-15",
     "nature": "hypothese"
+  },
+  "acvm_capacite_perte": {
+    "libelle": "Le profil retenu est le plus prudent de ce que le client accepte (fluctuations) et de ce que sa situation permet (capacité à supporter une perte)",
+    "source": "Autorités canadiennes en valeurs mobilières, Instruction générale relative au Règlement 31-103 (31-103CP), article 13.2 « Connaissance du client » : le profil de risque devrait refléter le plus bas de la tolérance au risque et de la capacité à supporter une perte (consolidation de l'Alberta Securities Commission, asc.ca)",
+    "date": "2026-01-01",
+    "nature": "publie"
+  },
+  "hypothese_capacite_libelles": {
+    "libelle": "Formulation des cinq situations de la capacité à supporter une perte, sur l'échelle des fluctuations acceptées",
+    "source": "Hypothèse du projet",
+    "date": "2026-11-15",
+    "nature": "hypothese"
   }
 }
