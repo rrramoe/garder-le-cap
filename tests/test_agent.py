@@ -651,3 +651,13 @@ def test_explorateur_a_l_outil_decrire_apport():
     assert "erreur" in o["decrire_apport"]("mateo", "TSLA", 15)
     from agent.suivi import libelle_outil
     assert libelle_outil("decrire_apport", {"ticker": "TSLA"}) == "Je regarde ce que TSLA apporterait à votre portefeuille."
+
+
+
+def test_correction_d_un_texte_trop_long():
+    long = "**Verdict** : en tension. " + "mot " * 200
+    scenario = SCENARIO_ROBERT[:4] + [long, "**Verdict** : en tension."]
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(scenario), equipe=False)
+    assert r["correction"]["faite"] and r["correction"]["reussie"]
+    assert "la limite absolue est de 180 mots" in r["correction"]["motifs"][0]
+    assert r["explication"] == "**Verdict** : en tension."

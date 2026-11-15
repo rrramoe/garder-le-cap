@@ -10,6 +10,7 @@ sans jamais lever d'exception. Démo sans interface : `python -m agent.inspectio
 from __future__ import annotations
 
 import json
+import re
 import os
 import sys
 import time
@@ -487,7 +488,7 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
     requete = consigne(identifiant_client(client), T, S, pourcentage)
     ancrage = _verifier(explication, trace, requete, simule, suivi)
     correction = {"faite": False, "motifs": []}
-    motifs = motifs_de_correction(ancrage) if explication else []
+    motifs = motifs_de_correction(ancrage, explication) if explication else []
     if motifs and agent is not None and not etat_garde_fou["intervenu"]:
         # Une seule réécriture, vérifiée à son tour ; si elle échoue aussi, l'avis de la vérification reste.
         suivi.emettre("correction")
@@ -499,7 +500,7 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
                 explication = nouveau
                 trace = fusionner_traces(extraire_trace(agent.messages, T), (explo or {}).get("trace") or [])
                 ancrage = _verifier(explication, trace, requete, simule, suivi)
-                correction["reussie"] = not motifs_de_correction(ancrage)
+                correction["reussie"] = not motifs_de_correction(ancrage, explication)
         except Exception:
             pass
         trace = trace + [{"etape": len(trace) + 1, "agent": "principal", "outil": "corriger_le_texte",
@@ -532,14 +533,25 @@ def _verifier(explication, trace, requete, simule, suivi) -> dict:
         return {"statut": "indisponible", "message": "Vérification de l'ancrage impossible."}
 
 
-def motifs_de_correction(ancrage: dict) -> list:
-    """Les problèmes trouvés par les contrôles (chiffres non sourcés, passage non appuyé), en français."""
-    if (ancrage or {}).get("statut") != "non_appuyee":
-        return []
-    motifs = [f"Le chiffre {c} ne figure dans aucun résultat d'outil." for c in ancrage.get("chiffres_non_sources") or []]
-    if not motifs:
-        motifs.append("Le garde-fou Bedrock ne trouve pas l'appui d'un passage dans les résultats des outils : "
-                      + str(ancrage.get("message", "")))
+LIMITE_MOTS = 180
+
+
+def nombre_de_mots(texte: str | None) -> int:
+    return len(re.findall(r"[\w’'-]*\w", texte or ""))
+
+
+def motifs_de_correction(ancrage: dict, explication: str | None = None) -> list:
+    """Les problèmes trouvés par les contrôles (chiffres non sourcés, passage non appuyé, longueur), en français."""
+    motifs = []
+    if (ancrage or {}).get("statut") == "non_appuyee":
+        motifs = [f"Le chiffre {c} ne figure dans aucun résultat d'outil."
+                  for c in ancrage.get("chiffres_non_sources") or []]
+        if not motifs:
+            motifs.append("Le garde-fou Bedrock ne trouve pas l'appui d'un passage dans les résultats des outils : "
+                          + str(ancrage.get("message", "")))
+    mots = nombre_de_mots(explication)
+    if mots > LIMITE_MOTS:
+        motifs.append(f"Le texte compte {mots} mots ; la limite absolue est de {LIMITE_MOTS} mots.")
     return motifs
 
 

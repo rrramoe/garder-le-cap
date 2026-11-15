@@ -37,6 +37,7 @@ Le contrôle des chiffres (code) et le garde-fou Bedrock (refus du conseil et de
 - Les **bornes** : six essais au plus (l'outil refuse le septième), quatre pistes rendues au plus (les dernières testées si l'explorateur n'en désigne pas) ; dans un scénario, des ventes qui ne dépassent jamais le total des achats ni la position détenue ; une limite de tours pour chaque agent (8 pour le chef de dossier, 10 pour l'explorateur) ; un délai de 150 s pour l'explorateur.
 - La liste **`pistes`** du rapport, construite à partir des résultats des outils, jamais du texte d'un agent.
 - Les **contrôles** de l'explication : chaque chiffre doit venir d'un outil, puis le garde-fou Bedrock mesure l'ancrage.
+- La **correction** : quand un contrôle signale le texte (un chiffre absent des outils, un passage non appuyé, plus de 180 mots), le code renvoie la liste des problèmes au chef de dossier, qui réécrit une seule fois ; le nouveau texte est vérifié à son tour, et l'avis reste si le problème demeure (`correction` dans le résultat).
 - Le **repli** : si l'explorateur échoue ou dépasse son délai, le chef de dossier finit seul avec la taille compatible calculée par le code, et le rapport le dit.
 - Le **suivi en direct** : chaque étape est envoyée à l'interface avec le nom de l'agent (`agent/suivi.py`).
 
