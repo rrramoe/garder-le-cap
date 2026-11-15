@@ -33,7 +33,7 @@ def creer_outils(client) -> list:
     def client_pour(client_id):
         if str(client_id).strip().lower() == id_lie:
             return client, None
-        return None, {"erreur": f"Cette inspection porte sur le client « {id_lie} » : utilisez client_id=\"{id_lie}\"."}
+        return None, {"erreur": f"Cette analyse porte sur le client « {id_lie} » : utilisez client_id=\"{id_lie}\"."}
 
     @tool(name="lire_fiche_client")
     def lire_fiche_client(client_id: str) -> dict:
@@ -41,7 +41,7 @@ def creer_outils(client) -> list:
         préférences souples, niveau de détail et portefeuille, avec l'origine et la source de chaque élément.
 
         Args:
-            client_id: Identifiant du client de l'inspection.
+            client_id: Identifiant du client de l'analyse.
         """
         c, erreur = client_pour(client_id)
         return erreur or api.lire_fiche_client(c)
@@ -63,7 +63,7 @@ def creer_outils(client) -> list:
         le levier et le contrôle d'expérience (`operation`).
 
         Args:
-            client_id: Identifiant du client de l'inspection.
+            client_id: Identifiant du client de l'analyse.
             ticker: Symbole de l'instrument.
             sens: « achat » ou « vente ».
             pourcentage: Montant de l'ordre en % du portefeuille (15 = 15 %).
@@ -79,7 +79,7 @@ def creer_outils(client) -> list:
         atteint 50, avec la courbe du score selon la taille. Ne se lance pas si une contrainte stricte est violée.
 
         Args:
-            client_id: Identifiant du client de l'inspection.
+            client_id: Identifiant du client de l'analyse.
             ticker: Symbole de l'instrument.
             sens: « achat » ou « vente ».
             pourcentage: Montant demandé en % du portefeuille.

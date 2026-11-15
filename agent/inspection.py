@@ -75,7 +75,7 @@ def consigne(client_id: str, ticker: str, sens: str, pourcentage, operation: str
     if operation != "comptant":
         ordre = (f"Ordre simulé : {LIBELLES_OPERATIONS.get(operation, operation)} ({sens}) de {pourcentage} % du "
                  f"portefeuille en {ticker}, operation=\"{operation}\".\n")
-    return (f"Inspection demandée.\nClient : client_id=\"{client_id}\".\n" + ordre +
+    return (f"Analyse demandée.\nClient : client_id=\"{client_id}\".\n" + ordre +
             "Monte le dossier avec les outils, puis rédige le rapport.")
 
 
