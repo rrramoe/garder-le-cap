@@ -146,6 +146,9 @@ def resumer(outil: str, r) -> str:
             texte = (f"Verdict : {v.get('libelle')} ; score {_nombre(r.get('score'))} "
                      f"(avant {_nombre(r.get('avant', {}).get('score'))}) ; note la plus basse : "
                      f"{r.get('dimension_min')} / {r.get('mesure_min')} ; {r.get('direction', {}).get('libelle')}.")
+            so = r.get("solidite") or {}
+            if so.get("libelle"):
+                texte += f" Solidité : {so['libelle'].lower()}."
             cs = r.get("contraintes_strictes", {})
             if cs.get("violee"):
                 texte += f" Contrainte stricte violée : {', '.join(cs.get('themes_violes') or [])}."

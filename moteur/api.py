@@ -15,7 +15,7 @@ import math
 import numpy as np
 
 from . import client as _client
-from . import donnees, instruments, notation, references
+from . import donnees, instruments, notation, references, solidite as _solidite
 
 SOURCES_FICHE_CLIENT = ("fbngp_profils_2024", "fbngp_politique_2022", "fidelity_crypto_2026", "hypothese_personas",
                         "hypothese_crypto_correspondance", "hypothese_plafonds_tous_profils", "hypothese_classes",
@@ -118,7 +118,9 @@ def simuler_ordre(client, ticker: str, sens: str, pourcentage: float) -> dict:
     """Contraintes strictes, notes avant et après, score, verdict, direction."""
     fiche = _client.construire_fiche(client)
     r = notation.simuler(fiche, str(ticker).strip().upper(), str(sens).strip().lower(), pourcentage)
+    r["solidite"] = _solidite.solidite(r["portefeuille_apres_pct"], fiche, r["apres"])
     cles = list(SOURCES_NOTATION) + [d["source"] for d in r["contraintes_strictes"]["detail"] if d.get("source")]
+    cles.append("hypothese_solidite")
     return {"client": fiche["id"], **r, "score": r["apres"]["score"], "dimension_min": r["apres"]["dimension_min"],
             "mesure_min": r["apres"]["mesure_min"], "periode": _periode_donnees(), "sources": _sources(*cles)}
 
@@ -130,3 +132,13 @@ def chercher_taille_compatible(client, ticker: str, sens: str, pourcentage: floa
     r = notation.taille_compatible(fiche, str(ticker).strip().upper(), str(sens).strip().lower(), pourcentage)
     return {"client": fiche["id"], "ticker": str(ticker).strip().upper(), "sens": sens, **r,
             "periode": _periode_donnees(), "sources": _sources(*SOURCES_NOTATION)}
+
+
+@_api
+def solidite(client, ticker: str, sens: str, pourcentage: float) -> dict:
+    """Solidité du score après l'ordre : note de risque sur 2022 seule et sur la période sans 2022."""
+    fiche = _client.construire_fiche(client)
+    r = notation.simuler(fiche, str(ticker).strip().upper(), str(sens).strip().lower(), pourcentage)
+    return {"client": fiche["id"], "ordre": r["ordre"], "verdict": r["verdict"],
+            **_solidite.solidite(r["portefeuille_apres_pct"], fiche, r["apres"]),
+            "periode": _periode_donnees(), "sources": _sources(*SOURCES_NOTATION, "hypothese_solidite")}

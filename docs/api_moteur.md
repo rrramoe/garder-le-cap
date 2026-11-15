@@ -58,7 +58,22 @@ Notes du portefeuille actuel, sans ordre : `score`, `dimension_min`, `mesure_min
 | `verdict` | `{code, libelle, raison}`, `code` = `compatible`, `en_tension`, `incompatible` |
 | `direction` | `{cas, libelle, score_avant, score_apres, revient_dans_la_politique}` ; `cas` = `reste_dans_la_politique`, `fait_sortir_de_la_politique`, `hors_politique_rapproche`, `hors_politique_aggrave` ; `remarque` si une contrainte stricte est violée |
 | `contribution_risque_apres` | `{ticker, poids_pct, part_du_risque_pct}` : affiché, non noté |
+| `solidite` | Voir `solidite` ci-dessous : le score après l'ordre sur 2022 seule et sur la période sans 2022 |
 | `periode` | Période des données, devise CAD |
+
+## `solidite(client, ticker, sens, pourcentage)`
+
+Section 7.7 : la note de risque du portefeuille après l'ordre est recalculée sur deux fenêtres, **défavorable** (2022 seule) et **favorable** (toute la période sans 2022), avec les mêmes formules et des portefeuilles étalons recalculés sur la même fenêtre. Le score d'une fenêtre est le minimum de cette note de risque et des notes de diversification et de préférences (qui ne dépendent pas de l'historique). Le score principal reste celui de la période complète.
+
+| Champ | Contenu |
+|---|---|
+| `statut`, `libelle` | `solide` (le score est du même côté de 50 dans les deux fenêtres) ou `fragile` |
+| `explication`, `regle` | La règle et son résultat, en français |
+| `score_principal` | Le score de la période complète |
+| `fenetres` | `defavorable` et `favorable` : `{libelle, debut, fin, score, dimension_min, dans_la_politique, note_risque}` ; `note_risque` = `{note, mesure_min, mesures}` (`ampleur`, `duree`) |
+| `ordre`, `verdict` | Rappel de l'ordre et du verdict |
+
+Le même bloc figure dans le résultat de `simuler_ordre` (champ `solidite`). Fenêtre favorable : les rendements d'avant et d'après 2022 sont mis bout à bout, les dates d'après 2022 avancées de 365 jours (la durée sous l'eau ne compte pas l'année retirée).
 
 ## `chercher_taille_compatible(client, ticker, sens, pourcentage)`
 

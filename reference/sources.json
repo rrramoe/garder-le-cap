@@ -107,5 +107,11 @@
     "source": "Hypothèse du projet",
     "date": "2026-11-15",
     "nature": "hypothese"
+  },
+  "hypothese_solidite": {
+    "libelle": "Solidité : note de risque recalculée sur 2022 seule (fenêtre défavorable) et sur la période sans 2022 (fenêtre favorable), étalons recalculés sur la même fenêtre",
+    "source": "Hypothèse du projet (spécification, section 7.7)",
+    "date": "2026-11-15",
+    "nature": "hypothese"
   }
 }
