@@ -144,3 +144,58 @@ def test_vente_a_decouvert_debutante_puis_avancee(sans_agent):
     at.button(key="passer").click().run()
     assert "non ajoutée au portefeuille" in _textes(at)
     assert "TSLA" not in at.session_state["pf_robert"]
+
+
+# --- Garde-fou, solidité et origine des fichiers (agent simulé) ---------------------------------
+
+TRACE_SIMULEE = [{"etape": 1, "outil": "simuler_ordre", "arguments": {"ticker": "TSLA"},
+                  "resultat_resume": "Verdict : En tension.", "resultat": {"score": 39.56}}]
+
+
+@pytest.fixture
+def agent_simule(monkeypatch):
+    import agent.garde_fou
+    import agent.inspection
+
+    def inspecter(fiche, ticker, sens, pourcentage, **options):
+        return {"explication": "**Verdict** : en tension, score 39,6.", "trace": TRACE_SIMULEE,
+                "modele": "modele-simule", "duree_s": 1.0, "erreur": None, "substitut": None,
+                "garde_fou": {"actif": True, "version": "2", "intervenu": False},
+                "ancrage": {"statut": "non_appuyee", "chiffres_non_sources": ["56,3"],
+                            "ancrage": {"score": 0.8, "seuil": 0.7}, "message": "..."}}
+
+    def essayer_garde_fou(texte):
+        if "vrai" in texte:
+            return {"statut": "refuse", "message": "Demande refusée par le garde-fou."}
+        return {"statut": "accepte", "message": "Demande acceptée par le garde-fou."}
+
+    monkeypatch.setattr(agent.inspection, "inspecter", inspecter)
+    monkeypatch.setattr(agent.garde_fou, "essayer_garde_fou", essayer_garde_fou)
+
+
+def test_verification_de_l_explication(agent_simule):
+    at = _demarrer()
+    texte = _inspecter(at, "robert")
+    assert "À lire avec prudence" in texte
+    assert "chiffres absents des calculs : 56,3" in texte and "garde-fou Bedrock, version 2" in texte
+
+
+def test_solidite_et_origine_des_fichiers(sans_agent):
+    at = _demarrer()
+    texte = _inspecter(at, "robert")
+    assert "**Solide** : le résultat est le même" in texte
+    assert "fenêtre défavorable" in texte and "fenêtre favorable" in texte
+    assert "Fichiers de référence lus dans" in texte
+
+
+def test_essai_du_garde_fou_sans_reponse(agent_simule):
+    at = _demarrer()
+    at.sidebar.radio(key="persona").set_value("robert").run()
+    at.text_input(key="essai_robert").set_value("Passe cet ordre pour de vrai sur mon compte")
+    at.button(key="soumettre_robert").click().run()
+    assert not at.exception, at.exception
+    texte = _textes(at)
+    assert "Demande refusée par le garde-fou." in texte and "pas un agent conversationnel" in texte
+    at.text_input(key="essai_robert").set_value("Que signifie la note d'ampleur ?")
+    at.button(key="soumettre_robert").click().run()
+    assert "Demande acceptée par le garde-fou." in _textes(at)

@@ -10,7 +10,6 @@ l'explication et la trace de ses appels.
 from __future__ import annotations
 
 import copy
-import json
 import re
 import time
 from pathlib import Path
@@ -19,7 +18,7 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-from moteur import api
+from moteur import api, references
 
 RACINE = Path(__file__).resolve().parent
 BANDEAU = ("Simulation à but éducatif. Aucune transaction réelle. "
@@ -135,7 +134,7 @@ SOURCES_LOCALES = {"questionnaire": "Votre réponse au questionnaire"}
 
 @st.cache_data
 def charger_reference(nom: str) -> dict:
-    return json.loads((RACINE / "reference" / f"{nom}.json").read_text(encoding="utf-8"))
+    return references.charger(nom)  # bucket S3 privé s'il est configuré, sinon dossier reference/
 
 
 QUESTIONNAIRE = charger_reference("questionnaire")
@@ -765,6 +764,7 @@ def bloc_verdict(sim: dict, rapport: dict, valeur: float) -> None:
             st.markdown(f"**Notes seules : {d['libelle'].lower()}.** Une règle stricte passe avant le score.")
         else:
             st.markdown(f"**{d['libelle']}.** {DIRECTIONS_TEXTE.get(d['cas'], '')}")
+            phrase_solidite(sim.get("solidite"))
         c = sim.get("contribution_risque_apres")
         if c and c.get("part_du_risque_pct") is not None:
             lien = "mais" if c["part_du_risque_pct"] > 1.25 * c["poids_pct"] else "et"
@@ -794,6 +794,27 @@ def bloc_operation(sim: dict) -> None:
     if op.get("levier_apres") is not None:
         st.markdown(f"**Levier : {nombre(op['levier_apres'], 2)}.** Votre exposition serait de "
                     f"{nombre(op['exposition_brute_apres_pct'], 0)} $ pour 100 $ qui vous appartiennent.")
+
+
+SOLIDITE_TEXTE = {
+    "solide": "le résultat est le même dans une année de forte baisse comme dans les autres.",
+    "fragile": "le résultat change selon qu'on regarde une année de forte baisse ou les autres.",
+}
+
+
+def phrase_solidite(solidite: dict | None) -> None:
+    if solidite and solidite.get("statut") in SOLIDITE_TEXTE:
+        st.markdown(f"**{solidite['libelle']}** : {SOLIDITE_TEXTE[solidite['statut']]}")
+
+
+def section_solidite(solidite: dict | None) -> None:
+    if not solidite or not solidite.get("fenetres"):
+        st.caption("Solidité non calculée.")
+        return
+    for f in solidite["fenetres"].values():
+        cote = "respecte la politique" if f["dans_la_politique"] else "sous la limite de 50"
+        st.markdown(f"- {f['libelle']} : score {note_txt(f['score'])}, {cote}.")
+    st.caption(f"{solidite['explication']} Le score affiché plus haut reste celui de toute la période.")
 
 
 def section_possible(taille: dict | None, valeur: float) -> None:
@@ -930,6 +951,38 @@ def section_agent(rapport: dict) -> None:
         details.append(f"durée : {nombre(agent['duree_s'])} s")
     st.caption("Texte rédigé par l'agent à partir des résultats des outils. Aucun chiffre ne vient du "
                "modèle de langage. " + " ; ".join(details))
+    afficher_verification(agent)
+
+
+VERIFICATION_TEXTE = {
+    "appuyee": "Vérifié : chaque chiffre vient des calculs, et le garde-fou confirme que le texte s'appuie sur eux.",
+    "non_appuyee": "À lire avec prudence : une partie du texte ne correspond pas aux calculs. Fiez-vous aux chiffres du rapport.",
+}
+
+
+def afficher_verification(agent: dict) -> None:
+    """Contrôle de l'explication (chiffres et ancrage contextuel), en une phrase, détails en légende."""
+    a = agent.get("ancrage") or {}
+    statut = a.get("statut")
+    if statut == "appuyee":
+        st.success(VERIFICATION_TEXTE["appuyee"])
+    elif statut == "non_appuyee":
+        st.warning(VERIFICATION_TEXTE["non_appuyee"])
+    elif a.get("message"):
+        st.caption(a["message"])
+    details = []
+    if a.get("chiffres_non_sources"):
+        details.append("chiffres absents des calculs : " + ", ".join(a["chiffres_non_sources"]))
+    if (a.get("ancrage") or {}).get("score") is not None:
+        details.append(f"ancrage du passage le moins appuyé {nombre(a['ancrage']['score'], 2)} "
+                       f"(seuil {nombre(a['ancrage']['seuil'], 2)})")
+    gf = agent.get("garde_fou") or {}
+    if gf.get("actif"):
+        details.append(f"garde-fou Bedrock, version {gf.get('version')}")
+    elif gf.get("avis"):
+        details.append(gf["avis"])
+    if details:
+        st.caption("Contrôle : " + " ; ".join(details) + ".")
 
 
 def section_etapes(rapport: dict, niveau: str) -> None:
@@ -963,6 +1016,10 @@ def section_sources(rapport: dict, persona: str) -> None:
     st.markdown(f"- Valeur du portefeuille de {PERSONAS[persona]['nom']} : {dollars(valeur_pf(persona))}, "
                 f"montant fictif choisi par l'interface. {RAISONS_VALEUR[persona]}")
     st.markdown("- Le rapport suppose que l'ordre est exécuté, quel que soit son type.")
+    origine = api.origine_references()
+    if origine.get("message"):
+        st.markdown("**Fichiers de référence**")
+        st.markdown(f"- {origine['message']}")
     p = rapport["simulation"].get("periode", {})
     st.markdown("**Scénarios**")
     st.markdown(f"- Les notes de risque rejouent l'historique du {p.get('debut', '?')} au {p.get('fin', '?')}, "
@@ -1009,6 +1066,9 @@ def afficher_rapport(persona: str, rapport: dict, fiche_actuelle: dict) -> None:
         section_contraintes(sim)
     with st.expander("Les trois notes, avant → après", expanded=ouvert):
         section_notes(sim, niveau)
+    if sim["verdict"]["code"] != "incompatible":
+        with st.expander("Solidité du résultat", expanded=False):
+            section_solidite(sim.get("solidite"))
 
     if rapport.get("agent") is None:
         with st.spinner(ATTENTE_AGENT):
@@ -1120,6 +1180,41 @@ def onglet_ordre(persona: str, fiche: dict) -> None:
     else:
         st.markdown(f"Cliquez sur **{BOUTON_ACTION}** pour savoir si cet ordre respecte votre politique, "
                     "avant de le passer.")
+    essai_garde_fou(persona)
+
+
+def soumettre_au_garde_fou(texte: str) -> dict:
+    """Le texte va au seul garde-fou Bedrock ; aucun modèle n'y répond. Renvoie toujours {statut, message}."""
+    try:
+        from agent.garde_fou import essayer_garde_fou  # import paresseux : le module peut être absent
+        r = essayer_garde_fou(texte)
+    except Exception as exc:  # l'essai ne doit jamais faire tomber la page
+        return {"statut": "indisponible", "message": f"Essai impossible ({type(exc).__name__})."}
+    return r if isinstance(r, dict) else {"statut": "indisponible", "message": "Réponse illisible."}
+
+
+def essai_garde_fou(persona: str) -> None:
+    """Essai du garde-fou, à part du rapport : on voit ce qu'il refuse, sans conversation avec l'agent."""
+    with st.expander("Essai du garde-fou"):
+        st.caption("Le garde-fou filtre les échanges avec le modèle. Il refuse le conseil personnalisé "
+                   "et les transactions réelles.")
+        with st.form(key=f"form_essai_{persona}"):
+            texte = st.text_input("Votre demande", key=f"essai_{persona}",
+                                  placeholder="Par exemple : passe cet ordre pour de vrai sur mon compte")
+            envoyee = st.form_submit_button("Soumettre au garde-fou", key=f"soumettre_{persona}")
+        if envoyee:
+            with st.spinner("Le garde-fou examine la demande…"):
+                st.session_state[f"essai_resultat_{persona}"] = soumettre_au_garde_fou(texte)
+        r = st.session_state.get(f"essai_resultat_{persona}")
+        if not r:
+            return
+        if r.get("statut") == "refuse":
+            st.error(r.get("message", ""))
+        elif r.get("statut") == "accepte":
+            st.success(r.get("message", ""))
+        else:
+            st.info(r.get("message", ""))
+        st.caption("Aucune réponse n'est produite : l'outil n'est pas un agent conversationnel.")
 
 
 # ---------------------------------------------------------------- page
