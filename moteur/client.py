@@ -83,7 +83,8 @@ def construire_fiche(client) -> dict:
     for t in port:
         instruments.fiche(t)  # lève si inconnu
         if port[t] < 0:
-            raise ErreurClient(f"Poids négatif pour {t} : la vente à découvert n'est pas simulée.")
+            raise ErreurClient(f"Poids négatif pour {t} : le portefeuille de départ ne contient que des positions positives. "
+                               "Une vente à découvert se simule par un ordre (opération « decouvert »).")
     total = sum(port.values())
     if abs(total - 100) > 0.01:
         raise ErreurClient(f"Les poids du portefeuille totalisent {total:.2f} % au lieu de 100 %.")

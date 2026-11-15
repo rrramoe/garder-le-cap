@@ -120,7 +120,8 @@ def valeur_portefeuille(poids: dict[str, float]) -> pd.Series:
         raise ErreurDonnees(f"Instrument(s) sans données de prix : {', '.join(manquants)}.")
     w = pd.Series(poids) / total
     r = rend[w.index].fillna(0.0).to_numpy() @ w.to_numpy()
-    valeur = np.concatenate([[1.0], np.cumprod(1.0 + r)])
+    # Avec un poids négatif (découvert, marge), une journée peut tout emporter : la valeur reste alors à 0.
+    valeur = np.concatenate([[1.0], np.cumprod(np.maximum(1.0 + r, 0.0))])
     return pd.Series(valeur, index=prix_cad().index)
 
 

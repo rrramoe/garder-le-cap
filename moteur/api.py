@@ -113,25 +113,38 @@ def etat_des_lieux(client) -> dict:
             "periode": _periode_donnees(), "sources": _sources(*SOURCES_NOTATION)}
 
 
+def _operation(operation) -> str:
+    return str(operation or "comptant").strip().lower()
+
+
 @_api
-def simuler_ordre(client, ticker: str, sens: str, pourcentage: float) -> dict:
-    """Contraintes strictes, notes avant et après, score, verdict, direction."""
+def simuler_ordre(client, ticker: str, sens: str, pourcentage: float, operation: str = "comptant") -> dict:
+    """Contraintes strictes, notes avant et après, score, verdict, direction.
+
+    `operation` : « comptant » (par défaut), « marge » (achat sur marge) ou « decouvert » (vente à découvert).
+    """
     fiche = _client.construire_fiche(client)
-    r = notation.simuler(fiche, str(ticker).strip().upper(), str(sens).strip().lower(), pourcentage)
+    op = _operation(operation)
+    r = notation.simuler(fiche, str(ticker).strip().upper(), str(sens).strip().lower(), pourcentage, op)
     r["solidite"] = _solidite.solidite(r["portefeuille_apres_pct"], fiche, r["apres"])
     cles = list(SOURCES_NOTATION) + [d["source"] for d in r["contraintes_strictes"]["detail"] if d.get("source")]
     cles.append("hypothese_solidite")
+    cles += notation.SOURCES_OPERATIONS[op]
     return {"client": fiche["id"], **r, "score": r["apres"]["score"], "dimension_min": r["apres"]["dimension_min"],
             "mesure_min": r["apres"]["mesure_min"], "periode": _periode_donnees(), "sources": _sources(*cles)}
 
 
 @_api
-def chercher_taille_compatible(client, ticker: str, sens: str, pourcentage: float) -> dict:
+def chercher_taille_compatible(client, ticker: str, sens: str, pourcentage: float, operation: str = "comptant") -> dict:
     """Plus grande taille (pas de 0,5 %) avec score >= 50, et courbe du score selon la taille."""
     fiche = _client.construire_fiche(client)
-    r = notation.taille_compatible(fiche, str(ticker).strip().upper(), str(sens).strip().lower(), pourcentage)
-    return {"client": fiche["id"], "ticker": str(ticker).strip().upper(), "sens": sens, **r,
-            "periode": _periode_donnees(), "sources": _sources(*SOURCES_NOTATION)}
+    op = _operation(operation)
+    r = notation.taille_compatible(fiche, str(ticker).strip().upper(), str(sens).strip().lower(), pourcentage, op)
+    resultat = {"client": fiche["id"], "ticker": str(ticker).strip().upper(), "sens": sens, **r,
+                "periode": _periode_donnees(), "sources": _sources(*SOURCES_NOTATION, *notation.SOURCES_OPERATIONS[op])}
+    if op != "comptant":
+        resultat["operation"] = op
+    return resultat
 
 
 @_api

@@ -91,7 +91,7 @@
     "nature": "hypothese"
   },
   "hypothese_mecanique_ordre": {
-    "libelle": "Un achat est payé par l'encaisse (ZST.TO) et une vente y est versée ; pas d'achat sur marge : un achat plus gros que l'encaisse est refusé",
+    "libelle": "Un achat est payé par l'encaisse (ZST.TO) et une vente y est versée ; au comptant (opération par défaut), un achat plus gros que l'encaisse est refusé",
     "source": "Hypothèse du projet",
     "date": "2026-11-15",
     "nature": "hypothese"
@@ -111,6 +111,26 @@
   "hypothese_solidite": {
     "libelle": "Solidité : note de risque recalculée sur 2022 seule (fenêtre défavorable) et sur la période sans 2022 (fenêtre favorable), étalons recalculés sur la même fenêtre",
     "source": "Hypothèse du projet (spécification, section 7.7)",
+    "date": "2026-11-15",
+    "nature": "hypothese"
+  },
+  "hypothese_marge": {
+    "libelle": "Achat sur marge : l'achat peut dépasser l'encaisse ; l'encaisse (ZST.TO) devient négative, c'est un emprunt au rendement de ZST.TO, compté comme des liquidités négatives dans la fourchette du profil",
+    "source": "Hypothèse du projet (simplification)",
+    "date": "2026-11-15",
+    "nature": "hypothese",
+    "limite": "Le coût de l'emprunt au-delà du rendement des liquidités est ignoré. Aucun appel de marge n'est simulé."
+  },
+  "hypothese_decouvert": {
+    "libelle": "Vente à découvert : le poids de l'instrument devient négatif et le produit va à l'encaisse ; le rendement du portefeuille reste la somme pondérée des rendements ; concentration et thèmes comptent chaque exposition en valeur absolue",
+    "source": "Hypothèse du projet (simplification)",
+    "date": "2026-11-15",
+    "nature": "hypothese",
+    "limite": "La perte d'une vente à découvert n'a pas de plafond : l'historique montre seulement ce qui s'est produit. Les frais d'emprunt des titres et les appels de marge ne sont pas simulés."
+  },
+  "hypothese_levier": {
+    "libelle": "Levier = exposition brute (somme des poids en valeur absolue, emprunt exclu) / valeur nette ; affiché, non noté",
+    "source": "Hypothèse du projet",
     "date": "2026-11-15",
     "nature": "hypothese"
   }

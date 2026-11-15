@@ -23,12 +23,32 @@ class ErreurOrdre(Exception):
 
 # ---------------------------------------------------------------- ordre
 
-def appliquer_ordre(port: dict, ticker: str, sens: str, pourcentage: float) -> dict:
-    """Portefeuille après l'ordre. Achat payé par l'encaisse, vente versée à l'encaisse."""
+SOURCES_OPERATIONS = {"comptant": (), "marge": ("hypothese_marge", "hypothese_levier"),
+                      "decouvert": ("hypothese_decouvert", "hypothese_levier")}
+OPERATIONS = {"comptant": ("achat", "vente"), "marge": ("achat",), "decouvert": ("vente",)}
+LIBELLES_OPERATIONS = {"comptant": "Au comptant", "marge": "Achat sur marge", "decouvert": "Vente à découvert"}
+
+
+def valider_operation(sens: str, operation: str) -> None:
+    if operation not in OPERATIONS:
+        raise ErreurOrdre(f"Opération invalide : « {operation} ». Choix possibles : {', '.join(OPERATIONS)}.")
+    if sens in ("achat", "vente") and sens not in OPERATIONS[operation]:
+        attendu = OPERATIONS[operation][0]
+        raise ErreurOrdre(f"{LIBELLES_OPERATIONS[operation]} : le sens doit être « {attendu} ».")
+
+
+def appliquer_ordre(port: dict, ticker: str, sens: str, pourcentage: float, operation: str = "comptant") -> dict:
+    """Portefeuille après l'ordre. Achat payé par l'encaisse, vente versée à l'encaisse.
+
+    `operation` : « comptant » (par défaut), « marge » (achat qui peut dépasser l'encaisse :
+    l'encaisse devient négative, c'est un emprunt) ou « decouvert » (vente au-delà du poids
+    détenu : le poids de l'instrument devient négatif, le produit va à l'encaisse).
+    """
     cash = references.encaisse()
     instruments.fiche(ticker)
     if sens not in ("achat", "vente"):
         raise ErreurOrdre(f"Sens invalide : « {sens} ». Choix possibles : achat, vente.")
+    valider_operation(sens, operation)
     try:
         pct = float(pourcentage)
     except (TypeError, ValueError):
@@ -40,20 +60,43 @@ def appliquer_ordre(port: dict, ticker: str, sens: str, pourcentage: float) -> d
     nouveau = dict(port)
     if sens == "achat":
         dispo = nouveau.get(cash, 0.0)
-        if pct > dispo + EPS:
+        if operation == "comptant" and pct > dispo + EPS:
             raise ErreurOrdre(
                 f"Encaisse insuffisante : l'achat de {pct:g} % dépasse l'encaisse disponible ({cash}, {dispo:g} % du portefeuille). "
-                "L'achat sur marge n'est pas simulé (hypothèse du projet)."
+                "Au comptant, l'achat ne peut pas dépasser l'encaisse : l'achat sur marge est une autre opération (« marge »)."
             )
         nouveau[cash] = dispo - pct
         nouveau[ticker] = nouveau.get(ticker, 0.0) + pct
     else:
         detenu = nouveau.get(ticker, 0.0)
-        if pct > detenu + EPS:
+        if operation == "comptant" and pct > detenu + EPS:
             raise ErreurOrdre(f"Vente impossible : le portefeuille détient {detenu:g} % de {ticker}, moins que les {pct:g} % demandés.")
         nouveau[ticker] = detenu - pct
         nouveau[cash] = nouveau.get(cash, 0.0) + pct
-    return {t: w for t, w in nouveau.items() if w > EPS}
+    return {t: w for t, w in nouveau.items() if abs(w) > EPS}
+
+
+def expositions(port: dict) -> dict:
+    """Exposition de chaque position en valeur absolue (concentration et thèmes).
+
+    Une encaisse négative est un emprunt, pas une position dans le fonds de liquidités :
+    elle ne compte pas comme exposition. Sans poids négatif, renvoie le portefeuille tel quel.
+    """
+    cash = references.encaisse()
+    return {t: (max(w, 0.0) if t == cash else abs(w)) for t, w in port.items()}
+
+
+def exposition_empruntee(port: dict) -> float:
+    """Poids détenu à découvert ou acheté avec de l'argent emprunté : somme des poids négatifs, en valeur absolue."""
+    return float(sum(-w for w in port.values() if w < 0))
+
+
+def levier(port: dict) -> dict:
+    """Levier = exposition brute / valeur nette. Sans emprunt ni découvert, il vaut 1."""
+    brute = float(sum(expositions(port).values()))
+    nette = float(sum(port.values()))
+    return {"levier": brute / nette if nette > 0 else None, "exposition_brute_pct": brute, "valeur_nette_pct": nette,
+            "exposition_empruntee_pct": exposition_empruntee(port)}
 
 
 # ---------------------------------------------------------------- contraintes strictes
@@ -180,18 +223,19 @@ def note_diversification(port: dict, fiche: dict) -> dict:
     plafonds = fiche["deduit"]["plafonds_concentration_pct"]["valeur"]
     crypto = fiche["deduit"]["crypto_pct"]["valeur"]
     classes = poids_par_classe(port)
+    ex = expositions(port)
     mesures = {}
     for c, f in fourchettes.items():
         w = classes.get(c, 0.0)
         mesures[f"classe_{c}"] = {"note": note_classe(w, f["min"], f["cible"], f["max"]), "poids": w,
                                   "min": f["min"], "cible": f["cible"], "max": f["max"],
                                   "libelle": f"Poids de la classe « {c} » face à sa fourchette"}
-    w_crypto = sum(w for t, w in port.items() if instruments.fiche(t)["classe_actif"] == "crypto")
+    w_crypto = sum(w for t, w in ex.items() if instruments.fiche(t)["classe_actif"] == "crypto")
     mesures["crypto"] = {"note": _plafond(w_crypto, crypto["plafond_pct"]), "poids": w_crypto,
                          "plafond": crypto["plafond_pct"], "libelle": "Poids des cryptoactifs face au plafond du profil"}
 
-    actions = {t: w for t, w in port.items() if instruments.est_action_individuelle(t)}
-    fonds = {t: w for t, w in port.items() if instruments.est_fonds(t)}
+    actions = {t: w for t, w in ex.items() if w > EPS and instruments.est_action_individuelle(t)}
+    fonds = {t: w for t, w in ex.items() if w > EPS and instruments.est_fonds(t)}
     if actions:
         t_max = max(actions, key=actions.get)
         mesures["plus_grosse_action"] = {"note": _plafond(actions[t_max], plafonds["action_individuelle"]),
@@ -235,7 +279,7 @@ def note_preferences(port: dict, fiche: dict, ordre: dict | None = None) -> dict
             continue
         etiquette = themes[theme_id]["etiquette"]
         if reponse == "eviter":
-            portes = {t: w for t, w in port.items() if instruments.valeur_etiquette(t, etiquette) is True}
+            portes = {t: w for t, w in expositions(port).items() if instruments.valeur_etiquette(t, etiquette) is True}
             indet = [t for t in port if instruments.valeur_etiquette(t, etiquette) == "indetermine"]
             e = sum(portes.values())
             mesures[theme_id] = {"note": max(0.0, 100.0 - 50.0 * e / repere), "reponse": reponse, "poids_expose": e,
@@ -309,10 +353,26 @@ def verdict(contraintes: dict, score: float) -> dict:
     return {"code": "en_tension", "libelle": "En tension", "raison": "Score sous 50 : au-delà d'une limite de la politique."}
 
 
-def simuler(fiche: dict, ticker: str, sens: str, pourcentage: float) -> dict:
+def bloc_operation(port_avant: dict, port_apres: dict, operation: str) -> dict:
+    """Type d'opération, levier avant et après (affiché, non noté), hypothèses et limites."""
+    lv_avant, lv_apres = levier(port_avant), levier(port_apres)
+    bloc = {"code": operation, "libelle": LIBELLES_OPERATIONS[operation],
+            "levier_avant": lv_avant["levier"], "levier_apres": lv_apres["levier"],
+            "exposition_brute_apres_pct": lv_apres["exposition_brute_pct"],
+            "exposition_empruntee_apres_pct": lv_apres["exposition_empruntee_pct"],
+            "hypotheses": [], "limites": []}
+    if operation != "comptant":
+        for s in references.sources(*SOURCES_OPERATIONS[operation]):
+            bloc["hypotheses"].append({"id": s["id"], "libelle": s["libelle"]})
+            if s.get("limite"):
+                bloc["limites"].append(s["limite"])
+    return bloc
+
+
+def simuler(fiche: dict, ticker: str, sens: str, pourcentage: float, operation: str = "comptant") -> dict:
     port_avant = fiche["portefeuille_pct"]
-    port_apres = appliquer_ordre(port_avant, ticker, sens, pourcentage)
-    ordre = {"ticker": ticker, "sens": sens, "pourcentage": float(pourcentage)}
+    port_apres = appliquer_ordre(port_avant, ticker, sens, pourcentage, operation)
+    ordre = {"ticker": ticker, "sens": sens, "pourcentage": float(pourcentage), "operation": operation}
     cs = contraintes_strictes(fiche, ticker, sens)
     avant = evaluer(port_avant, fiche)
     apres = evaluer(port_apres, fiche, ordre)
@@ -329,13 +389,14 @@ def simuler(fiche: dict, ticker: str, sens: str, pourcentage: float) -> dict:
         "verdict": verdict(cs, apres["score"]),
         "direction": dirn,
         "contribution_risque_apres": contribution_risque(port_apres, ticker),
+        "operation": bloc_operation(port_avant, port_apres, operation),
     }
 
 
-def taille_compatible(fiche: dict, ticker: str, sens: str, pourcentage: float) -> dict:
+def taille_compatible(fiche: dict, ticker: str, sens: str, pourcentage: float, operation: str = "comptant") -> dict:
     """Plus grande taille, par pas de 0,5 %, jusqu'au montant demandé, avec score >= 50."""
     port = fiche["portefeuille_pct"]
-    appliquer_ordre(port, ticker, sens, pourcentage)  # valide l'ordre demandé
+    appliquer_ordre(port, ticker, sens, pourcentage, operation)  # valide l'ordre demandé
     cs = contraintes_strictes(fiche, ticker, sens)
     if cs["violee"]:
         return {"lancee": False, "taille_compatible_pct": None, "courbe": [], "contraintes_strictes": cs,
@@ -346,8 +407,12 @@ def taille_compatible(fiche: dict, ticker: str, sens: str, pourcentage: float) -
         tailles.append(float(pourcentage))
     courbe = []
     for x in tailles:
-        ev = evaluer(appliquer_ordre(port, ticker, sens, x), fiche, {"ticker": ticker, "sens": sens, "pourcentage": x})
-        courbe.append({"taille_pct": x, "score": ev["score"], "dimension_min": ev["dimension_min"], "mesure_min": ev["mesure_min"]})
+        port_x = appliquer_ordre(port, ticker, sens, x, operation)
+        ev = evaluer(port_x, fiche, {"ticker": ticker, "sens": sens, "pourcentage": x, "operation": operation})
+        point = {"taille_pct": x, "score": ev["score"], "dimension_min": ev["dimension_min"], "mesure_min": ev["mesure_min"]}
+        if operation != "comptant":
+            point["levier"] = levier(port_x)["levier"]
+        courbe.append(point)
     ok = [p["taille_pct"] for p in courbe if p["score"] >= SEUIL_COMPATIBLE]
     taille = max(ok) if ok else None
     if taille is None:
