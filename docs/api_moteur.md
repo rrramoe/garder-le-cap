@@ -12,7 +12,8 @@ api.simuler_ordre("robert", "TSLA", "achat", 15)
 - Chaque fonction renvoie un dictionnaire sérialisable en JSON avec un champ `sources` : une liste de `{id, libelle, source, date, nature}`, où `nature` vaut `publie` ou `hypothese`.
 - En cas de problème : `{"erreur": "message en français"}` et rien d'autre. Aucune exception ne sort de l'API.
 - **Client** : un identifiant de persona (`"robert"`, `"mateo"`, `"amira"`) ou une fiche (dictionnaire). Une fiche peut partir d'un persona et modifier des réponses : `{"persona": "robert", "questionnaire": {"horizon": "15_plus", "themes": {"crypto": "exclure"}}}`. On peut aussi remplacer `portefeuille_pct`. Une fiche renvoyée par `lire_fiche_client` est acceptée telle quelle.
-- **Sens** : `"achat"` ou `"vente"`. **Pourcentage** : en % du portefeuille (15 = 15 %). Un achat est payé par l'encaisse (`ZST.TO`), une vente y est versée. Pas de marge : un achat plus gros que l'encaisse renvoie une erreur.
+- **Sens** : `"achat"` ou `"vente"`. **Pourcentage** : en % du portefeuille (15 = 15 %). Un achat est payé par l'encaisse (`ZST.TO`), une vente y est versée.
+- **Opération** (argument facultatif `operation`, voir plus bas) : `"comptant"` par défaut, `"marge"` ou `"decouvert"`. Au comptant, un achat plus gros que l'encaisse ou une vente plus grosse que la position renvoie une erreur.
 - Les notes vont de 0 à 100 (100 = sur la cible, 50 = limite de la politique). Les pires baisses sont des fractions négatives (−0,18 = −18 %). Les poids sont en %.
 - Les réponses possibles au questionnaire sont dans `reference/questionnaire.json` (`objectif`, `horizon`, `fluctuations`, `experience`, et l'échelle des thèmes `exclure / eviter / neutre / rechercher / obligatoire`). Les thèmes sont dans `reference/themes.json`.
 
@@ -46,11 +47,11 @@ Notes du portefeuille actuel, sans ordre : `score`, `dimension_min`, `mesure_min
 - `diversification.mesures` : `classe_liquidites`, `classe_revenu_fixe`, `classe_actions`, `classe_alternatifs`, `crypto`, `plus_grosse_action`, `plus_gros_fonds`, `plus_gros_secteur`. Aussi `poids_par_classe`.
 - `preferences.mesures` : une entrée par thème `eviter` ou `rechercher` ; `sans_objet: true` s'il n'y en a aucun ; `signalements` (achat favorable dans un thème recherché).
 
-## `simuler_ordre(client, ticker, sens, pourcentage)`
+## `simuler_ordre(client, ticker, sens, pourcentage, operation="comptant")`
 
 | Champ | Contenu |
 |---|---|
-| `ordre` | `{ticker, sens, pourcentage}` |
+| `ordre` | `{ticker, sens, pourcentage, operation}` |
 | `portefeuille_avant_pct`, `portefeuille_apres_pct` | Positions avant et après |
 | `contraintes_strictes` | `violee`, `themes_violes`, `detail` (par thème : `statut` = `violee`, `respectee`, `signalee`, `ignoree` ou `non_applicable`, `raison`, `declencheur`, `source`) |
 | `avant`, `apres` | Même forme que `etat_des_lieux` : `score`, `dimension_min`, `mesure_min`, `notes` |
@@ -58,6 +59,7 @@ Notes du portefeuille actuel, sans ordre : `score`, `dimension_min`, `mesure_min
 | `verdict` | `{code, libelle, raison}`, `code` = `compatible`, `en_tension`, `incompatible` |
 | `direction` | `{cas, libelle, score_avant, score_apres, revient_dans_la_politique}` ; `cas` = `reste_dans_la_politique`, `fait_sortir_de_la_politique`, `hors_politique_rapproche`, `hors_politique_aggrave` ; `remarque` si une contrainte stricte est violée |
 | `contribution_risque_apres` | `{ticker, poids_pct, part_du_risque_pct}` : affiché, non noté |
+| `operation` | `{code, libelle, levier_avant, levier_apres, exposition_brute_apres_pct, exposition_empruntee_apres_pct, hypotheses, limites, controle_experience}` (voir plus bas) |
 | `solidite` | Voir `solidite` ci-dessous : le score après l'ordre sur 2022 seule et sur la période sans 2022 |
 | `periode` | Période des données, devise CAD |
 
@@ -75,9 +77,9 @@ Section 7.7 : la note de risque du portefeuille après l'ordre est recalculée s
 
 Le même bloc figure dans le résultat de `simuler_ordre` (champ `solidite`). Fenêtre favorable : les rendements d'avant et d'après 2022 sont mis bout à bout, les dates d'après 2022 avancées de 365 jours (la durée sous l'eau ne compte pas l'année retirée).
 
-## `chercher_taille_compatible(client, ticker, sens, pourcentage)`
+## `chercher_taille_compatible(client, ticker, sens, pourcentage, operation="comptant")`
 
-Plus grande taille, par pas de 0,5 % jusqu'au montant demandé, avec un score de 50 ou plus.
+Plus grande taille, par pas de 0,5 % jusqu'au montant demandé, avec un score de 50 ou plus. Pour la marge ou le découvert, chaque point de la courbe porte aussi son `levier`, et le résultat rappelle `operation`.
 
 | Champ | Contenu |
 |---|---|
@@ -87,6 +89,34 @@ Plus grande taille, par pas de 0,5 % jusqu'au montant demandé, avec un score de
 | `issue` | `compatible_tel_quel`, `compatible_avec_ajustement`, `aucune_taille` |
 | `courbe` | Liste de `{taille_pct, score, dimension_min, mesure_min}` |
 | `contraintes_strictes` | Comme dans `simuler_ordre` |
+
+## Achat sur marge, vente à découvert et expérience
+
+| `operation` | Sens | Effet sur le portefeuille |
+|---|---|---|
+| `comptant` (défaut) | achat ou vente | Comportement d'origine, inchangé. |
+| `marge` | achat | L'achat peut dépasser l'encaisse : `ZST.TO` devient négatif, c'est un emprunt. |
+| `decouvert` | vente | La vente peut dépasser la position : le poids devient négatif, le produit va à l'encaisse. |
+
+Une autre combinaison renvoie une erreur (`marge` avec `vente`, `decouvert` avec `achat`, opération inconnue).
+
+**Conventions (hypothèses du projet, dans `sources`)** : `hypothese_marge`, `hypothese_decouvert`, `hypothese_levier`, `hypothese_experience_operations`.
+
+- Le rendement du portefeuille reste la somme pondérée des rendements, poids négatifs compris. Si une journée fait tout perdre, la valeur reste à 0.
+- L'emprunt compte comme des liquidités négatives dans la fourchette de liquidités du profil (les poids par classe restent nets).
+- Concentration (crypto, plus grosse action, plus gros fonds, plus gros secteur) et thèmes évités : chaque exposition compte en valeur absolue. Une encaisse négative n'est pas une position dans le fonds de liquidités.
+- **Levier** = exposition brute (somme des poids en valeur absolue, emprunt exclu) / valeur nette. Il vaut 1 sans marge ni découvert. Affiché, non noté.
+- **Limites**, dans `operation.limites` : le coût de l'emprunt au-delà du rendement des liquidités est ignoré ; la perte d'une vente à découvert n'a pas de plafond et l'historique montre seulement ce qui s'est produit ; ni appel de marge ni frais d'emprunt de titres ne sont simulés.
+
+**Contrôle de l'expérience.** `reference/operations_experience.json` (hypothèse du projet) donne, pour chaque opération avancée et chaque expérience, un niveau de l'échelle des thèmes. On le change dans ce fichier, sans toucher au code. Valeurs actuelles, identiques pour les deux opérations :
+
+| Expérience | Niveau | Effet |
+|---|---|---|
+| Débutante | `exclure` | Contrainte stricte : entrée `achat_sur_marge` ou `vente_a_decouvert` dans `contraintes_strictes` (avec `controle: "experience_operation"`), verdict « incompatible », aucune taille cherchée. |
+| Intermédiaire | `eviter` | Préférence souple : mesure `achat_sur_marge` ou `vente_a_decouvert` dans `notes.preferences`, notée `max(0, 100 - 50 * e / 15)`, où `e` est le poids détenu à découvert ou acheté avec de l'argent emprunté après l'ordre. |
+| Avancée | `neutre` | Aucun effet. |
+
+`operation.controle_experience` résume le contrôle : `{id, experience, niveau, effet, raison, source}`, avec `effet` = `contrainte_stricte`, `preference_souple` (plus `note` et `poids_expose`) ou `aucun`.
 
 ## Données
 

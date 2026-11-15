@@ -1,0 +1,869 @@
+{
+ "note": "Empreinte des résultats au comptant, relevée sur main (3d319a5) avant l'ajout des opérations. Sert à prouver que les appels par défaut sont inchangés.",
+ "cas": {
+  "amira|BTC-USD|vente|2": {
+   "portefeuille_apres_pct": {
+    "BTC-USD": 3.0,
+    "CSU.TO": 3.0,
+    "ETH-USD": 3.0,
+    "GLD": 4.0,
+    "MSFT": 6.0,
+    "NVDA": 10.0,
+    "QQQ": 14.0,
+    "SHOP.TO": 4.0,
+    "SPY": 22.0,
+    "XBB.TO": 7.0,
+    "XIU.TO": 14.0,
+    "ZST.TO": 10.0
+   },
+   "verdict": "en_tension",
+   "direction": "hors_politique_rapproche",
+   "themes_violes": [],
+   "avant": {
+    "score": 14.66222,
+    "dimension_min": "risque",
+    "mesure_min": "ampleur",
+    "mesures": {
+     "diversification": {
+      "classe_actions": 88.571429,
+      "classe_alternatifs": 90.0,
+      "classe_liquidites": 94.0,
+      "classe_revenu_fixe": 73.333333,
+      "crypto": 33.333333,
+      "plus_gros_fonds": 72.5,
+      "plus_gros_secteur": 71.25,
+      "plus_grosse_action": 66.666667
+     },
+     "preferences": {
+      "crypto": 100.0,
+      "techno": 100.0
+     },
+     "risque": {
+      "ampleur": 14.66222,
+      "duree": 94.633812
+     }
+    }
+   },
+   "apres": {
+    "score": 18.509912,
+    "dimension_min": "risque",
+    "mesure_min": "ampleur",
+    "mesures": {
+     "diversification": {
+      "classe_actions": 88.571429,
+      "classe_alternatifs": 83.333333,
+      "classe_liquidites": 90.0,
+      "classe_revenu_fixe": 73.333333,
+      "crypto": 50.0,
+      "plus_gros_fonds": 72.5,
+      "plus_gros_secteur": 71.25,
+      "plus_grosse_action": 66.666667
+     },
+     "preferences": {
+      "crypto": 93.333333,
+      "techno": 100.0
+     },
+     "risque": {
+      "ampleur": 18.509912,
+      "duree": 94.788957
+     }
+    }
+   },
+   "contribution_risque_apres": {
+    "part_du_risque_pct": 4.87918,
+    "poids_pct": 3.0,
+    "ticker": "BTC-USD"
+   },
+   "taille": {
+    "lancee": true,
+    "taille_compatible_pct": null,
+    "courbe": [
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 15.620136,
+      "taille_pct": 0.5
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 16.580726,
+      "taille_pct": 1.0
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 17.543986,
+      "taille_pct": 1.5
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 18.509912,
+      "taille_pct": 2.0
+     }
+    ]
+   }
+  },
+  "amira|NVDA|achat|7": {
+   "portefeuille_apres_pct": {
+    "BTC-USD": 5.0,
+    "CSU.TO": 3.0,
+    "ETH-USD": 3.0,
+    "GLD": 4.0,
+    "MSFT": 6.0,
+    "NVDA": 17.0,
+    "QQQ": 14.0,
+    "SHOP.TO": 4.0,
+    "SPY": 22.0,
+    "XBB.TO": 7.0,
+    "XIU.TO": 14.0,
+    "ZST.TO": 1.0
+   },
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave",
+   "themes_violes": [],
+   "avant": {
+    "score": 14.66222,
+    "dimension_min": "risque",
+    "mesure_min": "ampleur",
+    "mesures": {
+     "diversification": {
+      "classe_actions": 88.571429,
+      "classe_alternatifs": 90.0,
+      "classe_liquidites": 94.0,
+      "classe_revenu_fixe": 73.333333,
+      "crypto": 33.333333,
+      "plus_gros_fonds": 72.5,
+      "plus_gros_secteur": 71.25,
+      "plus_grosse_action": 66.666667
+     },
+     "preferences": {
+      "crypto": 100.0,
+      "techno": 100.0
+     },
+     "risque": {
+      "ampleur": 14.66222,
+      "duree": 94.633812
+     }
+    }
+   },
+   "apres": {
+    "score": 1.965399,
+    "dimension_min": "risque",
+    "mesure_min": "ampleur",
+    "mesures": {
+     "diversification": {
+      "classe_actions": 78.571429,
+      "classe_alternatifs": 90.0,
+      "classe_liquidites": 60.0,
+      "classe_revenu_fixe": 73.333333,
+      "crypto": 33.333333,
+      "plus_gros_fonds": 72.5,
+      "plus_gros_secteur": 62.5,
+      "plus_grosse_action": 43.333333
+     },
+     "preferences": {
+      "crypto": 100.0,
+      "techno": 100.0
+     },
+     "risque": {
+      "ampleur": 1.965399,
+      "duree": 94.953228
+     }
+    }
+   },
+   "contribution_risque_apres": {
+    "part_du_risque_pct": 35.968598,
+    "poids_pct": 17.0,
+    "ticker": "NVDA"
+   },
+   "taille": {
+    "lancee": true,
+    "taille_compatible_pct": null,
+    "courbe": [
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 13.738775,
+      "taille_pct": 0.5
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 12.817859,
+      "taille_pct": 1.0
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 11.899475,
+      "taille_pct": 1.5
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 10.983626,
+      "taille_pct": 2.0
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 10.070318,
+      "taille_pct": 2.5
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 9.159552,
+      "taille_pct": 3.0
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 8.251334,
+      "taille_pct": 3.5
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 7.345666,
+      "taille_pct": 4.0
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 6.442551,
+      "taille_pct": 4.5
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 5.541994,
+      "taille_pct": 5.0
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 4.643997,
+      "taille_pct": 5.5
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 3.748563,
+      "taille_pct": 6.0
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 2.855697,
+      "taille_pct": 6.5
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 1.965399,
+      "taille_pct": 7.0
+     }
+    ]
+   }
+  },
+  "mateo|XOM|achat|8": {
+   "portefeuille_apres_pct": {
+    "AAPL": 4.0,
+    "AGG": 8.0,
+    "CNR.TO": 5.0,
+    "ESGV": 20.0,
+    "GLD": 10.0,
+    "MFC.TO": 4.0,
+    "MSFT": 5.0,
+    "RY.TO": 6.0,
+    "XBB.TO": 28.0,
+    "XOM": 8.0,
+    "ZST.TO": 2.0
+   },
+   "verdict": "incompatible",
+   "direction": "reste_dans_la_politique",
+   "themes_violes": [
+    "ecarte_esg"
+   ],
+   "avant": {
+    "score": 65.0,
+    "dimension_min": "diversification",
+    "mesure_min": "plus_gros_fonds",
+    "mesures": {
+     "diversification": {
+      "classe_actions": 96.666667,
+      "classe_alternatifs": 100.0,
+      "classe_liquidites": 83.333333,
+      "classe_revenu_fixe": 80.0,
+      "crypto": 100.0,
+      "plus_gros_fonds": 65.0,
+      "plus_gros_secteur": 87.5,
+      "plus_grosse_action": 80.0
+     },
+     "preferences": {
+      "crypto": 100.0,
+      "speculatif": 100.0
+     },
+     "risque": {
+      "ampleur": 89.478618,
+      "duree": 90.28063
+     }
+    }
+   },
+   "apres": {
+    "score": 65.0,
+    "dimension_min": "diversification",
+    "mesure_min": "plus_gros_fonds",
+    "mesures": {
+     "diversification": {
+      "classe_actions": 82.5,
+      "classe_alternatifs": 100.0,
+      "classe_liquidites": 70.0,
+      "classe_revenu_fixe": 80.0,
+      "crypto": 100.0,
+      "plus_gros_fonds": 65.0,
+      "plus_gros_secteur": 87.5,
+      "plus_grosse_action": 73.333333
+     },
+     "preferences": {
+      "crypto": 100.0,
+      "speculatif": 100.0
+     },
+     "risque": {
+      "ampleur": 100.0,
+      "duree": 94.199179
+     }
+    }
+   },
+   "contribution_risque_apres": {
+    "part_du_risque_pct": 7.830874,
+    "poids_pct": 8.0,
+    "ticker": "XOM"
+   },
+   "taille": {
+    "lancee": false,
+    "taille_compatible_pct": null,
+    "courbe": []
+   }
+  },
+  "robert|GLD|achat|5": {
+   "portefeuille_apres_pct": {
+    "AGG": 15.0,
+    "ENB.TO": 3.0,
+    "FTS.TO": 4.0,
+    "GLD": 10.0,
+    "JNJ": 5.0,
+    "PG": 4.0,
+    "RY.TO": 6.0,
+    "XBB.TO": 35.0,
+    "XIU.TO": 8.0,
+    "ZST.TO": 10.0
+   },
+   "verdict": "compatible",
+   "direction": "reste_dans_la_politique",
+   "themes_violes": [],
+   "avant": {
+    "score": 56.25,
+    "dimension_min": "diversification",
+    "mesure_min": "plus_gros_fonds",
+    "mesures": {
+     "diversification": {
+      "classe_actions": 83.333333,
+      "classe_alternatifs": 100.0,
+      "classe_liquidites": 66.666667,
+      "classe_revenu_fixe": 75.0,
+      "crypto": 100.0,
+      "plus_gros_fonds": 56.25,
+      "plus_gros_secteur": 92.5,
+      "plus_grosse_action": 80.0
+     },
+     "preferences": {
+      "crypto": 100.0,
+      "etablie": 100.0,
+      "speculatif": 100.0
+     },
+     "risque": {
+      "ampleur": 100.0,
+      "duree": 67.465206
+     }
+    }
+   },
+   "apres": {
+    "score": 56.25,
+    "dimension_min": "diversification",
+    "mesure_min": "plus_gros_fonds",
+    "mesures": {
+     "diversification": {
+      "classe_actions": 83.333333,
+      "classe_alternatifs": 83.333333,
+      "classe_liquidites": 83.333333,
+      "classe_revenu_fixe": 75.0,
+      "crypto": 100.0,
+      "plus_gros_fonds": 56.25,
+      "plus_gros_secteur": 92.5,
+      "plus_grosse_action": 80.0
+     },
+     "preferences": {
+      "crypto": 100.0,
+      "etablie": 100.0,
+      "speculatif": 100.0
+     },
+     "risque": {
+      "ampleur": 100.0,
+      "duree": 78.051563
+     }
+    }
+   },
+   "contribution_risque_apres": {
+    "part_du_risque_pct": 17.728721,
+    "poids_pct": 10.0,
+    "ticker": "GLD"
+   },
+   "taille": {
+    "lancee": true,
+    "taille_compatible_pct": 5.0,
+    "courbe": [
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 0.5
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 1.0
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 1.5
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 2.0
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 2.5
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 3.0
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 3.5
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 4.0
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 4.5
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 5.0
+     }
+    ]
+   }
+  },
+  "robert|RY.TO|vente|3": {
+   "portefeuille_apres_pct": {
+    "AGG": 15.0,
+    "ENB.TO": 3.0,
+    "FTS.TO": 4.0,
+    "GLD": 5.0,
+    "JNJ": 5.0,
+    "PG": 4.0,
+    "RY.TO": 3.0,
+    "XBB.TO": 35.0,
+    "XIU.TO": 8.0,
+    "ZST.TO": 18.0
+   },
+   "verdict": "compatible",
+   "direction": "reste_dans_la_politique",
+   "themes_violes": [],
+   "avant": {
+    "score": 56.25,
+    "dimension_min": "diversification",
+    "mesure_min": "plus_gros_fonds",
+    "mesures": {
+     "diversification": {
+      "classe_actions": 83.333333,
+      "classe_alternatifs": 100.0,
+      "classe_liquidites": 66.666667,
+      "classe_revenu_fixe": 75.0,
+      "crypto": 100.0,
+      "plus_gros_fonds": 56.25,
+      "plus_gros_secteur": 92.5,
+      "plus_grosse_action": 80.0
+     },
+     "preferences": {
+      "crypto": 100.0,
+      "etablie": 100.0,
+      "speculatif": 100.0
+     },
+     "risque": {
+      "ampleur": 100.0,
+      "duree": 67.465206
+     }
+    }
+   },
+   "apres": {
+    "score": 56.25,
+    "dimension_min": "diversification",
+    "mesure_min": "plus_gros_fonds",
+    "mesures": {
+     "diversification": {
+      "classe_actions": 73.333333,
+      "classe_alternatifs": 100.0,
+      "classe_liquidites": 56.666667,
+      "classe_revenu_fixe": 75.0,
+      "crypto": 100.0,
+      "plus_gros_fonds": 56.25,
+      "plus_gros_secteur": 93.75,
+      "plus_grosse_action": 83.333333
+     },
+     "preferences": {
+      "crypto": 100.0,
+      "etablie": 90.0,
+      "speculatif": 100.0
+     },
+     "risque": {
+      "ampleur": 100.0,
+      "duree": 67.465206
+     }
+    }
+   },
+   "contribution_risque_apres": {
+    "part_du_risque_pct": 3.581106,
+    "poids_pct": 3.0,
+    "ticker": "RY.TO"
+   },
+   "taille": {
+    "lancee": true,
+    "taille_compatible_pct": 3.0,
+    "courbe": [
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 0.5
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 1.0
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 1.5
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 2.0
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 2.5
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 3.0
+     }
+    ]
+   }
+  },
+  "robert|TSLA|achat|15": {
+   "portefeuille_apres_pct": {
+    "AGG": 15.0,
+    "ENB.TO": 3.0,
+    "FTS.TO": 4.0,
+    "GLD": 5.0,
+    "JNJ": 5.0,
+    "PG": 4.0,
+    "RY.TO": 6.0,
+    "TSLA": 15.0,
+    "XBB.TO": 35.0,
+    "XIU.TO": 8.0
+   },
+   "verdict": "en_tension",
+   "direction": "fait_sortir_de_la_politique",
+   "themes_violes": [],
+   "avant": {
+    "score": 56.25,
+    "dimension_min": "diversification",
+    "mesure_min": "plus_gros_fonds",
+    "mesures": {
+     "diversification": {
+      "classe_actions": 83.333333,
+      "classe_alternatifs": 100.0,
+      "classe_liquidites": 66.666667,
+      "classe_revenu_fixe": 75.0,
+      "crypto": 100.0,
+      "plus_gros_fonds": 56.25,
+      "plus_gros_secteur": 92.5,
+      "plus_grosse_action": 80.0
+     },
+     "preferences": {
+      "crypto": 100.0,
+      "etablie": 100.0,
+      "speculatif": 100.0
+     },
+     "risque": {
+      "ampleur": 100.0,
+      "duree": 67.465206
+     }
+    }
+   },
+   "apres": {
+    "score": 39.564955,
+    "dimension_min": "risque",
+    "mesure_min": "ampleur",
+    "mesures": {
+     "diversification": {
+      "classe_actions": 50.0,
+      "classe_alternatifs": 100.0,
+      "classe_liquidites": 50.0,
+      "classe_revenu_fixe": 75.0,
+      "crypto": 100.0,
+      "plus_gros_fonds": 56.25,
+      "plus_gros_secteur": 81.25,
+      "plus_grosse_action": 50.0
+     },
+     "preferences": {
+      "crypto": 100.0,
+      "etablie": 100.0,
+      "speculatif": 50.0
+     },
+     "risque": {
+      "ampleur": 39.564955,
+      "duree": 58.430299
+     }
+    }
+   },
+   "contribution_risque_apres": {
+    "part_du_risque_pct": 72.120752,
+    "poids_pct": 15.0,
+    "ticker": "TSLA"
+   },
+   "taille": {
+    "lancee": true,
+    "taille_compatible_pct": 11.5,
+    "courbe": [
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 0.5
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 1.0
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 1.5
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 2.0
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 2.5
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 3.0
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 3.5
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 4.0
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 4.5
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 5.0
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 5.5
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 6.0
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 6.5
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 7.0
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 7.5
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 8.0
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 8.5
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 9.0
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 9.5
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 10.0
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 10.5
+     },
+     {
+      "dimension_min": "diversification",
+      "mesure_min": "plus_gros_fonds",
+      "score": 56.25,
+      "taille_pct": 11.0
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 50.49,
+      "taille_pct": 11.5
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 48.542459,
+      "taille_pct": 12.0
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 47.033347,
+      "taille_pct": 12.5
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 45.529377,
+      "taille_pct": 13.0
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 44.03055,
+      "taille_pct": 13.5
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 42.536869,
+      "taille_pct": 14.0
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 41.048337,
+      "taille_pct": 14.5
+     },
+     {
+      "dimension_min": "risque",
+      "mesure_min": "ampleur",
+      "score": 39.564955,
+      "taille_pct": 15.0
+     }
+    ]
+   }
+  }
+ }
+}

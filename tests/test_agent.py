@@ -100,6 +100,23 @@ def test_outils_utilisent_la_fiche_modifiee():
     assert api.lire_fiche_client("robert")["deduit"]["horizon_annees"]["valeur"] == 3
 
 
+def test_outils_passent_l_operation():
+    fiche = {"persona": "robert", "questionnaire": {"experience": "intermediaire"}}
+    o = {t.tool_name: t for t in creer_outils(fiche)}
+    assert o["simuler_ordre"]("robert", "TSLA", "vente", 5, "decouvert") == \
+        api.simuler_ordre(fiche, "TSLA", "vente", 5, "decouvert")
+    assert o["chercher_taille_compatible"]("robert", "TSLA", "vente", 5, "decouvert") == \
+        api.chercher_taille_compatible(fiche, "TSLA", "vente", 5, "decouvert")
+    assert "Vente à découvert" in inspection.resumer("simuler_ordre", api.simuler_ordre(fiche, "TSLA", "vente", 5,
+                                                                                          "decouvert"))
+
+
+def test_consigne_nomme_l_operation():
+    assert "operation" not in inspection.consigne("robert", "TSLA", "achat", 15)
+    texte = inspection.consigne("robert", "TSLA", "vente", 5, "decouvert")
+    assert "vente à découvert" in texte and 'operation="decouvert"' in texte
+
+
 def test_outils_refusent_un_autre_client():
     o = {t.tool_name: t for t in creer_outils("robert")}
     assert "erreur" in o["simuler_ordre"]("mateo", "XOM", "achat", 8)
@@ -225,3 +242,17 @@ def test_6_cas_2_mateo_xom_ne_cherche_pas_de_taille():
     outils = [e["outil"] for e in r["trace"]]
     assert _sous_suite(["lire_fiche_client", "lire_fiche_instrument", "simuler_ordre"], outils), outils
     assert "chercher_taille_compatible" not in outils
+
+
+@bedrock
+def test_decouvert_debutante_ne_cherche_pas_de_taille():
+    fiche = {"persona": "robert", "questionnaire": {"experience": "debutante"}}
+    r = inspection.inspecter(fiche, "TSLA", "vente", 5, operation="decouvert")
+    _verifier_rapport(r)
+    outils = [e["outil"] for e in r["trace"]]
+    assert _sous_suite(["lire_fiche_client", "lire_fiche_instrument", "simuler_ordre"], outils), outils
+    assert "chercher_taille_compatible" not in outils
+    simulation = next(e for e in r["trace"] if e["outil"] == "simuler_ordre")
+    assert simulation["arguments"].get("operation") == "decouvert"
+    assert simulation["resultat"]["verdict"]["code"] == "incompatible"
+    assert len(r["explication"].split()) <= 200  # limite de 180 mots dans le prompt, marge pour les marqueurs **
