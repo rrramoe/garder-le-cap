@@ -41,6 +41,16 @@ def _etiquettes_vraies(ticker: str) -> list[str]:
     return [k for k, e in instruments.fiche(ticker)["etiquettes"].items() if e.get("valeur") is True]
 
 
+TYPES = {"equity": "action", "etf_equity": "fonds", "etf_bond": "fonds", "etf_commodity": "fonds", "crypto": "crypto"}
+
+
+def resume_candidat(g: dict) -> dict:
+    """Quelques faits qui aident à choisir un candidat : type, rendement en dividende (fiche du titre)."""
+    rev = (g.get("faits_marche") or {}).get("revenu", {})
+    return {"type": TYPES.get(g["classe_actif"], g["classe_actif"]),
+            "rendement_dividende": rev.get("rendement_dividende", "indetermine")}
+
+
 def decrire(fiche_client: dict, ticker: str, pourcentage: float | None = None) -> dict:
     port = {t: float(w) for t, w in fiche_client["portefeuille_pct"].items()}
     f = instruments.fiche(ticker)
@@ -119,6 +129,7 @@ def decrire(fiche_client: dict, ticker: str, pourcentage: float | None = None) -
             "pire_baisse": g["statistiques_cad"]["pire_baisse"],
             "etiquettes": {k: e["valeur"] for k, e in g["etiquettes"].items()},
             "deja_detenu_pct": port.get(t, 0.0),
+            **resume_candidat(g),
         })
     candidats.sort(key=lambda x: -(x["correlation_avec_instrument"] if x["correlation_avec_instrument"] is not None
                                    else -2.0))

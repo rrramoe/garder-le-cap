@@ -17,6 +17,7 @@ import numpy as np
 from . import client as _client
 from . import apport as _apport
 from . import donnees, instruments, notation, references, solidite as _solidite
+from . import faits_marche as _faits
 
 SOURCES_FICHE_CLIENT = ("fbngp_profils_2024", "fbngp_politique_2022", "fidelity_crypto_2026", "hypothese_personas",
                         "hypothese_crypto_correspondance", "hypothese_plafonds_tous_profils", "hypothese_classes",
@@ -75,10 +76,21 @@ def lire_fiche_client(client) -> dict:
 
 
 @_api
-def lire_fiche_instrument(ticker: str) -> dict:
-    """Classe, devise, secteur, statistiques en CAD, étiquettes et leurs sources."""
+def lire_fiche_instrument(ticker: str, montant_cad: float | None = None) -> dict:
+    """Classe, devise, secteur, statistiques en CAD, étiquettes, faits de marché et leurs sources.
+
+    `montant_cad` (facultatif) : montant d'un ordre en dollars canadiens ; la fiche dit alors ce qu'il
+    représente en séances de la valeur échangée moyenne (`faits_marche.liquidite.jours_de_volume_ordre`).
+    """
     f = dict(instruments.fiche(str(ticker).strip().upper()))
     cles = {"donnees_marche", "hypothese_etiquettes", "hypothese_classes"}
+    if f.get("faits_marche"):
+        cles |= set(f["faits_marche"].get("sources", []))
+        if montant_cad is not None:
+            fm = dict(f["faits_marche"])
+            fm["liquidite"] = {**fm["liquidite"], "montant_ordre_cad": float(montant_cad),
+                               "jours_de_volume_ordre": _faits.jours_de_volume(float(montant_cad), fm["liquidite"])}
+            f["faits_marche"] = fm
     cles |= {e["source"] for e in f["etiquettes"].values() if e.get("source")}
     f["periode"] = instruments.meta().get("periode")
     f["fiches_generees_le"] = instruments.meta().get("genere_le")

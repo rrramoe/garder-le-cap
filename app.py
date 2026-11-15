@@ -1451,6 +1451,49 @@ def phrase_execution(type_ordre: str, prix: float | None) -> str:
     return f"Le rapport suppose que l'ordre est exécuté à {dollars(prix, 2)}."
 
 
+def _fait(x, rendu) -> str:
+    return "inconnu" if x is None or x == "indetermine" else rendu(x)
+
+
+def fiche_du_titre(ticker: str, montant: float) -> None:
+    """Ce que l'outil sait du titre : identité, chiffres clés du passé, étiquettes, sources (repliée)."""
+    f = api.lire_fiche_instrument(ticker, montant)
+    with st.expander(f"Fiche du titre : {ticker}", expanded=False):
+        if "erreur" in f:
+            st.error(f["erreur"])
+            return
+        st.markdown(f"**{f['nom']}** · {secteur_fr(f['secteur'])} · {f['marche']} · cotée en {f['devise']} · "
+                    f"classe « {CLASSES.get(f['classe_politique'], f['classe_politique'])} »")
+        fm = f.get("faits_marche") or {}
+        if fm:
+            perf, risq, mar = fm["performance"], fm["risque"], fm["marches"]
+            rev, liq, taux = fm["revenu"], fm["liquidite"], fm["taux"]
+            pire = perf.get("pire_annee")
+            lignes = [
+                f"Sur cinq ans, en dollars canadiens, dividendes compris : {_fait(perf.get('rendement_total'), pct_frac)}."
+                + (f" Pire année complète : {pire['annee']} ({pct_frac(pire['rendement'])})." if isinstance(pire, dict) else ""),
+                f"Aujourd'hui {_fait(perf.get('ecart_au_plus_haut'), pct_frac)} sous son plus haut. "
+                f"Pire jour : {_fait((risq.get('pire_jour') or {}).get('rendement'), pct_frac)}. "
+                f"Baisses de plus de 20 % : {risq.get('baisses_de_plus_de_20_pct', 'inconnu')}.",
+                f"Quand les actions canadiennes (XIU.TO) bougent de 1 %, il a bougé en moyenne de "
+                f"{_fait(mar['actions_canada']['beta'], lambda b: nombre(b, 2))} % ; les actions américaines (SPY) : "
+                f"{_fait(mar['actions_etats_unis']['beta'], lambda b: nombre(b, 2))} %.",
+                f"Dividendes des 12 derniers mois : {_fait(rev.get('rendement_dividende'), pct_frac)} du dernier cours.",
+                f"Valeur échangée par séance (3 derniers mois) : "
+                f"{_fait(liq.get('valeur_echangee_moyenne_par_jour_cad'), dollars)}. Votre montant en représente "
+                f"{_fait(liq.get('jours_de_volume_ordre'), lambda j: pct(100 * j, 3))}.",
+                f"Lien avec le taux à 10 ans ({taux.get('serie', '?')}) : corrélation "
+                f"{_fait(taux.get('correlation_avec_taux_10_ans'), lambda c: nombre(c, 2))}.",
+            ]
+            for l in lignes:
+                st.markdown(f"- {l}")
+        vraies = [THEMES.get(k, k) for k, e in f["etiquettes"].items() if e.get("valeur") is True]
+        st.markdown("**Étiquettes** : " + (", ".join(vraies) if vraies else "aucune"))
+        st.caption("Le passé ne dit pas l'avenir. Sources : " + " ; ".join(
+            f"{s['libelle']} ({s['source']})" if s["nature"] == "publie" else f"Hypothèse : {s['libelle']}"
+            for s in f.get("sources", [])))
+
+
 def onglet_ordre(persona: str, fiche: dict) -> None:
     univers = instruments()
     prix = derniers_prix_cad()
@@ -1495,6 +1538,8 @@ def onglet_ordre(persona: str, fiche: dict) -> None:
                    f"disponibles. {deja}")
     else:
         st.caption(f"Une vente est versée dans vos liquidités. {deja}")
+
+    fiche_du_titre(ticker, montant)
 
     b1, b2, _ = st.columns([1, 1.4, 2])
     inspecter = b1.button(BOUTON_ACTION, type="primary", key="inspecter", width="stretch")

@@ -8,3 +8,4 @@ data/corporate_actions.csv
 *.env
 .streamlit/secrets.toml
 .DS_Store
+data/macro_rates.csv

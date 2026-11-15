@@ -9,6 +9,7 @@
   "instruments": {
     "RY.TO": {
       "symbole": "RY.TO",
+      "identifiant_univers": "A01",
       "nom": "Royal Bank of Canada",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -75,10 +76,124 @@
           },
           "source": "vanguard_vsgx_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 1.595016,
+          "par_annee": {
+            "2021": 0.007732,
+            "2022": -0.015197,
+            "2023": 0.098006,
+            "2024": 0.343719,
+            "2025": 0.396023,
+            "2026": 0.269521
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2025,
+            "rendement": 0.396023
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": -0.015197
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.015197
+          },
+          "ecart_au_plus_haut": -0.041811,
+          "date_plus_haut": "2026-07-15",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.105962,
+          "pire_jour": {
+            "date": "2022-07-14",
+            "rendement": -0.056272
+          },
+          "pire_mois": {
+            "mois": "2023-05",
+            "rendement": -0.097242
+          },
+          "baisses_de_plus_de_20_pct": 1,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.86,
+            "correlation": 0.7263
+          },
+          "actions_etats_unis": {
+            "beta": 0.4386,
+            "correlation": 0.4728
+          },
+          "obligations_canada": {
+            "beta": 0.2919,
+            "correlation": 0.1254
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": "sans_objet",
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 6.8,
+          "rendement_dividende": 0.0235,
+          "annees_avec_dividende": 5,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2022": 4.96,
+            "2023": 5.34,
+            "2024": 5.6,
+            "2025": 6.04,
+            "2026": 6.8
+          },
+          "fractionnements": [],
+          "devise": "CAD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 898917586.0,
+          "valeur_echangee_moyenne_par_jour_cad": 898917586.0,
+          "devise": "CAD",
+          "periode": {
+            "debut": "2026-08-14",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.1216,
+          "serie": "BD.CDN.10YR.DQ.YLD",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "TD.TO": {
       "symbole": "TD.TO",
+      "identifiant_univers": "A02",
       "nom": "Toronto-Dominion Bank",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -145,10 +260,124 @@
           },
           "source": "vanguard_vsgx_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 1.337704,
+          "par_annee": {
+            "2021": 0.038441,
+            "2022": -0.060146,
+            "2023": 0.023358,
+            "2024": -0.060529,
+            "2025": 0.770589,
+            "2026": 0.40708
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2025,
+            "rendement": 0.770589
+          },
+          "pire_annee": {
+            "annee": 2024,
+            "rendement": -0.060529
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.060146
+          },
+          "ecart_au_plus_haut": -0.012519,
+          "date_plus_haut": "2026-11-04",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.126569,
+          "pire_jour": {
+            "date": "2024-12-05",
+            "rendement": -0.070801
+          },
+          "pire_mois": {
+            "mois": "2022-06",
+            "rendement": -0.126733
+          },
+          "baisses_de_plus_de_20_pct": 1,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.8425,
+            "correlation": 0.6218
+          },
+          "actions_etats_unis": {
+            "beta": 0.428,
+            "correlation": 0.4032
+          },
+          "obligations_canada": {
+            "beta": 0.2248,
+            "correlation": 0.0844
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": "sans_objet",
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 4.4,
+          "rendement_dividende": 0.0249,
+          "annees_avec_dividende": 5,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2022": 3.56,
+            "2023": 3.84,
+            "2024": 4.08,
+            "2025": 4.2,
+            "2026": 4.4
+          },
+          "fractionnements": [],
+          "devise": "CAD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 937000455.0,
+          "valeur_echangee_moyenne_par_jour_cad": 937000455.0,
+          "devise": "CAD",
+          "periode": {
+            "debut": "2026-08-14",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": 0.01,
+          "serie": "BD.CDN.10YR.DQ.YLD",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "MFC.TO": {
       "symbole": "MFC.TO",
+      "identifiant_univers": "A03",
       "nom": "Manulife Financial",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -215,10 +444,125 @@
           },
           "source": "vanguard_vsgx_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 2.17733,
+          "par_annee": {
+            "2021": -0.021326,
+            "2022": 0.058312,
+            "2023": 0.283333,
+            "2024": 0.575263,
+            "2025": 0.174473,
+            "2026": 0.292037
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2024,
+            "rendement": 0.575263
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": 0.058312
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": 0.058312
+          },
+          "ecart_au_plus_haut": -0.023687,
+          "date_plus_haut": "2026-11-04",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.150564,
+          "pire_jour": {
+            "date": "2022-05-12",
+            "rendement": -0.102259
+          },
+          "pire_mois": {
+            "mois": "2023-03",
+            "rendement": -0.080801
+          },
+          "baisses_de_plus_de_20_pct": 1,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 1.1077,
+            "correlation": 0.6691
+          },
+          "actions_etats_unis": {
+            "beta": 0.671,
+            "correlation": 0.5174
+          },
+          "obligations_canada": {
+            "beta": 0.2113,
+            "correlation": 0.0649
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": "sans_objet",
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 1.895,
+          "rendement_dividende": 0.0302,
+          "annees_avec_dividende": 6,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2021": 0.33,
+            "2022": 1.32,
+            "2023": 1.46,
+            "2024": 1.6,
+            "2025": 1.76,
+            "2026": 1.455
+          },
+          "fractionnements": [],
+          "devise": "CAD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 304687450.0,
+          "valeur_echangee_moyenne_par_jour_cad": 304687450.0,
+          "devise": "CAD",
+          "periode": {
+            "debut": "2026-08-14",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.0722,
+          "serie": "BD.CDN.10YR.DQ.YLD",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "ENB.TO": {
       "symbole": "ENB.TO",
+      "identifiant_univers": "A04",
       "nom": "Enbridge",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -285,10 +629,125 @@
           },
           "source": "hypothese_esg_deduit"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 0.826375,
+          "par_annee": {
+            "2021": -0.025444,
+            "2022": 0.139552,
+            "2023": -0.032715,
+            "2024": 0.371817,
+            "2025": 0.140977,
+            "2026": 0.086228
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2024,
+            "rendement": 0.371817
+          },
+          "pire_annee": {
+            "annee": 2023,
+            "rendement": -0.032715
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": 0.139552
+          },
+          "ecart_au_plus_haut": -0.133357,
+          "date_plus_haut": "2026-07-24",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.114426,
+          "pire_jour": {
+            "date": "2023-09-06",
+            "rendement": -0.059178
+          },
+          "pire_mois": {
+            "mois": "2023-05",
+            "rendement": -0.097828
+          },
+          "baisses_de_plus_de_20_pct": 1,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.596,
+            "correlation": 0.4838
+          },
+          "actions_etats_unis": {
+            "beta": 0.1901,
+            "correlation": 0.197
+          },
+          "obligations_canada": {
+            "beta": 0.2391,
+            "correlation": 0.0987
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": "sans_objet",
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 3.853,
+          "rendement_dividende": 0.0562,
+          "annees_avec_dividende": 6,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2021": 0.835,
+            "2022": 3.44,
+            "2023": 3.552,
+            "2024": 3.66,
+            "2025": 3.772,
+            "2026": 2.91
+          },
+          "fractionnements": [],
+          "devise": "CAD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 634742525.0,
+          "valeur_echangee_moyenne_par_jour_cad": 634742525.0,
+          "devise": "CAD",
+          "periode": {
+            "debut": "2026-08-14",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.1635,
+          "serie": "BD.CDN.10YR.DQ.YLD",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "CNQ.TO": {
       "symbole": "CNQ.TO",
+      "identifiant_univers": "A05",
       "nom": "Canadian Natural Resources",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -355,10 +814,134 @@
           },
           "source": "hypothese_esg_deduit"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 2.527127,
+          "par_annee": {
+            "2021": 0.0391,
+            "2022": 0.529239,
+            "2023": 0.210627,
+            "2024": 0.071056,
+            "2025": 0.104235,
+            "2026": 0.550262
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2022,
+            "rendement": 0.529239
+          },
+          "pire_annee": {
+            "annee": 2024,
+            "rendement": 0.071056
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": 0.529239
+          },
+          "ecart_au_plus_haut": -0.10686,
+          "date_plus_haut": "2026-10-30",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.2155,
+          "pire_jour": {
+            "date": "2026-11-04",
+            "rendement": -0.076964
+          },
+          "pire_mois": {
+            "mois": "2022-06",
+            "rendement": -0.165586
+          },
+          "baisses_de_plus_de_20_pct": 2,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 1.0054,
+            "correlation": 0.4279
+          },
+          "actions_etats_unis": {
+            "beta": 0.3511,
+            "correlation": 0.1908
+          },
+          "obligations_canada": {
+            "beta": -0.5685,
+            "correlation": -0.1231
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": "sans_objet",
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 2.463,
+          "rendement_dividende": 0.0352,
+          "annees_avec_dividende": 6,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2021": 0.288,
+            "2022": 2.2846,
+            "2023": 1.85,
+            "2024": 2.138,
+            "2025": 2.352,
+            "2026": 1.875
+          },
+          "fractionnements": [
+            {
+              "date": "2022-08-22",
+              "ratio": 1.021
+            },
+            {
+              "date": "2024-06-11",
+              "ratio": 2.0
+            }
+          ],
+          "devise": "CAD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 923226428.0,
+          "valeur_echangee_moyenne_par_jour_cad": 923226428.0,
+          "devise": "CAD",
+          "periode": {
+            "debut": "2026-08-14",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": 0.2019,
+          "serie": "BD.CDN.10YR.DQ.YLD",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "CNR.TO": {
       "symbole": "CNR.TO",
+      "identifiant_univers": "A06",
       "nom": "Canadian National Railway",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -425,10 +1008,125 @@
           },
           "source": "vanguard_vsgx_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 0.242273,
+          "par_annee": {
+            "2021": -0.041984,
+            "2022": 0.054747,
+            "2023": 0.056668,
+            "2024": -0.105286,
+            "2025": -0.045965,
+            "2026": 0.363042
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2023,
+            "rendement": 0.056668
+          },
+          "pire_annee": {
+            "annee": 2024,
+            "rendement": -0.105286
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": 0.054747
+          },
+          "ecart_au_plus_haut": -0.005649,
+          "date_plus_haut": "2026-07-23",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.140705,
+          "pire_jour": {
+            "date": "2026-04-29",
+            "rendement": -0.060053
+          },
+          "pire_mois": {
+            "mois": "2022-04",
+            "rendement": -0.099106
+          },
+          "baisses_de_plus_de_20_pct": 1,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.8412,
+            "correlation": 0.5532
+          },
+          "actions_etats_unis": {
+            "beta": 0.5078,
+            "correlation": 0.4263
+          },
+          "obligations_canada": {
+            "beta": 0.3255,
+            "correlation": 0.1089
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": "sans_objet",
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 3.633,
+          "rendement_dividende": 0.02,
+          "annees_avec_dividende": 6,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2021": 0.615,
+            "2022": 2.932,
+            "2023": 3.16,
+            "2024": 3.38,
+            "2025": 3.552,
+            "2026": 2.745
+          },
+          "fractionnements": [],
+          "devise": "CAD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 219275299.0,
+          "valeur_echangee_moyenne_par_jour_cad": 219275299.0,
+          "devise": "CAD",
+          "periode": {
+            "debut": "2026-08-14",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.182,
+          "serie": "BD.CDN.10YR.DQ.YLD",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "FTS.TO": {
       "symbole": "FTS.TO",
+      "identifiant_univers": "A07",
       "nom": "Fortis",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -495,10 +1193,125 @@
           },
           "source": "vanguard_vsgx_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 0.819072,
+          "par_annee": {
+            "2021": 0.097507,
+            "2022": -0.078651,
+            "2023": 0.047607,
+            "2024": 0.142406,
+            "2025": 0.239346,
+            "2026": 0.212849
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2025,
+            "rendement": 0.239346
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": -0.078651
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.078651
+          },
+          "ecart_au_plus_haut": -0.015853,
+          "date_plus_haut": "2026-11-05",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.097587,
+          "pire_jour": {
+            "date": "2023-08-03",
+            "rendement": -0.040772
+          },
+          "pire_mois": {
+            "mois": "2022-09",
+            "rendement": -0.094235
+          },
+          "baisses_de_plus_de_20_pct": 1,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.2294,
+            "correlation": 0.2036
+          },
+          "actions_etats_unis": {
+            "beta": 0.0226,
+            "correlation": 0.0256
+          },
+          "obligations_canada": {
+            "beta": 0.6334,
+            "correlation": 0.286
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": "sans_objet",
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 2.56,
+          "rendement_dividende": 0.0303,
+          "annees_avec_dividende": 6,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2021": 0.535,
+            "2022": 2.17,
+            "2023": 2.285,
+            "2024": 2.385,
+            "2025": 2.485,
+            "2026": 1.92
+          },
+          "fractionnements": [],
+          "devise": "CAD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 125187069.0,
+          "valeur_echangee_moyenne_par_jour_cad": 125187069.0,
+          "devise": "CAD",
+          "periode": {
+            "debut": "2026-08-14",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.3666,
+          "serie": "BD.CDN.10YR.DQ.YLD",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "ATD.TO": {
       "symbole": "ATD.TO",
+      "identifiant_univers": "A08",
       "nom": "Alimentation Couche-Tard",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -565,10 +1378,125 @@
           },
           "source": "vanguard_vsgx_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 0.715104,
+          "par_annee": {
+            "2021": 0.053638,
+            "2022": 0.132118,
+            "2023": 0.322585,
+            "2024": 0.031075,
+            "2025": -0.049148,
+            "2026": 0.10887
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2023,
+            "rendement": 0.322585
+          },
+          "pire_annee": {
+            "annee": 2025,
+            "rendement": -0.049148
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": 0.132118
+          },
+          "ecart_au_plus_haut": -0.115896,
+          "date_plus_haut": "2026-06-24",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.153606,
+          "pire_jour": {
+            "date": "2022-05-18",
+            "rendement": -0.055958
+          },
+          "pire_mois": {
+            "mois": "2022-06",
+            "rendement": -0.126327
+          },
+          "baisses_de_plus_de_20_pct": 1,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.7524,
+            "correlation": 0.408
+          },
+          "actions_etats_unis": {
+            "beta": 0.4254,
+            "correlation": 0.2945
+          },
+          "obligations_canada": {
+            "beta": 0.3065,
+            "correlation": 0.0845
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": "sans_objet",
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 0.86,
+          "rendement_dividende": 0.0104,
+          "annees_avec_dividende": 6,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2021": 0.11,
+            "2022": 0.47,
+            "2023": 0.595,
+            "2024": 0.72,
+            "2025": 0.8,
+            "2026": 0.645
+          },
+          "fractionnements": [],
+          "devise": "CAD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 111824856.0,
+          "valeur_echangee_moyenne_par_jour_cad": 111824856.0,
+          "devise": "CAD",
+          "periode": {
+            "debut": "2026-08-14",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.0475,
+          "serie": "BD.CDN.10YR.DQ.YLD",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "SHOP.TO": {
       "symbole": "SHOP.TO",
+      "identifiant_univers": "A09",
       "nom": "Shopify",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -635,10 +1563,123 @@
           },
           "source": "vanguard_vsgx_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": -0.000434,
+          "par_annee": {
+            "2021": -0.168648,
+            "2022": -0.73009,
+            "2023": 1.194427,
+            "2024": 0.483036,
+            "2025": 0.444539,
+            "2026": -0.052443
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2023,
+            "rendement": 1.194427
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": -0.73009
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.73009
+          },
+          "ecart_au_plus_haut": -0.170752,
+          "date_plus_haut": "2026-10-15",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.426841,
+          "pire_jour": {
+            "date": "2025-04-03",
+            "rendement": -0.196282
+          },
+          "pire_mois": {
+            "mois": "2022-04",
+            "rendement": -0.35003
+          },
+          "baisses_de_plus_de_20_pct": 3,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 2.6855,
+            "correlation": 0.5444
+          },
+          "actions_etats_unis": {
+            "beta": 2.0938,
+            "correlation": 0.5418
+          },
+          "obligations_canada": {
+            "beta": 1.4228,
+            "correlation": 0.1467
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": "sans_objet",
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 0.0,
+          "rendement_dividende": 0.0,
+          "annees_avec_dividende": 0,
+          "dividende_en_hausse": "indetermine",
+          "dividende_par_annee": {},
+          "fractionnements": [
+            {
+              "date": "2022-06-29",
+              "ratio": 10.0
+            }
+          ],
+          "devise": "CAD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 398257600.0,
+          "valeur_echangee_moyenne_par_jour_cad": 398257600.0,
+          "devise": "CAD",
+          "periode": {
+            "debut": "2026-08-14",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.1899,
+          "serie": "BD.CDN.10YR.DQ.YLD",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "CSU.TO": {
       "symbole": "CSU.TO",
+      "identifiant_univers": "A10",
       "nom": "Constellation Software",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -705,10 +1746,125 @@
           },
           "source": "vanguard_vsgx_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 0.609817,
+          "par_annee": {
+            "2021": 0.070924,
+            "2022": -0.096858,
+            "2023": 0.557028,
+            "2024": 0.354824,
+            "2025": -0.256279,
+            "2026": 0.060896
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2023,
+            "rendement": 0.557028
+          },
+          "pire_annee": {
+            "annee": 2025,
+            "rendement": -0.256279
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.096858
+          },
+          "ecart_au_plus_haut": -0.323421,
+          "date_plus_haut": "2025-05-08",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.211316,
+          "pire_jour": {
+            "date": "2026-03-11",
+            "rendement": -0.081224
+          },
+          "pire_mois": {
+            "mois": "2026-01",
+            "rendement": -0.23882
+          },
+          "baisses_de_plus_de_20_pct": 2,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.9772,
+            "correlation": 0.4182
+          },
+          "actions_etats_unis": {
+            "beta": 0.6592,
+            "correlation": 0.36
+          },
+          "obligations_canada": {
+            "beta": 0.5789,
+            "correlation": 0.126
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": "sans_objet",
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 5.576,
+          "rendement_dividende": 0.0016,
+          "annees_avec_dividende": 6,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2021": 1.277,
+            "2022": 5.273,
+            "2023": 5.354,
+            "2024": 5.524,
+            "2025": 5.56,
+            "2026": 4.198
+          },
+          "fractionnements": [],
+          "devise": "CAD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 183877792.0,
+          "valeur_echangee_moyenne_par_jour_cad": 183877792.0,
+          "devise": "CAD",
+          "periode": {
+            "debut": "2026-08-14",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.1754,
+          "serie": "BD.CDN.10YR.DQ.YLD",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "AAPL": {
       "symbole": "AAPL",
+      "identifiant_univers": "A11",
       "nom": "Apple",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -775,10 +1931,124 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 1.750113,
+          "par_annee": {
+            "2021": 0.194526,
+            "2022": -0.213771,
+            "2023": 0.455095,
+            "2024": 0.421985,
+            "2025": 0.038762,
+            "2026": 0.362395
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2023,
+            "rendement": 0.455095
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": -0.213771
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.213771
+          },
+          "ecart_au_plus_haut": 0.0,
+          "date_plus_haut": "2026-11-12",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.184852,
+          "pire_jour": {
+            "date": "2025-04-03",
+            "rendement": -0.108363
+          },
+          "pire_mois": {
+            "mois": "2022-12",
+            "rendement": -0.119933
+          },
+          "baisses_de_plus_de_20_pct": 2,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.9195,
+            "correlation": 0.4317
+          },
+          "actions_etats_unis": {
+            "beta": 1.1702,
+            "correlation": 0.7013
+          },
+          "obligations_canada": {
+            "beta": 0.503,
+            "correlation": 0.1201
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": -0.0242,
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 1.07,
+          "rendement_dividende": 0.003,
+          "annees_avec_dividende": 5,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2022": 0.91,
+            "2023": 0.95,
+            "2024": 0.99,
+            "2025": 1.03,
+            "2026": 1.07
+          },
+          "fractionnements": [],
+          "devise": "USD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 14288732742.0,
+          "valeur_echangee_moyenne_par_jour_cad": 20368588524.0,
+          "devise": "USD",
+          "periode": {
+            "debut": "2026-08-17",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.0316,
+          "serie": "DGS10",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "MSFT": {
       "symbole": "MSFT",
+      "identifiant_univers": "A12",
       "nom": "Microsoft",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -845,10 +2115,125 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 0.836072,
+          "par_annee": {
+            "2021": 0.009638,
+            "2022": -0.231083,
+            "2023": 0.544771,
+            "2024": 0.228573,
+            "2025": 0.100978,
+            "2026": 0.13188
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2023,
+            "rendement": 0.544771
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": -0.231083
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.231083
+          },
+          "ecart_au_plus_haut": -0.039198,
+          "date_plus_haut": "2026-11-04",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.186152,
+          "pire_jour": {
+            "date": "2026-01-29",
+            "rendement": -0.103646
+          },
+          "pire_mois": {
+            "mois": "2026-06",
+            "rendement": -0.14677
+          },
+          "baisses_de_plus_de_20_pct": 3,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.7856,
+            "correlation": 0.3654
+          },
+          "actions_etats_unis": {
+            "beta": 1.1446,
+            "correlation": 0.6796
+          },
+          "obligations_canada": {
+            "beta": 0.2499,
+            "correlation": 0.0591
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": -0.0263,
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 3.64,
+          "rendement_dividende": 0.007,
+          "annees_avec_dividende": 6,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2021": 0.62,
+            "2022": 2.54,
+            "2023": 2.79,
+            "2024": 3.08,
+            "2025": 3.4,
+            "2026": 2.73
+          },
+          "fractionnements": [],
+          "devise": "USD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 11933337048.0,
+          "valeur_echangee_moyenne_par_jour_cad": 17010971962.0,
+          "devise": "USD",
+          "periode": {
+            "debut": "2026-08-17",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.0679,
+          "serie": "DGS10",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "NVDA": {
       "symbole": "NVDA",
+      "identifiant_univers": "A13",
       "nom": "NVIDIA",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -915,10 +2300,130 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 5.231429,
+          "par_annee": {
+            "2021": -0.023391,
+            "2022": -0.468674,
+            "2023": 2.310574,
+            "2024": 1.95101,
+            "2025": 0.323226,
+            "2026": -0.071039
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2023,
+            "rendement": 2.310574
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": -0.468674
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.468674
+          },
+          "ecart_au_plus_haut": -0.304304,
+          "date_plus_haut": "2026-10-05",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.330271,
+          "pire_jour": {
+            "date": "2025-01-27",
+            "rendement": -0.167075
+          },
+          "pire_mois": {
+            "mois": "2022-04",
+            "rendement": -0.304173
+          },
+          "baisses_de_plus_de_20_pct": 5,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 1.6334,
+            "correlation": 0.4172
+          },
+          "actions_etats_unis": {
+            "beta": 2.0979,
+            "correlation": 0.6841
+          },
+          "obligations_canada": {
+            "beta": 0.2696,
+            "correlation": 0.035
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": -0.0315,
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 0.52,
+          "rendement_dividende": 0.0031,
+          "annees_avec_dividende": 6,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2021": 0.004,
+            "2022": 0.016,
+            "2023": 0.016,
+            "2024": 0.034,
+            "2025": 0.04,
+            "2026": 0.51
+          },
+          "fractionnements": [
+            {
+              "date": "2024-06-10",
+              "ratio": 10.0
+            }
+          ],
+          "devise": "USD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 29605614148.0,
+          "valeur_echangee_moyenne_par_jour_cad": 42202802967.0,
+          "devise": "USD",
+          "periode": {
+            "debut": "2026-08-17",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.0282,
+          "serie": "DGS10",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "GOOGL": {
       "symbole": "GOOGL",
+      "identifiant_univers": "A14",
       "nom": "Alphabet (Class A)",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -985,10 +2490,127 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 1.300946,
+          "par_annee": {
+            "2021": -0.016971,
+            "2022": -0.349289,
+            "2023": 0.546075,
+            "2024": 0.479649,
+            "2025": 0.581144,
+            "2026": -0.005531
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2025,
+            "rendement": 0.581144
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": -0.349289
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.349289
+          },
+          "ecart_au_plus_haut": -0.227266,
+          "date_plus_haut": "2026-05-13",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.219752,
+          "pire_jour": {
+            "date": "2026-10-29",
+            "rendement": -0.129586
+          },
+          "pire_mois": {
+            "mois": "2026-10",
+            "rendement": -0.19977
+          },
+          "baisses_de_plus_de_20_pct": 4,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.8855,
+            "correlation": 0.3582
+          },
+          "actions_etats_unis": {
+            "beta": 1.2659,
+            "correlation": 0.6536
+          },
+          "obligations_canada": {
+            "beta": 0.3297,
+            "correlation": 0.0678
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": -0.0201,
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 0.86,
+          "rendement_dividende": 0.0029,
+          "annees_avec_dividende": 3,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2024": 0.6,
+            "2025": 0.83,
+            "2026": 0.65
+          },
+          "fractionnements": [
+            {
+              "date": "2022-07-18",
+              "ratio": 20.0
+            }
+          ],
+          "devise": "USD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 9637013768.0,
+          "valeur_echangee_moyenne_par_jour_cad": 13737563126.0,
+          "devise": "USD",
+          "periode": {
+            "debut": "2026-08-17",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": 0.0532,
+          "serie": "DGS10",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "AMZN": {
       "symbole": "AMZN",
+      "identifiant_univers": "A15",
       "nom": "Amazon",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -1055,10 +2677,123 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 0.721407,
+          "par_annee": {
+            "2021": -0.045622,
+            "2022": -0.461736,
+            "2023": 0.76634,
+            "2024": 0.570894,
+            "2025": 0.002159,
+            "2026": 0.205062
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2023,
+            "rendement": 0.76634
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": -0.461736
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.461736
+          },
+          "ecart_au_plus_haut": -0.043207,
+          "date_plus_haut": "2026-08-03",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.241719,
+          "pire_jour": {
+            "date": "2022-04-29",
+            "rendement": -0.142973
+          },
+          "pire_mois": {
+            "mois": "2022-04",
+            "rendement": -0.219464
+          },
+          "baisses_de_plus_de_20_pct": 3,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 1.2017,
+            "correlation": 0.4308
+          },
+          "actions_etats_unis": {
+            "beta": 1.5248,
+            "correlation": 0.6978
+          },
+          "obligations_canada": {
+            "beta": 0.5605,
+            "correlation": 0.1022
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": -0.0158,
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 0.0,
+          "rendement_dividende": 0.0,
+          "annees_avec_dividende": 0,
+          "dividende_en_hausse": "indetermine",
+          "dividende_par_annee": {},
+          "fractionnements": [
+            {
+              "date": "2022-06-06",
+              "ratio": 20.0
+            }
+          ],
+          "devise": "USD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 10073449164.0,
+          "valeur_echangee_moyenne_par_jour_cad": 14359701784.0,
+          "devise": "USD",
+          "periode": {
+            "debut": "2026-08-17",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.0277,
+          "serie": "DGS10",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "TSLA": {
       "symbole": "TSLA",
+      "identifiant_univers": "A16",
       "nom": "Tesla",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -1125,10 +2860,123 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 0.308976,
+          "par_annee": {
+            "2021": 0.031801,
+            "2022": -0.626429,
+            "2023": 0.969848,
+            "2024": 0.768154,
+            "2025": 0.06075,
+            "2026": -0.080828
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2023,
+            "rendement": 0.969848
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": -0.626429
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.626429
+          },
+          "ecart_au_plus_haut": -0.174633,
+          "date_plus_haut": "2024-12-17",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.397784,
+          "pire_jour": {
+            "date": "2025-03-10",
+            "rendement": -0.150731
+          },
+          "pire_mois": {
+            "mois": "2022-12",
+            "rendement": -0.365648
+          },
+          "baisses_de_plus_de_20_pct": 3,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 1.7239,
+            "correlation": 0.3822
+          },
+          "actions_etats_unis": {
+            "beta": 2.0347,
+            "correlation": 0.5758
+          },
+          "obligations_canada": {
+            "beta": 0.7031,
+            "correlation": 0.0793
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": -0.0216,
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 0.0,
+          "rendement_dividende": 0.0,
+          "annees_avec_dividende": 0,
+          "dividende_en_hausse": "indetermine",
+          "dividende_par_annee": {},
+          "fractionnements": [
+            {
+              "date": "2022-08-25",
+              "ratio": 3.0
+            }
+          ],
+          "devise": "USD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 13932418671.0,
+          "valeur_echangee_moyenne_par_jour_cad": 19860662815.0,
+          "devise": "USD",
+          "periode": {
+            "debut": "2026-08-17",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.0039,
+          "serie": "DGS10",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "JPM": {
       "symbole": "JPM",
+      "identifiant_univers": "A17",
       "nom": "JPMorgan Chase",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -1195,10 +3043,124 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 1.638773,
+          "par_annee": {
+            "2021": -0.042466,
+            "2022": -0.06674,
+            "2023": 0.275597,
+            "2024": 0.569758,
+            "2025": 0.307507,
+            "2026": 0.12786
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2024,
+            "rendement": 0.569758
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": -0.06674
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.06674
+          },
+          "ecart_au_plus_haut": -0.034535,
+          "date_plus_haut": "2026-08-12",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.161556,
+          "pire_jour": {
+            "date": "2025-04-03",
+            "rendement": -0.085992
+          },
+          "pire_mois": {
+            "mois": "2022-06",
+            "rendement": -0.132352
+          },
+          "baisses_de_plus_de_20_pct": 2,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.9461,
+            "correlation": 0.5182
+          },
+          "actions_etats_unis": {
+            "beta": 0.8482,
+            "correlation": 0.593
+          },
+          "obligations_canada": {
+            "beta": -0.0468,
+            "correlation": -0.0131
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": -0.0509,
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 6.15,
+          "rendement_dividende": 0.0179,
+          "annees_avec_dividende": 5,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2022": 4.0,
+            "2023": 4.05,
+            "2024": 4.6,
+            "2025": 5.55,
+            "2026": 6.15
+          },
+          "fractionnements": [],
+          "devise": "USD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 2456085191.0,
+          "valeur_echangee_moyenne_par_jour_cad": 3501149439.0,
+          "devise": "USD",
+          "periode": {
+            "debut": "2026-08-17",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": 0.1611,
+          "serie": "DGS10",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "JNJ": {
       "symbole": "JNJ",
+      "identifiant_univers": "A18",
       "nom": "Johnson & Johnson",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -1265,10 +3227,125 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 1.241404,
+          "par_annee": {
+            "2021": 0.0529,
+            "2022": 0.132137,
+            "2023": -0.107248,
+            "2024": 0.035587,
+            "2025": 0.404791,
+            "2026": 0.447787
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2025,
+            "rendement": 0.404791
+          },
+          "pire_annee": {
+            "annee": 2023,
+            "rendement": -0.107248
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": 0.132137
+          },
+          "ecart_au_plus_haut": 0.0,
+          "date_plus_haut": "2026-11-12",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.121039,
+          "pire_jour": {
+            "date": "2025-04-01",
+            "rendement": -0.077716
+          },
+          "pire_mois": {
+            "mois": "2025-04",
+            "rendement": -0.094442
+          },
+          "baisses_de_plus_de_20_pct": 0,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.0991,
+            "correlation": 0.0704
+          },
+          "actions_etats_unis": {
+            "beta": 0.1517,
+            "correlation": 0.1376
+          },
+          "obligations_canada": {
+            "beta": 0.2713,
+            "correlation": 0.0981
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": 0.0305,
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 5.28,
+          "rendement_dividende": 0.0186,
+          "annees_avec_dividende": 6,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2021": 1.06,
+            "2022": 4.45,
+            "2023": 4.7,
+            "2024": 4.91,
+            "2025": 5.14,
+            "2026": 3.98
+          },
+          "fractionnements": [],
+          "devise": "USD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 1894662777.0,
+          "valeur_echangee_moyenne_par_jour_cad": 2700841789.0,
+          "devise": "USD",
+          "periode": {
+            "debut": "2026-08-17",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.1102,
+          "serie": "DGS10",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "PG": {
       "symbole": "PG",
+      "identifiant_univers": "A19",
       "nom": "Procter & Gamble",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -1335,10 +3412,124 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 0.4796,
+          "par_annee": {
+            "2021": 0.126167,
+            "2022": 0.014379,
+            "2023": -0.031854,
+            "2024": 0.275643,
+            "2025": -0.164246,
+            "2026": 0.254853
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2024,
+            "rendement": 0.275643
+          },
+          "pire_annee": {
+            "annee": 2025,
+            "rendement": -0.164246
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": 0.014379
+          },
+          "ecart_au_plus_haut": -0.011413,
+          "date_plus_haut": "2025-03-10",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.130718,
+          "pire_jour": {
+            "date": "2022-07-29",
+            "rendement": -0.062603
+          },
+          "pire_mois": {
+            "mois": "2026-03",
+            "rendement": -0.117317
+          },
+          "baisses_de_plus_de_20_pct": 1,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.1941,
+            "correlation": 0.1348
+          },
+          "actions_etats_unis": {
+            "beta": 0.2717,
+            "correlation": 0.241
+          },
+          "obligations_canada": {
+            "beta": 0.4465,
+            "correlation": 0.1578
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": 0.0288,
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 4.324,
+          "rendement_dividende": 0.0257,
+          "annees_avec_dividende": 5,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2022": 3.609,
+            "2023": 3.736,
+            "2024": 3.962,
+            "2025": 4.178,
+            "2026": 4.324
+          },
+          "fractionnements": [],
+          "devise": "USD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 1426501076.0,
+          "valeur_echangee_moyenne_par_jour_cad": 2033477284.0,
+          "devise": "USD",
+          "periode": {
+            "debut": "2026-08-17",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.1809,
+          "serie": "DGS10",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "XOM": {
       "symbole": "XOM",
+      "identifiant_univers": "A20",
       "nom": "Exxon Mobil",
       "classe_actif": "equity",
       "classe_politique": "actions",
@@ -1405,10 +3596,124 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 2.548601,
+          "par_annee": {
+            "2021": -0.032587,
+            "2022": 1.002105,
+            "2023": -0.084624,
+            "2024": 0.210452,
+            "2025": 0.104721,
+            "2026": 0.496784
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2022,
+            "rendement": 1.002105
+          },
+          "pire_annee": {
+            "annee": 2023,
+            "rendement": -0.084624
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": 1.002105
+          },
+          "ecart_au_plus_haut": -0.074137,
+          "date_plus_haut": "2026-10-30",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.176443,
+          "pire_jour": {
+            "date": "2022-05-09",
+            "rendement": -0.072989
+          },
+          "pire_mois": {
+            "mois": "2025-04",
+            "rendement": -0.146675
+          },
+          "baisses_de_plus_de_20_pct": 0,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.5637,
+            "correlation": 0.2834
+          },
+          "actions_etats_unis": {
+            "beta": 0.2886,
+            "correlation": 0.1852
+          },
+          "obligations_canada": {
+            "beta": -0.6115,
+            "correlation": -0.1564
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": -0.0552,
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 4.12,
+          "rendement_dividende": 0.0243,
+          "annees_avec_dividende": 5,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2022": 3.55,
+            "2023": 3.68,
+            "2024": 3.84,
+            "2025": 4.0,
+            "2026": 3.09
+          },
+          "fractionnements": [],
+          "devise": "USD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 2294766514.0,
+          "valeur_echangee_moyenne_par_jour_cad": 3271189666.0,
+          "devise": "USD",
+          "periode": {
+            "debut": "2026-08-17",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": 0.1775,
+          "serie": "DGS10",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "XIU.TO": {
       "symbole": "XIU.TO",
+      "identifiant_univers": "A21",
       "nom": "iShares S&P/TSX 60 Index ETF",
       "classe_actif": "etf_equity",
       "classe_politique": "actions",
@@ -1465,10 +3770,125 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 0.89653,
+          "par_annee": {
+            "2021": -0.013987,
+            "2022": -0.063481,
+            "2023": 0.118533,
+            "2024": 0.207341,
+            "2025": 0.28894,
+            "2026": 0.17991
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2025,
+            "rendement": 0.28894
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": -0.063481
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.063481
+          },
+          "ecart_au_plus_haut": -0.004925,
+          "date_plus_haut": "2026-11-11",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.090183,
+          "pire_jour": {
+            "date": "2025-04-04",
+            "rendement": -0.044853
+          },
+          "pire_mois": {
+            "mois": "2022-06",
+            "rendement": -0.082253
+          },
+          "baisses_de_plus_de_20_pct": 0,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 1.0,
+            "correlation": 1.0
+          },
+          "actions_etats_unis": {
+            "beta": 0.5355,
+            "correlation": 0.6835
+          },
+          "obligations_canada": {
+            "beta": 0.3833,
+            "correlation": 0.1949
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": "sans_objet",
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 1.136,
+          "rendement_dividende": 0.0208,
+          "annees_avec_dividende": 6,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2021": 0.196,
+            "2022": 0.895,
+            "2023": 1.013,
+            "2024": 1.094,
+            "2025": 1.125,
+            "2026": 0.836
+          },
+          "fractionnements": [],
+          "devise": "CAD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 224721075.0,
+          "valeur_echangee_moyenne_par_jour_cad": 224721075.0,
+          "devise": "CAD",
+          "periode": {
+            "debut": "2026-08-14",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.2097,
+          "serie": "BD.CDN.10YR.DQ.YLD",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "SPY": {
       "symbole": "SPY",
+      "identifiant_univers": "A22",
       "nom": "SPDR S&P 500 ETF Trust",
       "classe_actif": "etf_equity",
       "classe_politique": "actions",
@@ -1525,10 +3945,125 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 0.965393,
+          "par_annee": {
+            "2021": 0.029202,
+            "2022": -0.125861,
+            "2023": 0.232133,
+            "2024": 0.358681,
+            "2025": 0.121313,
+            "2026": 0.163769
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2024,
+            "rendement": 0.358681
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": -0.125861
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.125861
+          },
+          "ecart_au_plus_haut": -0.028641,
+          "date_plus_haut": "2026-10-09",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.114092,
+          "pire_jour": {
+            "date": "2025-04-03",
+            "rendement": -0.065945
+          },
+          "pire_mois": {
+            "mois": "2022-04",
+            "rendement": -0.06616
+          },
+          "baisses_de_plus_de_20_pct": 1,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.8725,
+            "correlation": 0.6835
+          },
+          "actions_etats_unis": {
+            "beta": 1.0,
+            "correlation": 1.0
+          },
+          "obligations_canada": {
+            "beta": 0.3237,
+            "correlation": 0.129
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": -0.0806,
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 7.583,
+          "rendement_dividende": 0.01,
+          "annees_avec_dividende": 6,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2021": 1.633,
+            "2022": 6.32,
+            "2023": 6.633,
+            "2024": 7.066,
+            "2025": 7.281,
+            "2026": 5.59
+          },
+          "fractionnements": [],
+          "devise": "USD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 32951474679.0,
+          "valeur_echangee_moyenne_par_jour_cad": 46972327154.0,
+          "devise": "USD",
+          "periode": {
+            "debut": "2026-08-17",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.0748,
+          "serie": "DGS10",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "QQQ": {
       "symbole": "QQQ",
+      "identifiant_univers": "A23",
       "nom": "Invesco QQQ Trust (Nasdaq-100)",
       "classe_actif": "etf_equity",
       "classe_politique": "actions",
@@ -1585,10 +4120,125 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 1.038044,
+          "par_annee": {
+            "2021": 0.018344,
+            "2022": -0.279715,
+            "2023": 0.512197,
+            "2024": 0.366207,
+            "2025": 0.150399,
+            "2026": 0.169072
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2023,
+            "rendement": 0.512197
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": -0.279715
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.279715
+          },
+          "ecart_au_plus_haut": -0.092261,
+          "date_plus_haut": "2026-10-06",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.156857,
+          "pire_jour": {
+            "date": "2025-04-03",
+            "rendement": -0.070123
+          },
+          "pire_mois": {
+            "mois": "2022-04",
+            "rendement": -0.11549
+          },
+          "baisses_de_plus_de_20_pct": 2,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 1.03,
+            "correlation": 0.5908
+          },
+          "actions_etats_unis": {
+            "beta": 1.2948,
+            "correlation": 0.948
+          },
+          "obligations_canada": {
+            "beta": 0.4141,
+            "correlation": 0.1208
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": -0.0518,
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 3.091,
+          "rendement_dividende": 0.0045,
+          "annees_avec_dividende": 6,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2021": 0.491,
+            "2022": 2.135,
+            "2023": 2.536,
+            "2024": 2.847,
+            "2025": 2.795,
+            "2026": 2.297
+          },
+          "fractionnements": [],
+          "devise": "USD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 27524777809.0,
+          "valeur_echangee_moyenne_par_jour_cad": 39236570767.0,
+          "devise": "USD",
+          "periode": {
+            "debut": "2026-08-17",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.0683,
+          "serie": "DGS10",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "ESGV": {
       "symbole": "ESGV",
+      "identifiant_univers": "A24",
       "nom": "Vanguard ESG U.S. Stock ETF",
       "classe_actif": "etf_equity",
       "classe_politique": "actions",
@@ -1645,10 +4295,125 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 0.83056,
+          "par_annee": {
+            "2021": 0.016706,
+            "2022": -0.18854,
+            "2023": 0.277226,
+            "2024": 0.356547,
+            "2025": 0.109502,
+            "2026": 0.154227
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2024,
+            "rendement": 0.356547
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": -0.18854
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.18854
+          },
+          "ecart_au_plus_haut": -0.035353,
+          "date_plus_haut": "2026-10-09",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.124076,
+          "pire_jour": {
+            "date": "2025-04-03",
+            "rendement": -0.067792
+          },
+          "pire_mois": {
+            "mois": "2022-04",
+            "rendement": -0.078454
+          },
+          "baisses_de_plus_de_20_pct": 2,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.9287,
+            "correlation": 0.6726
+          },
+          "actions_etats_unis": {
+            "beta": 1.0725,
+            "correlation": 0.9915
+          },
+          "obligations_canada": {
+            "beta": 0.4023,
+            "correlation": 0.1482
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": -0.077,
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 1.189,
+          "rendement_dividende": 0.0089,
+          "annees_avec_dividende": 6,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2021": 0.262,
+            "2022": 0.932,
+            "2023": 0.988,
+            "2024": 1.097,
+            "2025": 1.103,
+            "2026": 0.894
+          },
+          "fractionnements": [],
+          "devise": "USD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 25051606.0,
+          "valeur_echangee_moyenne_par_jour_cad": 35711065.0,
+          "devise": "USD",
+          "periode": {
+            "debut": "2026-08-17",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.0999,
+          "serie": "DGS10",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "XBB.TO": {
       "symbole": "XBB.TO",
+      "identifiant_univers": "A25",
       "nom": "iShares Core Canadian Universe Bond Index ETF",
       "classe_actif": "etf_bond",
       "classe_politique": "revenu_fixe",
@@ -1705,10 +4470,125 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 0.036114,
+          "par_annee": {
+            "2021": 0.024531,
+            "2022": -0.116645,
+            "2023": 0.066388,
+            "2024": 0.039974,
+            "2025": 0.025895,
+            "2026": 0.006251
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2023,
+            "rendement": 0.066388
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": -0.116645
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.116645
+          },
+          "ecart_au_plus_haut": -0.015002,
+          "date_plus_haut": "2026-06-30",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.04657,
+          "pire_jour": {
+            "date": "2023-10-03",
+            "rendement": -0.014868
+          },
+          "pire_mois": {
+            "mois": "2022-04",
+            "rendement": -0.036256
+          },
+          "baisses_de_plus_de_20_pct": 0,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.0992,
+            "correlation": 0.1949
+          },
+          "actions_etats_unis": {
+            "beta": 0.0514,
+            "correlation": 0.129
+          },
+          "obligations_canada": {
+            "beta": 1.0,
+            "correlation": 1.0
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": "sans_objet",
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 0.967,
+          "rendement_dividende": 0.0351,
+          "annees_avec_dividende": 6,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2021": 0.132,
+            "2022": 0.795,
+            "2023": 0.85,
+            "2024": 0.924,
+            "2025": 0.954,
+            "2026": 0.807
+          },
+          "fractionnements": [],
+          "devise": "CAD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 4165537.0,
+          "valeur_echangee_moyenne_par_jour_cad": 4165537.0,
+          "devise": "CAD",
+          "periode": {
+            "debut": "2026-08-14",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.9749,
+          "serie": "BD.CDN.10YR.DQ.YLD",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "ZST.TO": {
       "symbole": "ZST.TO",
+      "identifiant_univers": "A26",
       "nom": "BMO Ultra Short-Term Bond ETF",
       "classe_actif": "etf_bond",
       "classe_politique": "liquidites",
@@ -1765,10 +4645,125 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 0.182729,
+          "par_annee": {
+            "2021": 0.000608,
+            "2022": 0.012217,
+            "2023": 0.053786,
+            "2024": 0.052053,
+            "2025": 0.030918,
+            "2026": 0.021724
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2023,
+            "rendement": 0.053786
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": 0.012217
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": 0.012217
+          },
+          "ecart_au_plus_haut": -0.000407,
+          "date_plus_haut": "2026-11-11",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.002834,
+          "pire_jour": {
+            "date": "2022-06-30",
+            "rendement": -0.002255
+          },
+          "pire_mois": {
+            "mois": "2022-06",
+            "rendement": -0.00307
+          },
+          "baisses_de_plus_de_20_pct": 0,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.0066,
+            "correlation": 0.1547
+          },
+          "actions_etats_unis": {
+            "beta": 0.0029,
+            "correlation": 0.0877
+          },
+          "obligations_canada": {
+            "beta": 0.0298,
+            "correlation": 0.3545
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": "sans_objet",
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 1.229,
+          "rendement_dividende": 0.025,
+          "annees_avec_dividende": 6,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2021": 0.16,
+            "2022": 1.35,
+            "2023": 2.36,
+            "2024": 2.3,
+            "2025": 1.383,
+            "2026": 1.035
+          },
+          "fractionnements": [],
+          "devise": "CAD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 2525652.0,
+          "valeur_echangee_moyenne_par_jour_cad": 2525652.0,
+          "devise": "CAD",
+          "periode": {
+            "debut": "2026-08-14",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.3906,
+          "serie": "BD.CDN.10YR.DQ.YLD",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "AGG": {
       "symbole": "AGG",
+      "identifiant_univers": "A27",
       "nom": "iShares Core U.S. Aggregate Bond ETF",
       "classe_actif": "etf_bond",
       "classe_politique": "revenu_fixe",
@@ -1825,10 +4820,125 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 0.116891,
+          "par_annee": {
+            "2021": 0.009331,
+            "2022": -0.070804,
+            "2023": 0.031746,
+            "2024": 0.102177,
+            "2025": 0.021037,
+            "2026": 0.025661
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2024,
+            "rendement": 0.102177
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": -0.070804
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.070804
+          },
+          "ecart_au_plus_haut": -0.021746,
+          "date_plus_haut": "2026-06-24",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.050454,
+          "pire_jour": {
+            "date": "2025-04-10",
+            "rendement": -0.01733
+          },
+          "pire_mois": {
+            "mois": "2022-03",
+            "rendement": -0.043582
+          },
+          "baisses_de_plus_de_20_pct": 0,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": -0.0333,
+            "correlation": -0.0589
+          },
+          "actions_etats_unis": {
+            "beta": 0.0728,
+            "correlation": 0.1642
+          },
+          "obligations_canada": {
+            "beta": 0.7004,
+            "correlation": 0.6297
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": 0.3055,
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 3.981,
+          "rendement_dividende": 0.0418,
+          "annees_avec_dividende": 6,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2021": 0.279,
+            "2022": 2.318,
+            "2023": 3.108,
+            "2024": 3.628,
+            "2025": 3.883,
+            "2026": 3.321
+          },
+          "fractionnements": [],
+          "devise": "USD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 1040559148.0,
+          "valeur_echangee_moyenne_par_jour_cad": 1483317065.0,
+          "devise": "USD",
+          "periode": {
+            "debut": "2026-08-17",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.6859,
+          "serie": "DGS10",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "TLT": {
       "symbole": "TLT",
+      "identifiant_univers": "A28",
       "nom": "iShares 20+ Year Treasury Bond ETF",
       "classe_actif": "etf_bond",
       "classe_politique": "revenu_fixe",
@@ -1885,10 +4995,125 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": -0.26355,
+          "par_annee": {
+            "2021": 0.017262,
+            "2022": -0.265374,
+            "2023": 0.003551,
+            "2024": 0.000321,
+            "2025": -0.007011,
+            "2026": -0.011398
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2023,
+            "rendement": 0.003551
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": -0.265374
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.265374
+          },
+          "ecart_au_plus_haut": -0.311433,
+          "date_plus_haut": "2021-12-03",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.113034,
+          "pire_jour": {
+            "date": "2022-03-02",
+            "rendement": -0.037222
+          },
+          "pire_mois": {
+            "mois": "2023-09",
+            "rendement": -0.08026
+          },
+          "baisses_de_plus_de_20_pct": 1,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.0148,
+            "correlation": 0.012
+          },
+          "actions_etats_unis": {
+            "beta": 0.0719,
+            "correlation": 0.0747
+          },
+          "obligations_canada": {
+            "beta": 1.7816,
+            "correlation": 0.7375
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": 0.0529,
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 3.91,
+          "rendement_dividende": 0.049,
+          "annees_avec_dividende": 6,
+          "dividende_en_hausse": true,
+          "dividende_par_annee": {
+            "2021": 0.352,
+            "2022": 2.656,
+            "2023": 3.343,
+            "2024": 3.755,
+            "2025": 3.861,
+            "2026": 3.247
+          },
+          "fractionnements": [],
+          "devise": "USD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 3158334254.0,
+          "valeur_echangee_moyenne_par_jour_cad": 4502205479.0,
+          "devise": "USD",
+          "periode": {
+            "debut": "2026-08-17",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.8467,
+          "serie": "DGS10",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "GLD": {
       "symbole": "GLD",
+      "identifiant_univers": "A29",
       "nom": "SPDR Gold Shares",
       "classe_actif": "etf_commodity",
       "classe_politique": "alternatifs",
@@ -1945,10 +5170,118 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 1.307956,
+          "par_annee": {
+            "2021": -0.011192,
+            "2022": 0.060059,
+            "2023": 0.100457,
+            "2024": 0.377942,
+            "2025": 0.559073,
+            "2026": -0.068645
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2025,
+            "rendement": 0.559073
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": 0.060059
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": 0.060059
+          },
+          "ecart_au_plus_haut": -0.246245,
+          "date_plus_haut": "2026-01-28",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.127774,
+          "pire_jour": {
+            "date": "2026-01-30",
+            "rendement": -0.099622
+          },
+          "pire_mois": {
+            "mois": "2026-03",
+            "rendement": -0.091147
+          },
+          "baisses_de_plus_de_20_pct": 1,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 0.3435,
+            "correlation": 0.2437
+          },
+          "actions_etats_unis": {
+            "beta": 0.1028,
+            "correlation": 0.0931
+          },
+          "obligations_canada": {
+            "beta": 0.6247,
+            "correlation": 0.2254
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": -0.0891,
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 0.0,
+          "rendement_dividende": 0.0,
+          "annees_avec_dividende": 0,
+          "dividende_en_hausse": "indetermine",
+          "dividende_par_annee": {},
+          "fractionnements": [],
+          "devise": "USD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 3800025909.0,
+          "valeur_echangee_moyenne_par_jour_cad": 5416936934.0,
+          "devise": "USD",
+          "periode": {
+            "debut": "2026-08-17",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.1738,
+          "serie": "DGS10",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "BTC-USD": {
       "symbole": "BTC-USD",
+      "identifiant_univers": "A30",
       "nom": "Bitcoin",
       "classe_actif": "crypto",
       "classe_politique": "alternatifs",
@@ -2005,10 +5338,118 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": 0.261592,
+          "par_annee": {
+            "2021": -0.271729,
+            "2022": -0.616972,
+            "2023": 1.476177,
+            "2024": 1.414398,
+            "2025": -0.107826,
+            "2026": -0.152078
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2023,
+            "rendement": 1.476177
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": -0.616972
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.616972
+          },
+          "ecart_au_plus_haut": -0.41583,
+          "date_plus_haut": "2025-10-06",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.343278,
+          "pire_jour": {
+            "date": "2022-06-13",
+            "rendement": -0.221845
+          },
+          "pire_mois": {
+            "mois": "2022-06",
+            "rendement": -0.365978
+          },
+          "baisses_de_plus_de_20_pct": 4,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 1.188,
+            "correlation": 0.3053
+          },
+          "actions_etats_unis": {
+            "beta": 1.174,
+            "correlation": 0.3851
+          },
+          "obligations_canada": {
+            "beta": 0.3541,
+            "correlation": 0.0463
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": -0.0239,
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 0.0,
+          "rendement_dividende": 0.0,
+          "annees_avec_dividende": 0,
+          "dividende_en_hausse": "indetermine",
+          "dividende_par_annee": {},
+          "fractionnements": [],
+          "devise": "USD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 28023561936.0,
+          "valeur_echangee_moyenne_par_jour_cad": 39947587540.0,
+          "devise": "USD",
+          "periode": {
+            "debut": "2026-09-11",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": 0.0268,
+          "serie": "DGS10",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     },
     "ETH-USD": {
       "symbole": "ETH-USD",
+      "identifiant_univers": "A31",
       "nom": "Ether",
       "classe_actif": "crypto",
       "classe_politique": "alternatifs",
@@ -2065,6 +5506,113 @@
           },
           "source": "vanguard_esgv_2026"
         }
+      },
+      "faits_marche": {
+        "periode": {
+          "debut": "2021-11-12",
+          "fin": "2026-11-12"
+        },
+        "performance": {
+          "rendement_total": -0.509741,
+          "par_annee": {
+            "2021": -0.203844,
+            "2022": -0.652111,
+            "2023": 0.873425,
+            "2024": 0.575862,
+            "2025": -0.151936,
+            "2026": -0.293027
+          },
+          "annees_partielles": [
+            2021,
+            2026
+          ],
+          "meilleure_annee": {
+            "annee": 2023,
+            "rendement": 0.873425
+          },
+          "pire_annee": {
+            "annee": 2022,
+            "rendement": -0.652111
+          },
+          "annee_difficile_du_marche": {
+            "annee": 2022,
+            "marche": "XIU.TO",
+            "rendement_marche": -0.063481,
+            "rendement": -0.652111
+          },
+          "ecart_au_plus_haut": -0.570471,
+          "date_plus_haut": "2025-08-22",
+          "unite": "fraction, rendement total en CAD (dividendes compris)",
+          "note": "Meilleure et pire année : années civiles complètes seulement."
+        },
+        "risque": {
+          "volatilite_baissiere": 0.459652,
+          "pire_jour": {
+            "date": "2022-06-13",
+            "rendement": -0.271902
+          },
+          "pire_mois": {
+            "mois": "2022-06",
+            "rendement": -0.440165
+          },
+          "baisses_de_plus_de_20_pct": 2,
+          "unite": "fraction annualisée (volatilité), fraction (jour, mois), nombre d'épisodes ; en CAD"
+        },
+        "marches": {
+          "actions_canada": {
+            "beta": 1.7353,
+            "correlation": 0.3333
+          },
+          "actions_etats_unis": {
+            "beta": 1.6416,
+            "correlation": 0.4025
+          },
+          "obligations_canada": {
+            "beta": 0.5183,
+            "correlation": 0.0506
+          },
+          "references": {
+            "actions_canada": "XIU.TO",
+            "actions_etats_unis": "SPY",
+            "obligations_canada": "XBB.TO"
+          },
+          "part_volatilite_due_au_change": -0.0209,
+          "unite": "rendements quotidiens en CAD ; bêta et corrélation sans unité ; part du change en fraction de la variance"
+        },
+        "revenu": {
+          "dividendes_12_mois": 0.0,
+          "rendement_dividende": 0.0,
+          "annees_avec_dividende": 0,
+          "dividende_en_hausse": "indetermine",
+          "dividende_par_annee": {},
+          "fractionnements": [],
+          "devise": "USD",
+          "unite": "dividendes par action en devise de cotation ; rendement = dividendes des 12 derniers mois / dernier cours",
+          "note": "Années civiles de la période ; « en hausse » compare la dernière année complète à la première. Les dividendes des fonds peuvent être incomplets (organisateurs)."
+        },
+        "liquidite": {
+          "valeur_echangee_moyenne_par_jour": 12472385551.0,
+          "valeur_echangee_moyenne_par_jour_cad": 17779385603.0,
+          "devise": "USD",
+          "periode": {
+            "debut": "2026-09-11",
+            "fin": "2026-11-12",
+            "seances": 63
+          },
+          "unite": "dollars par séance (cours de clôture x volume ; crypto : volume déjà en dollars américains)"
+        },
+        "taux": {
+          "correlation_avec_taux_10_ans": -0.028,
+          "serie": "DGS10",
+          "semaines": 261,
+          "unite": "corrélation des rendements hebdomadaires en CAD avec la variation hebdomadaire du taux 10 ans (points de pourcentage)"
+        },
+        "sources": [
+          "donnees_marche",
+          "donnees_dividendes",
+          "donnees_taux",
+          "hypothese_faits_marche"
+        ]
       }
     }
   }

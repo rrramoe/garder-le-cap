@@ -157,5 +157,23 @@
     "source": "Hypothèse du projet",
     "date": "2026-11-15",
     "nature": "hypothese"
+  },
+  "donnees_dividendes": {
+    "libelle": "Dividendes et fractionnements par date ex (corporate_actions.csv)",
+    "source": "Jeu de données des organisateurs du Datathon PolyFinances 2026 (Yahoo Finance via yfinance)",
+    "date": "2026-11-13",
+    "nature": "publie"
+  },
+  "donnees_taux": {
+    "libelle": "Taux obligataires 10 ans du Canada et des États-Unis (macro_rates.csv : BD.CDN.10YR.DQ.YLD, DGS10)",
+    "source": "Jeu de données des organisateurs du Datathon PolyFinances 2026 (Banque du Canada, API Valet ; FRED, Federal Reserve Bank of St. Louis)",
+    "date": "2026-11-13",
+    "nature": "publie"
+  },
+  "hypothese_faits_marche": {
+    "libelle": "Conventions des faits de marché : « le marché » de l'année la plus difficile = XIU.TO ; volatilité baissière = racine de la moyenne des carrés des rendements négatifs, annualisée ; part du change = 1 - variance en devise de cotation / variance en CAD ; taux : rendements et variations hebdomadaires (vendredi) ; liquidité : moyenne des 63 dernières séances. Des descriptions du passé, sans note ni prévision",
+    "source": "Hypothèse du projet (moteur/faits_marche.py)",
+    "date": "2026-11-15",
+    "nature": "hypothese"
   }
 }

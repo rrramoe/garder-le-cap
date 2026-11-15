@@ -3,6 +3,10 @@
 Usage : python scripts/construire_fiches.py [--sans-reseau]
 
 - Statistiques en CAD calculées par le moteur sur `data/prices_daily.csv`.
+- Faits de marché (`faits_marche`) : performance passée, risque, lien avec les marchés, revenu,
+  liquidité et sensibilité aux taux, calculés par `moteur/faits_marche.py` sur les fichiers des
+  organisateurs copiés dans `data/` (prices_daily.csv, fx_usdcad_daily.csv, corporate_actions.csv,
+  macro_rates.csv ; les trois premiers viennent de Yahoo et ne sont pas publiés dans le dépôt).
 - Date de première cotation : `firstTradeDate` de yfinance (accès réseau), pour les
   actions individuelles. Avec `--sans-reseau`, les dates déjà présentes dans le cache
   sont réutilisées ; sinon l'étiquette `etablie` est `indetermine`.
@@ -17,7 +21,7 @@ from pathlib import Path
 RACINE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE))
 
-from moteur import donnees, etiquettes, references  # noqa: E402
+from moteur import donnees, etiquettes, faits_marche, references  # noqa: E402
 
 SORTIE = RACINE / "reference" / "fiches_instruments.json"
 
@@ -61,6 +65,7 @@ def main() -> None:
 
         fiches[ticker] = {
             "symbole": ticker,
+            "identifiant_univers": ligne["asset_id"],
             "nom": ligne["name"],
             "classe_actif": classe_actif,
             "classe_politique": references.classe_politique(ticker),
@@ -84,6 +89,7 @@ def main() -> None:
                 "techno": etiquettes.etiquette_techno(classe_actif, ligne["sector"]),
                 "ecarte_esg": etiquettes.etiquette_ecarte_esg(ticker, classe_actif),
             },
+            "faits_marche": faits_marche.faits(ticker, ligne.to_dict()),
         }
 
     sortie = {

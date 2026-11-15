@@ -31,9 +31,22 @@ api.simuler_ordre("robert", "TSLA", "achat", 15)
 
 **Besoin de liquidités dans les 12 prochains mois** (`besoin_liquidite` : `aucun`, `jusqu_10`, `10_25`, `25_40`). La borne haute de la tranche (0, 10, 25 ou 40 %) relève d'autant le minimum, la cible et le maximum de la classe `liquidites` (maximum plafonné à 100) ; les autres classes gardent leur fourchette et la formule de classe s'applique telle quelle à la fourchette relevée. `deduit.besoin_liquidite_pct` : `{valeur, origine, phrase, source}`, par exemple « Vous gardez au moins 10 % en liquidités pour vos besoins de l'année. ». Sans réponse : `aucun`, rien ne change. Règle du décalage : `hypothese_besoin_liquidite` (listée dans `sources` seulement quand un besoin est déclaré).
 
-## `lire_fiche_instrument(ticker)`
+## `lire_fiche_instrument(ticker, montant_cad=None)`
 
-`symbole`, `nom`, `classe_actif`, `classe_politique`, `secteur`, `marche`, `devise`, `statistiques_cad` (`volatilite_annualisee`, `pire_baisse`, `temps_sous_l_eau_annees`, `non_recupere`, dates), `premiere_cotation` (actions individuelles : `date`, `recupere_le`), `etiquettes`, `periode`, `seuil_speculatif`, `fiches_generees_le`.
+`symbole`, `identifiant_univers`, `nom`, `classe_actif`, `classe_politique`, `secteur`, `marche`, `devise`, `statistiques_cad` (`volatilite_annualisee`, `pire_baisse`, `temps_sous_l_eau_annees`, `non_recupere`, dates), `premiere_cotation` (actions individuelles : `date`, `recupere_le`), `etiquettes`, `faits_marche`, `periode`, `seuil_speculatif`, `fiches_generees_le`.
+
+`faits_marche` : des faits sur le passé, calculés par `scripts/construire_fiches.py` (module `moteur/faits_marche.py`) sur les fichiers des organisateurs ; aucun n'entre dans un score. En CAD sur le calendrier du moteur, sauf mention. Une donnée absente ou trop courte vaut `"indetermine"`.
+
+| Bloc | Contenu |
+|---|---|
+| `performance` | `rendement_total`, `par_annee` (année → rendement), `annees_partielles`, `meilleure_annee` et `pire_annee` (années complètes), `annee_difficile_du_marche` (`{annee, marche: XIU.TO, rendement_marche, rendement}`), `ecart_au_plus_haut`, `date_plus_haut` |
+| `risque` | `volatilite_baissiere` (annualisée), `pire_jour`, `pire_mois`, `baisses_de_plus_de_20_pct` (épisodes) |
+| `marches` | `actions_canada` (XIU.TO), `actions_etats_unis` (SPY), `obligations_canada` (XBB.TO) : `{beta, correlation}` ; `part_volatilite_due_au_change` (titres en USD : 1 - variance en USD / variance en CAD ; `sans_objet` sinon) |
+| `revenu` | Devise de cotation : `dividendes_12_mois` (par action), `rendement_dividende` (sur le dernier cours), `annees_avec_dividende`, `dividende_en_hausse` (dernière année complète contre la première), `dividende_par_annee`, `fractionnements` |
+| `liquidite` | `valeur_echangee_moyenne_par_jour` (devise de cotation) et `_cad`, sur les 63 dernières séances ; avec `montant_cad` : `montant_ordre_cad` et `jours_de_volume_ordre` (montant / valeur échangée moyenne) |
+| `taux` | `correlation_avec_taux_10_ans` (rendements hebdomadaires contre variation hebdomadaire du taux 10 ans de la devise : `BD.CDN.10YR.DQ.YLD` ou `DGS10`) |
+
+Sources : `donnees_marche`, `donnees_dividendes`, `donnees_taux`, conventions `hypothese_faits_marche`. `data/corporate_actions.csv` et `data/macro_rates.csv` ne sont pas publiés dans le dépôt : copiez-les depuis le dossier des organisateurs (ou régénérez-les avec `python data/build_dataset.py`), puis `python scripts/construire_fiches.py --sans-reseau`.
 
 `etiquettes` : `speculatif`, `etablie`, `crypto`, `techno`, `ecarte_esg`. Chacune : `{valeur, regle, declencheur, source}`, avec `valeur` = `true`, `false`, `"indetermine"` ou `"sans_objet"` et `declencheur` = le chiffre ou le statut qui l'a produite.
 
@@ -124,7 +137,7 @@ Ce que l'instrument apporterait au portefeuille du client : **des faits seulemen
 | `positions_proches` | Les trois positions actuelles les plus corrélées à l'instrument : `{ticker, nom, poids_pct, correlation}` |
 | `exposition_actuelle` | `classe` : `{classe, poids_pct, min_pct, cible_pct, max_pct}` ; `secteur` (action individuelle) : `{secteur, poids_pct, positions, plafond_pct, plafond_action_individuelle_pct}`, sinon `null` ; `fonds` (fonds négocié en bourse) : `{poids_actuel_pct, plafond_pct}` ; `etiquettes` : pour chaque étiquette vraie de l'instrument, `{poids_pct, positions, reponse_client, plafond_pct}` (`plafond_pct` pour la crypto seulement) ; `periode` |
 | `apres_ordre` | Si `pourcentage` est donné : achat au comptant, `{pourcentage_ordre, poids_pct, part_du_risque_pct, poids_avant_pct, part_du_risque_avant_pct}` (même calcul que `contribution_risque_apres`) ; `{pourcentage_ordre, erreur}` si l'achat est impossible (encaisse insuffisante) ; `null` sans `pourcentage` |
-| `candidats` | Les instruments de la même classe, du plus corrélé au moins corrélé à l'instrument : `{symbole, nom, secteur, correlation_avec_instrument, correlation_avec_portefeuille, volatilite_annualisee, pire_baisse, etiquettes, deja_detenu_pct}` |
+| `candidats` | Les instruments de la même classe, du plus corrélé au moins corrélé à l'instrument : `{symbole, nom, secteur, correlation_avec_instrument, correlation_avec_portefeuille, volatilite_annualisee, pire_baisse, etiquettes, deja_detenu_pct, type, rendement_dividende}` (`type` : `action`, `fonds` ou `crypto`) |
 | `periode`, `frequence` | Période des données (CAD) ; `quotidienne` |
 
 Instrument inconnu, client inconnu, montant invalide ou historique de prix manquant : `{"erreur": "..."}`.
