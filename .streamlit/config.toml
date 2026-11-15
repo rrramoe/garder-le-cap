@@ -1,0 +1,9 @@
+[theme]
+# Couleur principale neutre : le rouge reste réservé au verdict « incompatible ».
+primaryColor = "#37474f"
+
+[client]
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false

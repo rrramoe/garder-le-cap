@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 import time
 from pathlib import Path
 
@@ -369,24 +370,33 @@ def graphique_courbe(taille: dict) -> alt.Chart:
     df["mesure"] = [libelle_mesure(d, m) for d, m in zip(df["dimension_min"], df["mesure_min"])]
     haut = max(100.0, float(df["score"].max()))
     base = alt.Chart(df).encode(
-        x=alt.X("taille_pct:Q", title="Taille de l'ordre (% du portefeuille)"),
+        x=alt.X("taille_pct:Q", title="Taille de l'ordre (% du portefeuille)",
+                scale=alt.Scale(domainMin=0), axis=alt.Axis(tickMinStep=1, format="d")),
         y=alt.Y("score:Q", title="Score après l'ordre (0 à 100)", scale=alt.Scale(domain=[0, haut])),
         tooltip=[alt.Tooltip("taille_pct:Q", title="Taille (%)", format=".1f"),
                  alt.Tooltip("score:Q", title="Score", format=".1f"),
                  alt.Tooltip("dimension:N", title="Donné par"), alt.Tooltip("mesure:N", title="Mesure")])
     ligne = base.mark_line(color="#37474f") + base.mark_circle(size=28, color="#37474f")
     limite = alt.Chart(pd.DataFrame({"y": [LIMITE]})).mark_rule(color="#c62828", strokeDash=[5, 4]).encode(y="y:Q")
-    texte_limite = alt.Chart(pd.DataFrame({"y": [LIMITE], "x": [float(df["taille_pct"].min())]})).mark_text(
-        align="left", dy=-7, color="#c62828", fontSize=11).encode(
-        x="x:Q", y="y:Q", text=alt.value("Limite de la politique (50)"))
-    couches = [ligne, limite, texte_limite]
+    x_min, x_max = float(df["taille_pct"].min()), float(df["taille_pct"].max())
+    # Étiquettes posées dans le cadre, avec un halo blanc pour rester lisibles sur la courbe.
+    lim = pd.DataFrame({"y": [LIMITE], "x": [x_min], "lib": ["Limite de la politique (50)"]})
+    couches = [ligne, limite] + _etiquette(lim, "#c62828", align="left", dy=12)
     if taille.get("taille_compatible_pct") is not None:
-        tc = pd.DataFrame({"x": [taille["taille_compatible_pct"]],
-                           "lib": [f"Taille compatible : {pct(taille['taille_compatible_pct'])}"]})
+        x_tc = float(taille["taille_compatible_pct"])
+        tc = pd.DataFrame({"x": [x_tc], "y": [haut * 0.94],
+                           "lib": [f"Taille compatible : {pct(x_tc)}"]})
         couches.append(alt.Chart(tc).mark_rule(color="#2e7d32").encode(x="x:Q"))
-        couches.append(alt.Chart(tc).mark_text(align="right", dx=-4, dy=-110, color="#2e7d32",
-                                                fontSize=11).encode(x="x:Q", text="lib:N"))
+        a_gauche = x_tc > (x_min + x_max) / 2
+        couches += _etiquette(tc, "#2e7d32", align="right" if a_gauche else "left", dx=-6 if a_gauche else 6)
     return alt.layer(*couches).properties(height=280)
+
+
+def _etiquette(df: pd.DataFrame, couleur: str, **pos) -> list:
+    enc = {"x": "x:Q", "y": "y:Q", "text": "lib:N"}
+    halo = alt.Chart(df).mark_text(fontSize=11, stroke="white", strokeWidth=4, **pos).encode(**enc)
+    texte = alt.Chart(df).mark_text(fontSize=11, color=couleur, **pos).encode(**enc)
+    return [halo, texte]
 
 
 # ---------------------------------------------------------------- rendu : fiche
@@ -687,10 +697,11 @@ def section_agent(rapport: dict) -> None:
         if agent.get("erreur"):
             st.caption(f"Raison : {agent['erreur']}.")
         return
-    st.markdown(agent["explication"])
+    # Les titres éventuels du texte de l'agent deviennent du gras, pour rester sous le titre de la partie.
+    st.markdown(re.sub(r"(?m)^#{1,6}\s+(.+?)\s*$", r"\n**\1**\n", agent["explication"]))
     details = []
     if agent.get("modele"):
-        details.append(f"modèle : {agent['modele']}")
+        details.append(f"Modèle : {agent['modele']}")
     if agent.get("duree_s") is not None:
         details.append(f"durée : {nombre(agent['duree_s'])} s")
     st.caption("Texte rédigé par l'agent à partir des résultats des outils ; aucun chiffre ne vient du "
