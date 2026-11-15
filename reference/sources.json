@@ -175,5 +175,11 @@
     "source": "Hypothèse du projet (moteur/faits_marche.py)",
     "date": "2026-11-15",
     "nature": "hypothese"
+  },
+  "yfinance_profils": {
+    "libelle": "Profils des instruments : industrie, pays, capitalisation, chiffre d'affaires, bénéfice net, dette, encaisse, signe des flux de trésorerie (entreprises) ; dix plus grandes positions, secteurs, types d'actifs, ratio des frais (fonds). La phrase de description est composée par le projet à partir de ces champs",
+    "source": "Yahoo Finance via yfinance (même source que les prix des organisateurs), téléchargement non publié dans le dépôt",
+    "date": "2026-11-15",
+    "nature": "publie"
   }
 }

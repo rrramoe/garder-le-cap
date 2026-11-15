@@ -9,6 +9,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from . import profils
 from . import donnees, instruments, notation, references
 from .client import poids_par_classe
 
@@ -130,6 +131,10 @@ def decrire(fiche_client: dict, ticker: str, pourcentage: float | None = None) -
             "etiquettes": {k: e["valeur"] for k, e in g["etiquettes"].items()},
             "deja_detenu_pct": port.get(t, 0.0),
             **resume_candidat(g),
+            **(({"positions_deja_detenues": profils.positions_deja_detenues(t, port, set(instruments.toutes()))}
+                if g["classe_actif"].startswith("etf") else
+                {"industrie": profils.profil(t).get("industrie", "indetermine")}
+                if g["classe_actif"] == "equity" else {})),
         })
     candidats.sort(key=lambda x: -(x["correlation_avec_instrument"] if x["correlation_avec_instrument"] is not None
                                    else -2.0))

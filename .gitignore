@@ -9,3 +9,5 @@ data/corporate_actions.csv
 .streamlit/secrets.toml
 .DS_Store
 data/macro_rates.csv
+data/profils_bruts/
+reference/profils_instruments.json

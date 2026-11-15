@@ -1455,6 +1455,10 @@ def _fait(x, rendu) -> str:
     return "inconnu" if x is None or x == "indetermine" else rendu(x)
 
 
+def _milliards(v, devise: str) -> str:
+    return _fait(v, lambda x: f"{nombre(x / 1e9, 1)} G$ {devise}".strip())
+
+
 def fiche_du_titre(ticker: str, montant: float) -> None:
     """Ce que l'outil sait du titre : identité, chiffres clés du passé, étiquettes, sources (repliée)."""
     f = api.lire_fiche_instrument(ticker, montant)
@@ -1487,6 +1491,25 @@ def fiche_du_titre(ticker: str, montant: float) -> None:
             ]
             for l in lignes:
                 st.markdown(f"- {l}")
+        pr = f.get("profil") or {}
+        if pr.get("type") == "entreprise":
+            dev = pr.get("devise_des_etats_financiers", "")
+            st.markdown(f"**L'entreprise.** {pr['description']}")
+            st.markdown(f"- Valeur en bourse : {_milliards(pr.get('capitalisation'), pr.get('devise_capitalisation', ''))}. "
+                        f"Chiffre d'affaires : {_milliards(pr.get('chiffre_affaires'), dev)} ; "
+                        f"bénéfice net : {_milliards(pr.get('benefice_net'), dev)}.")
+            flux = ", ".join(f"{k} {v}" for k, v in (pr.get("flux_tresorerie_signes") or {}).items())
+            st.markdown(f"- Dette : {_milliards(pr.get('dette'), dev)} ; encaisse : {_milliards(pr.get('encaisse'), dev)}. "
+                        f"Flux de trésorerie du dernier exercice : {flux.replace('negatif', 'négatif')}.")
+        elif pr.get("type") == "fonds":
+            st.markdown(f"**Le fonds.** {pr['description']} Frais : "
+                        f"{_fait(pr.get('ratio_frais_pct'), lambda v: nombre(v, 2) + ' % par an')}.")
+            pos = pr.get("dix_plus_grandes_positions")
+            if isinstance(pos, list) and pos:
+                st.markdown("- Plus grandes positions : " + ", ".join(
+                    f"{h['nom']} ({pct_frac(h['poids'])})" for h in pos[:5]) + ".")
+        elif pr.get("type") == "cryptoactif":
+            st.markdown(f"**L'actif.** {pr['description']}")
         vraies = [THEMES.get(k, k) for k, e in f["etiquettes"].items() if e.get("valeur") is True]
         st.markdown("**Étiquettes** : " + (", ".join(vraies) if vraies else "aucune"))
         st.caption("Le passé ne dit pas l'avenir. Sources : " + " ; ".join(

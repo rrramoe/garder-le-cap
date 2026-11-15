@@ -18,6 +18,7 @@ from . import client as _client
 from . import apport as _apport
 from . import donnees, instruments, notation, references, solidite as _solidite
 from . import faits_marche as _faits
+from . import profils as _profils
 
 SOURCES_FICHE_CLIENT = ("fbngp_profils_2024", "fbngp_politique_2022", "fidelity_crypto_2026", "hypothese_personas",
                         "hypothese_crypto_correspondance", "hypothese_plafonds_tous_profils", "hypothese_classes",
@@ -84,6 +85,9 @@ def lire_fiche_instrument(ticker: str, montant_cad: float | None = None) -> dict
     """
     f = dict(instruments.fiche(str(ticker).strip().upper()))
     cles = {"donnees_marche", "hypothese_etiquettes", "hypothese_classes"}
+    f["profil"] = _profils.profil(f["symbole"])
+    if f["profil"].get("source"):
+        cles.add(f["profil"]["source"])
     if f.get("faits_marche"):
         cles |= set(f["faits_marche"].get("sources", []))
         if montant_cad is not None:
