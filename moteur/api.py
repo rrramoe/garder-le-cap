@@ -69,7 +69,8 @@ def lire_fiche_client(client) -> dict:
     """Profil, horizon, règles, fourchettes et portefeuille du client."""
     fiche = _client.construire_fiche(client)
     fiche["poids_par_classe_pct"] = _client.poids_par_classe(fiche["portefeuille_pct"])
-    fiche["sources"] = _sources(*SOURCES_FICHE_CLIENT)
+    deduites = [e[k] for e in fiche["deduit"].values() for k in ("regle", "hypothese") if e.get(k)]
+    fiche["sources"] = _sources(*SOURCES_FICHE_CLIENT, *deduites)
     return fiche
 
 

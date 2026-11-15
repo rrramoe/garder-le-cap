@@ -10,7 +10,8 @@ class ErreurClient(Exception):
     pass
 
 
-CHAMPS = ("objectif", "horizon", "fluctuations", "capacite_perte", "experience")
+CHAMPS = ("objectif", "horizon", "fluctuations", "capacite_perte", "besoin_liquidite", "experience")
+DEFAUTS = {"besoin_liquidite": "aucun"}  # réponses neutres quand la fiche ne les donne pas
 
 # Ordre des profils, du plus prudent au plus exposé : le profil retenu est le plus prudent
 # de ce que le client accepte (fluctuations) et de ce que sa situation permet (capacité).
@@ -62,11 +63,29 @@ def _base(client) -> dict:
     return base
 
 
+def decaler_liquidites(fourchettes: dict, besoin_pct: float) -> dict:
+    """Relève le minimum, la cible et le maximum des liquidités du besoin de l'année (maximum plafonné à 100)."""
+    f = copy.deepcopy(fourchettes)
+    if besoin_pct:
+        liq = f["liquidites"]
+        liq["min"], liq["cible"] = liq["min"] + besoin_pct, liq["cible"] + besoin_pct
+        liq["max"] = min(100, liq["max"] + besoin_pct)
+    return f
+
+
+def phrase_besoin(besoin_pct: float) -> str:
+    if not besoin_pct:
+        return "Aucun besoin de liquidités dans l'année : la zone des liquidités est celle du profil."
+    return f"Vous gardez au moins {besoin_pct:g} % en liquidités pour vos besoins de l'année."
+
+
 def construire_fiche(client) -> dict:
     b = _base(client)
     q = b["questionnaire"]
     if "fluctuations" in q:
         q.setdefault("capacite_perte", q["fluctuations"])
+    for champ, defaut in DEFAUTS.items():
+        q.setdefault(champ, defaut)
     ref_q = references.charger("questionnaire")
     for champ in CHAMPS:
         if champ not in q:
@@ -104,6 +123,8 @@ def construire_fiche(client) -> dict:
     profil = references.charger("profils")["profils"][profil_id]
     horizon = ref_q["horizon"]["options"][q["horizon"]]
     crypto = references.charger("crypto")["par_profil"][profil_id]
+    besoin = ref_q["besoin_liquidite"]["options"][q["besoin_liquidite"]]
+    fourchettes = decaler_liquidites(profil["fourchettes"], besoin["pct"])
     plafonds = references.charger("plafonds_concentration")["plafonds_pct"]
 
     contraintes = [{"theme": t, "reponse": r} for t, r in themes.items() if r in ("exclure", "obligatoire")]
@@ -128,8 +149,17 @@ def construire_fiche(client) -> dict:
                    "permis": {"valeur": capa["profil"], "libelle": lib_permis},
                    "decide_par": decide, "phrase": phrase,
                    "source": "fbngp_profils_2024", "regle": "acvm_capacite_perte", "hypothese": "hypothese_capacite_libelles"},
-        "fourchettes_pct": {"valeur": profil["fourchettes"], "origine": f"Fourchettes et cibles du profil {profil['libelle']}.",
-                            "source": "fbngp_profils_2024"},
+        "fourchettes_pct": {"valeur": fourchettes,
+                            "origine": f"Fourchettes et cibles du profil {profil['libelle']}."
+                                       + (f" Liquidités relevées de {besoin['pct']} points pour le besoin de l'année."
+                                          if besoin["pct"] else ""),
+                            "source": "fbngp_profils_2024",
+                            **({"hypothese": "hypothese_besoin_liquidite"} if besoin["pct"] else {})},
+        "besoin_liquidite_pct": {"valeur": besoin["pct"],
+                                 "origine": f"Besoin de liquidités dans les 12 prochains mois « {besoin['libelle']} ».",
+                                 "phrase": phrase_besoin(besoin["pct"]),
+                                 "source": "questionnaire",
+                                 **({"hypothese": "hypothese_besoin_liquidite"} if besoin["pct"] else {})},
         "horizon_annees": {"valeur": horizon["borne_basse_annees"],
                            "origine": f"Borne basse de l'horizon « {horizon['libelle']} ».", "source": "questionnaire"},
         "plafonds_concentration_pct": {"valeur": plafonds, "origine": "Plafonds identiques pour tous les profils.",

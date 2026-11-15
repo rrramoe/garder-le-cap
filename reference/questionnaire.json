@@ -89,6 +89,28 @@
     },
     "note": "Même échelle que « Fluctuations acceptées ». Le profil retenu est le plus prudent des deux. Les situations décrites sont une formulation du projet (hypothèse)."
   },
+  "besoin_liquidite": {
+    "libelle": "Besoin de liquidités dans les 12 prochains mois",
+    "options": {
+      "aucun": {
+        "libelle": "Aucun",
+        "pct": 0
+      },
+      "jusqu_10": {
+        "libelle": "Jusqu'à 10 %",
+        "pct": 10
+      },
+      "10_25": {
+        "libelle": "10 à 25 %",
+        "pct": 25
+      },
+      "25_40": {
+        "libelle": "25 à 40 %",
+        "pct": 40
+      }
+    },
+    "note": "Part du portefeuille dont le client aura besoin dans l'année. La borne haute de la tranche sert aux calculs : elle relève d'autant le minimum, la cible et le maximum de la classe « liquidités » (maximum plafonné à 100 %). Hypothèse du projet."
+  },
   "experience": {
     "libelle": "Expérience",
     "options": {

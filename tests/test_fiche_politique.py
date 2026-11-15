@@ -59,3 +59,39 @@ def test_sources_de_la_capacite():
     ids = {s["id"] for s in api.lire_fiche_client("robert")["sources"]}
     assert {"acvm_capacite_perte", "hypothese_capacite_libelles"} <= ids
     assert client.CHAMPS.index("capacite_perte") == client.CHAMPS.index("fluctuations") + 1
+
+
+# ---------------------------------------------------------------- besoin de liquidités
+
+BESOIN_10 = {"persona": "mateo", "questionnaire": {"besoin_liquidite": "jusqu_10"}}
+
+
+def test_besoin_aucun_ne_change_rien():
+    r = api.lire_fiche_client({"persona": "mateo", "questionnaire": {"besoin_liquidite": "aucun"}})
+    assert r["deduit"]["fourchettes_pct"]["valeur"] == PROFILS["equilibre"]["fourchettes"]
+    assert r["deduit"]["besoin_liquidite_pct"]["valeur"] == 0
+    assert "hypothese_besoin_liquidite" not in {s["id"] for s in r["sources"]}
+
+
+@pytest.mark.parametrize("choix,besoin", [("jusqu_10", 10), ("10_25", 25), ("25_40", 40)])
+def test_besoin_decale_la_seule_classe_liquidites(choix, besoin):
+    r = api.lire_fiche_client({"persona": "amira", "questionnaire": {"besoin_liquidite": choix}})
+    f, f0 = r["deduit"]["fourchettes_pct"]["valeur"], PROFILS["croissance_maximale"]["fourchettes"]
+    liq, liq0 = f["liquidites"], f0["liquidites"]
+    assert (liq["min"], liq["cible"], liq["max"]) == (liq0["min"] + besoin, liq0["cible"] + besoin,
+                                                      min(100, liq0["max"] + besoin))
+    assert {c: v for c, v in f.items() if c != "liquidites"} == {c: v for c, v in f0.items() if c != "liquidites"}
+    assert r["deduit"]["besoin_liquidite_pct"]["phrase"] == \
+        f"Vous gardez au moins {besoin} % en liquidités pour vos besoins de l'année."
+    assert "hypothese_besoin_liquidite" in {s["id"] for s in r["sources"]}
+
+
+def test_besoin_achat_paye_par_l_encaisse_passe_en_tension():
+    sans = api.simuler_ordre("mateo", "AGG", "achat", 2)
+    avec = api.simuler_ordre(BESOIN_10, "AGG", "achat", 2)
+    assert sans["verdict"]["code"] == "compatible"
+    assert avec["verdict"]["code"] == "en_tension"
+    assert avec["mesure_min"] == "classe_liquidites"
+    m = avec["apres"]["notes"]["diversification"]["mesures"]["classe_liquidites"]
+    assert (m["poids"], m["min"], m["cible"]) == (8, 10, 15)
+    assert m["note"] == pytest.approx(30.0)  # formule de classe inchangée : 100 - 50 x (15 - 8) / (15 - 10)

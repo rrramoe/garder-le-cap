@@ -160,7 +160,7 @@ def charger_reference(nom: str) -> dict:
 
 QUESTIONNAIRE = charger_reference("questionnaire")
 THEMES = {t["id"]: t["libelle"] for t in charger_reference("themes")["themes"]}
-CHAMPS_Q = ("objectif", "horizon", "fluctuations", "capacite_perte", "experience")
+CHAMPS_Q = ("objectif", "horizon", "fluctuations", "capacite_perte", "besoin_liquidite", "experience")
 PERSONAS = charger_reference("personas")["personas"]
 ORDRE_PERSONAS = ["robert", "mateo", "amira"]
 
@@ -639,6 +639,8 @@ def valeur_deduite(cle: str, e: dict) -> str:
             return "aucune"
         return " ; ".join(f"{libelle_theme_reponse(c['reponse'])} : {THEMES.get(c['theme'], c['theme'])}"
                           for c in v)
+    if cle == "besoin_liquidite_pct":
+        return e.get("phrase", f"{nombre(v, 0)} %")
     if cle == "niveau_detail":
         return NIVEAUX.get(v, v)
     if cle == "coherence_objectif":
@@ -649,6 +651,7 @@ def valeur_deduite(cle: str, e: dict) -> str:
 LIBELLES_DEDUIT = {
     "profil": "Profil d'investisseur",
     "fourchettes_pct": "Zones permises par classe",
+    "besoin_liquidite_pct": "Liquidités de l'année",
     "horizon_annees": "Horizon utilisé",
     "plafonds_concentration_pct": "Maximum par titre",
     "crypto_pct": "Cryptoactifs",
@@ -664,6 +667,10 @@ def onglet_fiche(persona: str, fiche_client: dict) -> None:
     with gauche:
         st.subheader("Vos réponses")
         st.caption("Changez une réponse : tout le reste se met à jour.")
+        q0 = PERSONAS[persona]["questionnaire"]
+        st.caption(f"Les réponses de départ de {PERSONAS[persona]['nom']} sont fictives (hypothèse du projet). "
+                   f"Capacité à supporter une perte : même niveau que les fluctuations acceptées ; "
+                   f"besoin de liquidités : « {libelle_option('besoin_liquidite', q0['besoin_liquidite'])} ».")
         c1, c2 = st.columns(2)
         for i, champ in enumerate(CHAMPS_Q):
             options = list(QUESTIONNAIRE[champ]["options"])
@@ -1091,6 +1098,17 @@ def section_etapes(rapport: dict, niveau: str) -> None:
             st.json(t["resultat"], expanded=False)
 
 
+def phrases_fiche(fiche_client: dict) -> list[str]:
+    """Phrases simples des règles de la fiche qui changent l'analyse (profil retenu, liquidités)."""
+    d = fiche_client.get("deduit", {}) if isinstance(fiche_client, dict) else {}
+    phrases = []
+    if d.get("profil", {}).get("decide_par") == "capacite":
+        phrases.append(d["profil"]["phrase"])
+    if d.get("besoin_liquidite_pct", {}).get("valeur"):
+        phrases.append(d["besoin_liquidite_pct"]["phrase"])
+    return phrases
+
+
 def section_sources(rapport: dict, persona: str) -> None:
     sources = {}
     for r in (rapport["fiche_client"], rapport["fiche_instrument"], rapport["simulation"], rapport["taille"] or {}):
@@ -1098,6 +1116,11 @@ def section_sources(rapport: dict, persona: str) -> None:
             sources[s["id"]] = s
     publies = [s for s in sources.values() if s["nature"] == "publie"]
     hypotheses = [s for s in sources.values() if s["nature"] != "publie"]
+    phrases = phrases_fiche(rapport["fiche_client"])
+    if phrases:
+        st.markdown("**Votre fiche**")
+        for p in phrases:
+            st.markdown(f"- {p}")
     st.markdown("**Faits publiés**")
     for s in publies:
         st.markdown(f"- {s['libelle']} — {s['source']} ({s['date']})")

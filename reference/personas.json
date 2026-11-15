@@ -8,6 +8,7 @@
         "horizon": "15_plus",
         "fluctuations": "elevees",
         "capacite_perte": "elevees",
+        "besoin_liquidite": "aucun",
         "experience": "intermediaire",
         "themes": {"ecarte_esg": "neutre", "speculatif": "neutre", "crypto": "rechercher", "techno": "rechercher", "etablie": "neutre"}
       },
@@ -21,6 +22,7 @@
         "horizon": "8_12",
         "fluctuations": "moderees",
         "capacite_perte": "moderees",
+        "besoin_liquidite": "aucun",
         "experience": "intermediaire",
         "themes": {"ecarte_esg": "exclure", "speculatif": "eviter", "crypto": "eviter", "techno": "neutre", "etablie": "neutre"}
       },
@@ -34,6 +36,7 @@
         "horizon": "3_5",
         "fluctuations": "faibles_moderees",
         "capacite_perte": "faibles_moderees",
+        "besoin_liquidite": "aucun",
         "experience": "avancee",
         "themes": {"ecarte_esg": "neutre", "speculatif": "eviter", "crypto": "eviter", "techno": "neutre", "etablie": "rechercher"}
       },

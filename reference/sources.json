@@ -43,7 +43,7 @@
     "limite": "Yahoo peut donner le début de son propre historique plutôt que la vraie date d'inscription (ex. plusieurs titres du TSX au 1995-01-12)."
   },
   "hypothese_personas": {
-    "libelle": "Association de chaque persona à un profil, réponses aux thèmes, portefeuilles de départ fictifs",
+    "libelle": "Association de chaque persona à un profil, réponses aux thèmes, portefeuilles de départ fictifs ; réponses neutres aux deux questions ajoutées (capacité à supporter une perte au même niveau que les fluctuations acceptées, aucun besoin de liquidités)",
     "source": "Hypothèse du projet, à partir du vocabulaire de l'énoncé",
     "date": "2026-11-15",
     "nature": "hypothese"
@@ -148,6 +148,12 @@
   },
   "hypothese_capacite_libelles": {
     "libelle": "Formulation des cinq situations de la capacité à supporter une perte, sur l'échelle des fluctuations acceptées",
+    "source": "Hypothèse du projet",
+    "date": "2026-11-15",
+    "nature": "hypothese"
+  },
+  "hypothese_besoin_liquidite": {
+    "libelle": "Le besoin de liquidités de l'année relève d'autant le minimum, la cible et le maximum de la classe « liquidités » (maximum plafonné à 100 %) ; les autres classes gardent leur fourchette",
     "source": "Hypothèse du projet",
     "date": "2026-11-15",
     "nature": "hypothese"
