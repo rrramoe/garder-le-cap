@@ -228,9 +228,11 @@ def _module_agent_factice(avec_crochet: bool):
                   ("simuler_ordre", "Je simule l'ordre.", "Verdict simulé."),
                   ("chercher_taille_compatible", "Je cherche le montant compatible.", "Taille trouvée.")]
         for n, (outil, libelle, resume) in enumerate(appels, start=1):
+            if sur_etape and n > 1:
+                sur_etape({"moment": "redaction", "agent": "principal"})  # tour du modèle entre deux outils
             if sur_etape:
                 sur_etape({"moment": "debut_outil", "etape": n, "outil": outil, "arguments": {"ticker": ticker},
-                           "libelle": libelle, "agent": "analyste"})
+                           "libelle": libelle, "agent": "principal"})
                 time.sleep(0.05)
                 sur_etape({"moment": "fin_outil", "etape": n, "outil": outil, "resultat_resume": resume})
             trace.append({"etape": n, "outil": outil, "arguments": {"ticker": ticker},
@@ -273,6 +275,8 @@ def test_analyse_en_direct_replie_en_etapes(agent_en_direct):
     assert any(l.startswith("Étapes de l'analyse · 3 étape(s)") for l in etiquettes), etiquettes
     assert at.status[0].state == "complete"
     assert "Taille trouvée." in texte  # résumé de l'étape, dans la liste repliée
+    assert "Agent principal ·" in texte  # l'agent au travail reste nommé dans « Étapes de l'analyse »
+    assert at.status[0].label.startswith("Étapes de l'analyse · 3 étape(s)")
 
 
 def test_agent_sans_crochet_garde_l_attente_simple(agent_sans_crochet):
@@ -291,15 +295,16 @@ def test_rendu_en_direct_marque_les_etapes():
     import ast
     source = Path(APP).read_text(encoding="utf-8")
     arbre = ast.parse(source)
-    noeuds = [n for n in arbre.body if isinstance(n, ast.FunctionDef) and n.name == "rendu_en_direct"
-              or isinstance(n, ast.Assign) and any(getattr(t, "id", "") == "LIBELLES_PHASES" for t in n.targets)]
+    noeuds = [n for n in arbre.body if isinstance(n, ast.FunctionDef) and n.name in ("rendu_en_direct", "nom_agent")
+              or isinstance(n, ast.Assign) and any(getattr(t, "id", "") in ("LIBELLES_PHASES", "NOMS_AGENTS")
+                                                   for t in n.targets)]
     espace: dict = {}
     exec(compile(ast.Module(body=noeuds, type_ignores=[]), APP, "exec"), espace)
     rendu = espace["rendu_en_direct"](
         [{"libelle": "Je lis votre fiche.", "fini": True, "resume": "Profil lu.", "agent": "principal"},
          {"libelle": "Je rédige l'explication.", "phase": True, "fini": True},
-         {"libelle": "Je simule l'ordre.", "fini": False, "resume": "", "agent": "chercheur"}])
+         {"libelle": "Je simule l'ordre.", "fini": False, "resume": "", "agent": "explorateur"}])
     lignes = rendu.splitlines()
-    assert lignes[0].rstrip() == "- ✓ Je lis votre fiche." and "Profil lu." in rendu and "principal" not in rendu
-    assert lignes[-1] == "- … **Je simule l'ordre.** :gray[(chercheur)]"  # ordre d'arrivée gardé
+    assert lignes[0].rstrip() == "- ✓ Je lis votre fiche. :gray[· Agent principal]" and "Profil lu." in rendu
+    assert lignes[-1] == "- … **Je simule l'ordre.** :gray[· Agent explorateur]"  # ordre d'arrivée gardé
     assert "- ✓ Je rédige l'explication." in lignes

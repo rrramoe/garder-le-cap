@@ -39,6 +39,9 @@ ATTENTE_AGENT = "L'agent rédige l'explication…"
 EN_DIRECT_AGENT = "L'agent analyse votre ordre…"
 DELAI_MAX_AGENT_S = 240  # au-delà, le rapport du moteur reste seul affiché
 
+# Noms des agents de l'équipe, tels que montrés à l'écran.
+NOMS_AGENTS = {"principal": "Agent principal", "explorateur": "Agent explorateur"}
+
 # Analyse en direct : phrases montrées pendant le travail de l'agent (si l'agent n'en fournit pas).
 LIBELLES_OUTILS = {
     "lire_fiche_client": "Je lis votre fiche.",
@@ -1039,7 +1042,8 @@ def section_etapes(rapport: dict, niveau: str) -> None:
         st.caption("Les appels au moteur de calcul faits par l'interface, dans l'ordre.")
     for i, t in enumerate(trace, start=1):
         args = ", ".join(f"{k}={v!r}" for k, v in (t.get("arguments") or {}).items())
-        st.markdown(f"{t.get('etape', i)}. **`{t.get('outil', '?')}`**({args}) — {t.get('resultat_resume', '')}")
+        qui = f"{nom_agent(t['agent'])} · " if t.get("agent") else ""
+        st.markdown(f"{t.get('etape', i)}. {qui}**`{t.get('outil', '?')}`**({args}) — {t.get('resultat_resume', '')}")
         if niveau == "detaille" and t.get("resultat") is not None:
             st.json(t["resultat"], expanded=False)
 
@@ -1140,11 +1144,15 @@ def afficher_rapport(persona: str, rapport: dict, fiche_actuelle: dict) -> None:
 
 # ---------------------------------------------------------------- analyse en direct
 
+def nom_agent(code: str) -> str:
+    return NOMS_AGENTS.get(code, f"Agent {code}")
+
+
 def rendu_en_direct(etapes: list[dict]) -> str:
     """Liste des étapes, dans l'ordre : « … » pendant l'étape, « ✓ » et son résultat quand elle finit."""
     lignes = []
     for e in etapes:
-        agent = f" :gray[({e['agent']})]" if e.get("agent") and e["agent"] != "principal" else ""
+        agent = f" :gray[· {nom_agent(e['agent'])}]" if e.get("agent") else ""
         if e["fini"]:
             resume = f"  \n  :gray[{e['resume']}]" if e.get("resume") else ""
             lignes.append(f"- ✓ {e['libelle']}{agent}{resume}")
@@ -1200,6 +1208,9 @@ def analyser_en_direct(rapport: dict, niveau: str) -> bool:
                 continue
             moment = ev.get("moment")
             if moment == "debut_outil":
+                # Une « rédaction » suivie d'un nouvel outil n'était qu'un choix de l'étape suivante.
+                while etapes and etapes[-1].get("moment") == "redaction" and not etapes[-1]["fini"]:
+                    etapes.pop()
                 clore_phases()
                 e = {"libelle": ev.get("libelle") or LIBELLES_OUTILS.get(ev.get("outil"), f"J'appelle {ev.get('outil')}."),
                      "agent": ev.get("agent"), "fini": False, "resume": ""}
@@ -1211,9 +1222,11 @@ def analyser_en_direct(rapport: dict, niveau: str) -> bool:
                 if e is not None:
                     e["fini"], e["resume"] = True, str(ev.get("resultat_resume") or "")
             elif moment in LIBELLES_PHASES:
+                if etapes and etapes[-1].get("moment") == moment and not etapes[-1]["fini"]:
+                    continue
                 clore_phases()
-                etapes.append({"libelle": LIBELLES_PHASES[moment], "phase": True, "fini": False,
-                               "agent": ev.get("agent")})
+                etapes.append({"libelle": LIBELLES_PHASES[moment], "phase": True, "moment": moment,
+                               "fini": False, "agent": ev.get("agent")})
             elif moment == "fin":
                 clore_phases()
             else:
@@ -1222,6 +1235,13 @@ def analyser_en_direct(rapport: dict, niveau: str) -> bool:
         r = sortie.get("r")
         if r is None:
             r = {"explication": None, "trace": [], "erreur": "l'agent a dépassé le temps prévu"}
+        # Chaque étape de la trace garde le nom de l'agent qui l'a faite (annoncé en direct).
+        outils_vus = [x for x in etapes if not x.get("phase")]
+        for i, t in enumerate(r.get("trace") or []):
+            if isinstance(t, dict) and not t.get("agent"):
+                e = par_numero.get(t.get("etape")) or (outils_vus[i] if i < len(outils_vus) else None)
+                if e and e.get("agent"):
+                    t["agent"] = e["agent"]
         rapport["agent"] = r
         # La liste en direct se replie en « Étapes de l'analyse », avec le détail complet.
         zone.empty()
