@@ -308,3 +308,40 @@ def test_rendu_en_direct_marque_les_etapes():
     assert lignes[0].rstrip() == "- ✓ Je lis votre fiche. :gray[· Agent principal]" and "Profil lu." in rendu
     assert lignes[-1] == "- … **Je simule l'ordre.** :gray[· Agent explorateur]"  # ordre d'arrivée gardé
     assert "- ✓ Je rédige l'explication." in lignes
+
+
+# --- Pistes testées par l'explorateur et correction du texte ---------------------------------------
+
+@pytest.fixture
+def equipe_simulee(monkeypatch):
+    import agent.inspection
+
+    def inspecter(fiche, ticker, sens, pourcentage, **options):
+        return {"explication": "**Verdict** : en tension.", "trace": TRACE_SIMULEE, "modele": "modele-simule",
+                "duree_s": 1.0, "erreur": None, "substitut": None,
+                "intention": "l'achat semble viser une action de croissance.",
+                "pistes": [{"famille": "combinaison", "libelle_famille": "Combinaison",
+                            "description": "Montant plus petit avec un complément",
+                            "ordres": [{"ticker": "TSLA", "sens": "achat", "pourcentage": 6.0},
+                                       {"ticker": "SPY", "sens": "achat", "pourcentage": 4.0}],
+                            "raison": "Garde une part de croissance avec moins de risque.",
+                            "verdict": {"code": "compatible", "libelle": "Compatible"}, "score": 50.0,
+                            "direction": {"cas": "reste_dans_la_politique"}, "etape": 6}],
+                "agents": [{"nom": "principal"}, {"nom": "explorateur", "statut": "termine"}],
+                "correction": {"faite": True, "motifs": ["Le chiffre 97,3 ne figure dans aucun résultat d'outil."],
+                               "reussie": True},
+                "garde_fou": {"actif": True, "version": "2", "intervenu": False},
+                "ancrage": {"statut": "appuyee", "chiffres_non_sources": [], "message": "..."}}
+
+    monkeypatch.setattr(agent.inspection, "inspecter", inspecter)
+
+
+def test_pistes_testees_et_correction(equipe_simulee):
+    at = _demarrer()
+    texte = _inspecter(at, "robert")
+    assert "Pistes testées" in texte
+    assert "Finalité supposée de l'achat (hypothèse de l'agent) :* l'achat semble viser" in texte
+    assert "**Combinaison** : achat de 6,0 % de TSLA (" in texte and "achat de 4,0 % de SPY (" in texte
+    assert "compatible</b> (score 50" in texte and "Garde une part de croissance" in texte
+    assert "pas des recommandations" in texte and "L'agent a aussi testé" not in texte
+    assert "L'agent a corrigé son texte après vérification." in texte

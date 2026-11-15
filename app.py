@@ -982,6 +982,42 @@ def section_notes(sim: dict, niveau: str) -> None:
             st.markdown(f"- Signalement : {s.get('message', '')}")
 
 
+def jambe_txt(o: dict, valeur: float) -> str:
+    """« achat de 7,5 % de XIU.TO (3 750 $) »."""
+    return (f"{o.get('sens', 'achat')} de {pct(o.get('pourcentage', 0))} de {o.get('ticker')} "
+            f"({dollars(float(o.get('pourcentage', 0)) * valeur / 100)})")
+
+
+def section_pistes(rapport: dict, valeur: float) -> None:
+    """« Pistes testées » : ce que l'explorateur a essayé, avec les résultats du moteur. Sinon, le substitut."""
+    agent = rapport.get("agent") or {}
+    pistes = agent.get("pistes") or []
+    explorateur = next((a for a in agent.get("agents") or [] if a.get("nom") == "explorateur"), None)
+    if not pistes:
+        section_substitut(rapport, valeur)
+        return
+    st.markdown("##### Pistes testées")
+    if agent.get("intention"):
+        st.markdown(f"*Finalité supposée de l'achat (hypothèse de l'agent) :* {agent['intention']}")
+    if explorateur and explorateur.get("statut") == "repli" and explorateur.get("avis"):
+        st.caption(explorateur["avis"])
+    lignes = []
+    for p in pistes:
+        code = (p.get("verdict") or {}).get("code")
+        couleur = COULEURS_VERDICT.get(code, MARINE)
+        jambes = " ; ".join(jambe_txt(o, valeur) for o in p.get("ordres") or [])
+        ligne = (f"- **{p.get('libelle_famille', '')}** : {jambes} → <b style=\"color:{couleur}\">"
+                 f"{(p.get('verdict') or {}).get('libelle', '').lower()}</b> (score {note_txt(p.get('score'))})")
+        if p.get("raison"):
+            ligne += f"<br><span style=\"color:#6E6E71\">{p['raison']}</span>"
+        lignes.append(ligne)
+    st.markdown("\n".join(lignes), unsafe_allow_html=True)
+    st.caption("Des possibilités testées par le moteur, pas des recommandations.")
+
+
+CORRECTION_TEXTE = "L'agent a corrigé son texte après vérification."
+
+
 def section_agent(rapport: dict) -> None:
     agent = rapport.get("agent") or {}
     if agent.get("erreur") or not agent.get("explication"):
@@ -998,6 +1034,8 @@ def section_agent(rapport: dict) -> None:
         details.append(f"durée : {nombre(agent['duree_s'])} s")
     st.caption("Texte rédigé par l'agent à partir des résultats des outils. Aucun chiffre ne vient du "
                "modèle de langage. " + " ; ".join(details))
+    if (agent.get("correction") or {}).get("faite"):
+        st.caption(CORRECTION_TEXTE)
     afficher_verification(agent)
 
 
@@ -1131,7 +1169,7 @@ def afficher_rapport(persona: str, rapport: dict, fiche_actuelle: dict) -> None:
                 rapport["agent"] = appeler_agent(rapport["fiche"], o["ticker"], o["sens"], o["pourcentage"],
                                                  operation_moteur(o.get("operation")))
     with zone_substitut:
-        section_substitut(rapport, valeur)
+        section_pistes(rapport, valeur)
     with zone_explication, st.expander("Explication de l'agent", expanded=ouvert):
         section_agent(rapport)
     if not etapes_affichees:
