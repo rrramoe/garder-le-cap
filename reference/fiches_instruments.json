@@ -75,6 +75,31 @@
             "preuve": "Principales positions du fonds VSGX de Vanguard (2026)."
           },
           "source": "vanguard_vsgx_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 6.8,
+            "devise": "CAD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": false,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "CAD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -259,6 +284,31 @@
             "preuve": "Non vérifié."
           },
           "source": "vanguard_vsgx_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 4.4,
+            "devise": "CAD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": false,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "CAD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -443,6 +493,31 @@
             "preuve": "Non vérifié."
           },
           "source": "vanguard_vsgx_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 1.895,
+            "devise": "CAD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": false,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "CAD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -628,6 +703,31 @@
             "preuve": "Déduction : secteur Énergie et règle publiée « charbon, pétrole ou gaz »."
           },
           "source": "hypothese_esg_deduit"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 3.853,
+            "devise": "CAD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": false,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "CAD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -813,6 +913,31 @@
             "preuve": "Déduction : secteur Énergie et règle publiée « charbon, pétrole ou gaz »."
           },
           "source": "hypothese_esg_deduit"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 2.463,
+            "devise": "CAD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": false,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "CAD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -1007,6 +1132,31 @@
             "preuve": "Non vérifié."
           },
           "source": "vanguard_vsgx_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 3.633,
+            "devise": "CAD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": false,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "CAD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -1192,6 +1342,31 @@
             "preuve": "Non vérifié."
           },
           "source": "vanguard_vsgx_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 2.56,
+            "devise": "CAD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": false,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "CAD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -1377,6 +1552,31 @@
             "preuve": "Non vérifié."
           },
           "source": "vanguard_vsgx_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 0.86,
+            "devise": "CAD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": false,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "CAD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -1562,6 +1762,31 @@
             "preuve": "Non vérifié."
           },
           "source": "vanguard_vsgx_2026"
+        },
+        "dividende": {
+          "valeur": false,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 0.0,
+            "devise": "CAD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": false,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "CAD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -1745,6 +1970,31 @@
             "preuve": "Non vérifié."
           },
           "source": "vanguard_vsgx_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 5.576,
+            "devise": "CAD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": false,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "CAD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -1930,6 +2180,31 @@
             "preuve": "Dix premières positions d'ESGV, fiche du 30 sept. 2026."
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 1.07,
+            "devise": "USD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": true,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "USD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -2114,6 +2389,31 @@
             "preuve": "Dix premières positions d'ESGV, fiche du 30 sept. 2026."
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 3.64,
+            "devise": "USD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": true,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "USD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -2299,6 +2599,31 @@
             "preuve": "Dix premières positions d'ESGV, fiche du 30 sept. 2026."
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 0.52,
+            "devise": "USD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": true,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "USD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -2489,6 +2814,31 @@
             "preuve": "Dix premières positions d'ESGV, fiche du 30 sept. 2026."
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 0.86,
+            "devise": "USD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": true,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "USD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -2676,6 +3026,31 @@
             "preuve": "Dix premières positions d'ESGV, fiche du 30 sept. 2026."
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": false,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 0.0,
+            "devise": "USD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": true,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "USD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -2859,6 +3234,31 @@
             "preuve": "Dix premières positions d'ESGV, fiche du 30 sept. 2026."
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": false,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 0.0,
+            "devise": "USD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": true,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "USD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -3042,6 +3442,31 @@
             "preuve": "Non vérifié."
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 6.15,
+            "devise": "USD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": true,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "USD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -3226,6 +3651,31 @@
             "preuve": "Non vérifié."
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 5.28,
+            "devise": "USD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": true,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "USD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -3411,6 +3861,31 @@
             "preuve": "Non vérifié."
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 4.324,
+            "devise": "USD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": true,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "USD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -3595,6 +4070,31 @@
             "preuve": "Fiche du fonds ESGV du 30 sept. 2026, tableau des exclusions : énergie non renouvelable."
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 4.12,
+            "devise": "USD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": true,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "USD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": true,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -3769,6 +4269,31 @@
             "statut": "sans_objet"
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 1.136,
+            "devise": "CAD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": false,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "CAD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": false,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "etf_equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -3944,6 +4469,31 @@
             "statut": "sans_objet"
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 7.583,
+            "devise": "USD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": true,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "USD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": false,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "etf_equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -4119,6 +4669,31 @@
             "statut": "sans_objet"
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 3.091,
+            "devise": "USD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": true,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "USD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": false,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "etf_equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -4294,6 +4869,31 @@
             "statut": "sans_objet"
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 1.189,
+            "devise": "USD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": true,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "USD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": false,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "etf_equity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -4469,6 +5069,31 @@
             "statut": "sans_objet"
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 0.967,
+            "devise": "CAD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": false,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "CAD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": false,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "etf_bond"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -4644,6 +5269,31 @@
             "statut": "sans_objet"
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 1.229,
+            "devise": "CAD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": false,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "CAD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": false,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "etf_bond"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -4819,6 +5469,31 @@
             "statut": "sans_objet"
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 3.981,
+            "devise": "USD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": true,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "USD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": false,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "etf_bond"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -4994,6 +5669,31 @@
             "statut": "sans_objet"
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": true,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 3.91,
+            "devise": "USD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": true,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "USD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": false,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "etf_bond"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -5169,6 +5869,31 @@
             "statut": "sans_objet"
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": false,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 0.0,
+            "devise": "USD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": true,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "USD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": false,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "etf_commodity"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -5337,6 +6062,31 @@
             "statut": "sans_objet"
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": false,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 0.0,
+            "devise": "USD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": true,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "USD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": false,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "crypto"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {
@@ -5505,6 +6255,31 @@
             "statut": "sans_objet"
           },
           "source": "vanguard_esgv_2026"
+        },
+        "dividende": {
+          "valeur": false,
+          "regle": "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv).",
+          "declencheur": {
+            "dividendes_12_mois": 0.0,
+            "devise": "USD"
+          },
+          "source": "donnees_dividendes"
+        },
+        "devise_etrangere": {
+          "valeur": true,
+          "regle": "Coté dans une autre devise que le dollar canadien.",
+          "declencheur": {
+            "devise": "USD"
+          },
+          "source": "donnees_marche"
+        },
+        "action_individuelle": {
+          "valeur": false,
+          "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+          "declencheur": {
+            "classe_actif": "crypto"
+          },
+          "source": "donnees_marche"
         }
       },
       "faits_marche": {

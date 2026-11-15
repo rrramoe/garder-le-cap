@@ -63,6 +63,7 @@ def main() -> None:
                 premiere = premiere_cotation_yfinance(ticker)
                 recupere_le = aujourd_hui if premiere else None
 
+        fm = faits_marche.faits(ticker, ligne.to_dict())
         fiches[ticker] = {
             "symbole": ticker,
             "identifiant_univers": ligne["asset_id"],
@@ -88,8 +89,11 @@ def main() -> None:
                 "crypto": etiquettes.etiquette_crypto(classe_actif),
                 "techno": etiquettes.etiquette_techno(classe_actif, ligne["sector"]),
                 "ecarte_esg": etiquettes.etiquette_ecarte_esg(ticker, classe_actif),
+                "dividende": etiquettes.etiquette_dividende(fm["revenu"]),
+                "devise_etrangere": etiquettes.etiquette_devise_etrangere(ligne["currency"]),
+                "action_individuelle": etiquettes.etiquette_action_individuelle(classe_actif),
             },
-            "faits_marche": faits_marche.faits(ticker, ligne.to_dict()),
+            "faits_marche": fm,
         }
 
     sortie = {

@@ -123,3 +123,58 @@ def test_candidats_portent_type_et_dividende():
     c = {x["symbole"]: x for x in r["candidats"]}
     assert c["CNQ.TO"]["type"] == "action" and c["SPY"]["type"] == "fonds"
     assert c["CNQ.TO"]["rendement_dividende"] == _faits("CNQ.TO")["revenu"]["rendement_dividende"]
+
+
+# ---------------------------------------------------------------- trois thèmes de plus (données)
+# Un client neuf, sans persona : une fiche et un portefeuille suffisent.
+
+CLIENT_NEUF = {"id": "nouveau", "nom": "Client neuf",
+               "questionnaire": {"objectif": "croissance_equilibree", "horizon": "8_12", "fluctuations": "moderees",
+                                 "experience": "intermediaire", "themes": {}},
+               "portefeuille_pct": {"ZST.TO": 20, "XBB.TO": 35, "XIU.TO": 25, "SPY": 20}}
+
+
+def _client(**themes):
+    c = json.loads(json.dumps(CLIENT_NEUF))
+    c["questionnaire"]["themes"] = themes
+    return c
+
+
+def test_etiquettes_des_nouveaux_themes_suivent_les_donnees():
+    a = pd.read_csv(D / "corporate_actions.csv", parse_dates=["ex_date"])
+    u = pd.read_csv(D / "assets_universe.csv").set_index("ticker")
+    fin = pd.read_csv(D / "prices_daily.csv", parse_dates=["date"]).groupby("ticker").date.max()
+    for t, ligne in u.iterrows():
+        e = instruments.fiche(t)["etiquettes"]
+        verse = bool(((a.ticker == t) & (a.action == "dividend") & (a.value > 0)
+                      & (a.ex_date > fin[t] - pd.DateOffset(months=12))).any())
+        assert e["dividende"]["valeur"] is verse, t
+        assert e["devise_etrangere"]["valeur"] is (ligne.currency != "CAD"), t
+        assert e["action_individuelle"]["valeur"] is (ligne.asset_class == "equity"), t
+
+
+def test_themes_neutres_par_defaut_pour_un_client_neuf():
+    r = api.lire_fiche_client(CLIENT_NEUF)
+    assert {r["questionnaire"]["themes"][t] for t in ("dividende", "devise_etrangere", "action_individuelle")} == {"neutre"}
+    for p in ("amira", "mateo", "robert"):
+        q = api.lire_fiche_client(p)["questionnaire"]["themes"]
+        assert q["dividende"] == q["devise_etrangere"] == q["action_individuelle"] == "neutre"
+
+
+def test_exclure_les_dividendes_rend_l_achat_incompatible():
+    r = api.simuler_ordre(_client(dividende="exclure"), "RY.TO", "achat", 5)
+    assert r["verdict"]["code"] == "incompatible"
+    assert r["contraintes_strictes"]["themes_violes"] == ["dividende"]
+    assert api.simuler_ordre(_client(dividende="exclure"), "SHOP.TO", "achat", 2)["verdict"]["code"] != "incompatible"
+
+
+def test_obligatoire_actions_individuelles_refuse_un_fonds():
+    assert api.simuler_ordre(_client(action_individuelle="obligatoire"), "QQQ", "achat", 5)["verdict"]["code"] == "incompatible"
+    assert api.simuler_ordre(_client(action_individuelle="obligatoire"), "RY.TO", "achat", 5)["verdict"]["code"] != "incompatible"
+
+
+def test_eviter_la_devise_etrangere_mesure_le_poids_en_usd():
+    r = api.simuler_ordre(_client(devise_etrangere="eviter"), "AAPL", "achat", 5)
+    m = r["apres"]["notes"]["preferences"]["mesures"]["devise_etrangere"]
+    assert m["poids_expose"] == pytest.approx(25.0)          # SPY 20 % + AAPL 5 %
+    assert m["note"] == pytest.approx(max(0.0, 100 - 50 * 25 / 15))

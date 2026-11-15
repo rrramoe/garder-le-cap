@@ -78,3 +78,24 @@ def etiquette_ecarte_esg(ticker: str, classe_actif: str) -> dict:
     valeur = {"ecarte": VRAI, "ecarte_deduit": VRAI, "retenu": FAUX}.get(statut, INDETERMINE)
     source = {"ecarte_deduit": "hypothese_esg_deduit"}.get(statut, "vanguard_vsgx_2026" if ticker.endswith(".TO") else "vanguard_esgv_2026")
     return {"valeur": valeur, "regle": regle, "declencheur": {"statut": statut, "preuve": entree["preuve"]}, "source": source}
+
+
+def etiquette_dividende(revenu: dict) -> dict:
+    regle = "A versé au moins un dividende dans les 12 derniers mois des données (corporate_actions.csv)."
+    d12 = revenu.get("dividendes_12_mois") if isinstance(revenu, dict) else None
+    if not isinstance(d12, (int, float)):
+        return {"valeur": INDETERMINE, "regle": regle, "declencheur": {"dividendes_12_mois": None},
+                "source": "donnees_dividendes"}
+    return {"valeur": bool(d12 > 0), "regle": regle,
+            "declencheur": {"dividendes_12_mois": d12, "devise": revenu.get("devise")}, "source": "donnees_dividendes"}
+
+
+def etiquette_devise_etrangere(devise: str) -> dict:
+    return {"valeur": devise != "CAD", "regle": "Coté dans une autre devise que le dollar canadien.",
+            "declencheur": {"devise": devise}, "source": "donnees_marche"}
+
+
+def etiquette_action_individuelle(classe_actif: str) -> dict:
+    return {"valeur": _est_action_individuelle(classe_actif),
+            "regle": "Action d'une seule entreprise (classe « equity »), par opposition à un fonds ou à un cryptoactif.",
+            "declencheur": {"classe_actif": classe_actif}, "source": "donnees_marche"}

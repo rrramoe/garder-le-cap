@@ -15,14 +15,14 @@ api.simuler_ordre("robert", "TSLA", "achat", 15)
 - **Sens** : `"achat"` ou `"vente"`. **Pourcentage** : en % du portefeuille (15 = 15 %). Un achat est payé par l'encaisse (`ZST.TO`), une vente y est versée.
 - **Opération** (argument facultatif `operation`, voir plus bas) : `"comptant"` par défaut, `"marge"` ou `"decouvert"`. Au comptant, un achat plus gros que l'encaisse ou une vente plus grosse que la position renvoie une erreur.
 - Les notes vont de 0 à 100 (100 = sur la cible, 50 = limite de la politique). Les pires baisses sont des fractions négatives (−0,18 = −18 %). Les poids sont en %.
-- Les réponses possibles au questionnaire sont dans `reference/questionnaire.json` (`objectif`, `horizon`, `fluctuations`, `capacite_perte`, `besoin_liquidite`, `experience`, et l'échelle des thèmes `exclure / eviter / neutre / rechercher / obligatoire`). Les thèmes sont dans `reference/themes.json`.
+- Les réponses possibles au questionnaire sont dans `reference/questionnaire.json` (`objectif`, `horizon`, `fluctuations`, `capacite_perte`, `besoin_liquidite`, `experience`, et l'échelle des thèmes `exclure / eviter / neutre / rechercher / obligatoire`). Les thèmes sont dans `reference/themes.json` : une ligne par thème (`id`, `libelle`, `etiquette`) ; ajouter un thème, c'est ajouter une ligne et l'étiquette du même nom dans les fiches d'instruments (`scripts/construire_fiches.py`). Huit thèmes : les cinq de départ, plus `dividende`, `devise_etrangere` et `action_individuelle`. Un thème sans réponse vaut `neutre`.
 
 ## `lire_fiche_client(client)`
 
 | Champ | Contenu |
 |---|---|
 | `id`, `nom` | Identifiant et nom |
-| `questionnaire` | Les réponses : `objectif`, `horizon`, `fluctuations`, `capacite_perte`, `besoin_liquidite`, `experience`, `themes` (5 thèmes) |
+| `questionnaire` | Les réponses : `objectif`, `horizon`, `fluctuations`, `capacite_perte`, `besoin_liquidite`, `experience`, `themes` (8 thèmes) |
 | `portefeuille_pct` | Positions, ticker → % |
 | `poids_par_classe_pct` | `liquidites`, `revenu_fixe`, `actions`, `alternatifs` |
 | `deduit` | `profil`, `fourchettes_pct`, `besoin_liquidite_pct`, `horizon_annees`, `plafonds_concentration_pct`, `crypto_pct`, `contraintes_strictes`, `preferences_souples`, `niveau_detail`, `coherence_objectif`. Chaque élément : `{valeur, origine, source}` (+ `regle`, `hypothese` au besoin) |
@@ -48,7 +48,7 @@ api.simuler_ordre("robert", "TSLA", "achat", 15)
 
 Sources : `donnees_marche`, `donnees_dividendes`, `donnees_taux`, conventions `hypothese_faits_marche`. `data/corporate_actions.csv` et `data/macro_rates.csv` ne sont pas publiés dans le dépôt : copiez-les depuis le dossier des organisateurs (ou régénérez-les avec `python data/build_dataset.py`), puis `python scripts/construire_fiches.py --sans-reseau`.
 
-`etiquettes` : `speculatif`, `etablie`, `crypto`, `techno`, `ecarte_esg`. Chacune : `{valeur, regle, declencheur, source}`, avec `valeur` = `true`, `false`, `"indetermine"` ou `"sans_objet"` et `declencheur` = le chiffre ou le statut qui l'a produite.
+`etiquettes` : `speculatif`, `etablie`, `crypto`, `techno`, `ecarte_esg`, `dividende` (au moins un dividende dans les 12 derniers mois des données, `corporate_actions.csv`), `devise_etrangere` (cotée dans une autre devise que le CAD), `action_individuelle` (action d'une seule entreprise, par opposition à un fonds ou à un cryptoactif). Chacune : `{valeur, regle, declencheur, source}`, avec `valeur` = `true`, `false`, `"indetermine"` ou `"sans_objet"` et `declencheur` = le chiffre ou le statut qui l'a produite.
 
 ## `lister_instruments(classe=None)`
 

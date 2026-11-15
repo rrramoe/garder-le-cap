@@ -5,7 +5,10 @@
     {"id": "speculatif", "libelle": "Placements spéculatifs", "etiquette": "speculatif"},
     {"id": "crypto", "libelle": "Cryptoactifs", "etiquette": "crypto"},
     {"id": "techno", "libelle": "Technologies et IA", "etiquette": "techno"},
-    {"id": "etablie", "libelle": "Entreprises établies", "etiquette": "etablie"}
+    {"id": "etablie", "libelle": "Entreprises établies", "etiquette": "etablie"},
+    {"id": "dividende", "libelle": "Titres qui versent un dividende", "etiquette": "dividende"},
+    {"id": "devise_etrangere", "libelle": "Titres en devise étrangère", "etiquette": "devise_etrangere"},
+    {"id": "action_individuelle", "libelle": "Actions individuelles (plutôt que des fonds)", "etiquette": "action_individuelle"}
   ],
   "repere_preferences_souples_pct": 15
 }
