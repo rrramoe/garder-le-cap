@@ -18,7 +18,7 @@ pytestmark = pytest.mark.skipif(
     reason="data/prices_daily.csv absent : régénérez-le avec data/build_dataset.py",
 )
 
-CHAMPS = {"explication", "trace", "modele", "duree_s", "erreur", "garde_fou", "ancrage"}
+CHAMPS = {"explication", "trace", "modele", "duree_s", "erreur", "garde_fou", "ancrage", "substitut"}
 CHAMPS_ETAPE = {"etape", "outil", "arguments", "resultat_resume", "resultat"}
 MOTS_INTERDITS = ("bonne idée", "mauvaise idée", "je recommande", "je conseille")
 
@@ -141,13 +141,53 @@ def test_inspecter_trace_et_explication_avec_modele_simule():
     json.dumps(r)
 
 
+SCENARIO_SUBSTITUT = SCENARIO_ROBERT[:4] + [
+    [("lister_instruments", {"classe": "actions"})],
+    [("simuler_ordre", {**ORDRE_ROBERT, "ticker": "SPY"})],
+    "**Verdict** : en tension. **Ce qui est possible** : un ordre de même taille sur SPY serait compatible.",
+]
+
+
+def test_substitut_dans_la_trace_et_le_resultat():
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(SCENARIO_SUBSTITUT))
+    assert [e["outil"] for e in r["trace"]] == ["lire_fiche_client", "lire_fiche_instrument", "simuler_ordre",
+                                                "chercher_taille_compatible", "lister_instruments", "simuler_ordre"]
+    assert r["trace"][5]["resultat_resume"].startswith("Substitut testé (SPY) : Verdict : Compatible")
+    assert not r["trace"][2]["resultat_resume"].startswith("Substitut")
+    s = r["substitut"]
+    assert s["ticker"] == "SPY" and s["verdict"]["code"] == "compatible" and s["etape"] == 6
+    assert s["nature"] == "possibilite_testee" and "pas une recommandation" in s["avertissement"]
+    assert s["score"] == api.simuler_ordre("robert", "SPY", "achat", 15)["score"]
+
+
+def test_pas_de_substitut_sans_autre_symbole():
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(SCENARIO_ROBERT))
+    assert r["substitut"] is None
+
+
+def test_resumes_en_francais_correct():
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(SCENARIO_SUBSTITUT))
+    resumes = " ".join(e["resultat_resume"] for e in r["trace"])
+    assert "détail détaillé" in resumes and "étiquettes : spéculatif" in resumes
+    assert "compatible avec ajustement" in resumes and "ampleur de la pire baisse" in resumes
+    for identifiant in ("detaille", "speculatif", "compatible_avec_ajustement", "plus_grosse_action", "ecarte_esg"):
+        assert identifiant not in resumes, identifiant
+
+
+def test_prompt_systeme_cadre():
+    texte = inspection.PROMPT_SYSTEME.read_text(encoding="utf-8")
+    assert "180" in texte and "lister_instruments" in texte and "pas une recommandation" in texte
+    assert "inspection" not in texte.lower()  # vocabulaire de l'interface : « analyse »
+
+
 def test_trace_garde_l_ordre_des_appels_paralleles():
     scenario = [[("lire_fiche_client", {"client_id": "mateo"}), ("lire_fiche_instrument", {"ticker": "XOM"})],
                 [("simuler_ordre", {"client_id": "mateo", "ticker": "XOM", "sens": "achat", "pourcentage": 8})],
                 "Incompatible."]
     r = inspection.inspecter("mateo", "XOM", "achat", 8, modele=ModeleSimule(scenario, raisonnement=None))
     assert [e["outil"] for e in r["trace"]] == ["lire_fiche_client", "lire_fiche_instrument", "simuler_ordre"]
-    assert "Contrainte stricte violée : ecarte_esg" in r["trace"][2]["resultat_resume"]
+    assert "Contrainte stricte violée : écarté ESG" in r["trace"][2]["resultat_resume"]
+    assert "contraintes strictes : écarté ESG" in r["trace"][0]["resultat_resume"]
 
 
 def test_limite_de_tours():
@@ -235,6 +275,22 @@ def test_6_cas_1_robert_tsla_cherche_la_taille():
                        outils), outils
 
 
+def _mots(texte: str) -> int:
+    import re
+    return len(re.findall(r"[\w’'-]*\w", texte))
+
+
+@bedrock
+def test_6_cas_1_substitut_et_longueur():
+    r = inspection.inspecter("robert", "TSLA", "achat", 15)
+    _verifier_rapport(r)
+    outils = [e["outil"] for e in r["trace"]]
+    assert outils[:4] == ["lire_fiche_client", "lire_fiche_instrument", "simuler_ordre", "chercher_taille_compatible"]
+    assert "lister_instruments" in outils and r["substitut"] and r["substitut"]["ticker"] != "TSLA", outils
+    assert _mots(r["explication"]) <= 180
+    assert "recommand" not in r["explication"].lower()
+
+
 @bedrock
 def test_6_cas_2_mateo_xom_ne_cherche_pas_de_taille():
     r = inspection.inspecter("mateo", "XOM", "achat", 8)
@@ -242,6 +298,8 @@ def test_6_cas_2_mateo_xom_ne_cherche_pas_de_taille():
     outils = [e["outil"] for e in r["trace"]]
     assert _sous_suite(["lire_fiche_client", "lire_fiche_instrument", "simuler_ordre"], outils), outils
     assert "chercher_taille_compatible" not in outils
+    assert "lister_instruments" not in outils and r["substitut"] is None  # chemin visiblement différent du cas 1
+    assert _mots(r["explication"]) <= 180
 
 
 @bedrock

@@ -3,7 +3,8 @@
     inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptant") -> dict
 
 renvoie toujours `explication`, `trace`, `modele`, `duree_s`, `erreur`, `garde_fou` (état du garde-fou
-Bedrock pendant l'inspection) et `ancrage` (vérification de l'explication par les résultats des outils),
+Bedrock pendant l'inspection), `ancrage` (vérification de l'explication par les résultats des outils) et
+`substitut` (l'instrument testé par l'agent à la place de celui de l'ordre, ou None),
 sans jamais lever d'exception. Démo sans interface : `python -m agent.inspection robert TSLA achat 15`.
 """
 from __future__ import annotations
@@ -21,7 +22,7 @@ from .outils import creer_outils, identifiant_client
 MODELE_DEFAUT = "global.anthropic.claude-sonnet-5"
 REGION = identifiants.REGION
 JETONS_SORTIE = 4000          # le bloc de raisonnement compte dans les jetons de sortie
-LIMITE_TOURS = 8
+LIMITE_TOURS = 10            # 7 tours dans le chemin le plus long (substitut compris), avec une marge
 TENTATIVES_SDK = {"max_attempts": 4, "mode": "adaptive"}   # mode de tentatives de botocore (ThrottlingException)
 PROMPT_SYSTEME = Path(__file__).parent / "prompts" / "systeme.md"
 
@@ -122,6 +123,27 @@ def _pct(fraction) -> str:
         return str(fraction)
 
 
+ETIQUETTES = {"speculatif": "spéculatif", "etablie": "établie", "crypto": "cryptoactif", "techno": "technologie",
+              "ecarte_esg": "écarté ESG"}
+NIVEAUX = {"essentiel": "essentiel", "standard": "standard", "detaille": "détaillé"}
+DIMENSIONS = {"risque": "risque", "diversification": "diversification", "preferences": "préférences"}
+MESURES = {"ampleur": "ampleur de la pire baisse", "duree": "durée sous l'eau", "classe_liquidites": "poids des liquidités",
+           "classe_revenu_fixe": "poids du revenu fixe", "classe_actions": "poids des actions",
+           "classe_alternatifs": "poids des titres alternatifs", "crypto": "poids des cryptoactifs",
+           "plus_grosse_action": "plus grosse action", "plus_gros_fonds": "plus gros fonds",
+           "plus_gros_secteur": "plus gros secteur"}
+ISSUES = {"compatible_tel_quel": "compatible tel quel", "compatible_avec_ajustement": "compatible avec ajustement",
+          "aucune_taille": "aucune taille"}
+CLASSES = {"liquidites": "liquidités", "revenu_fixe": "revenu fixe", "actions": "actions",
+           "alternatifs": "titres alternatifs", "toutes": "toutes"}
+
+
+def _mesure(m) -> str:
+    if isinstance(m, str) and m.startswith("theme_"):
+        return f"thème « {ETIQUETTES.get(m[len('theme_'):], m[len('theme_'):])} »"
+    return MESURES.get(m, ETIQUETTES.get(m, str(m).replace("_", " ")))
+
+
 def resumer(outil: str, r) -> str:
     """Résumé d'une ligne, en français, du résultat d'un outil (chiffres recopiés du moteur)."""
     try:
@@ -134,16 +156,19 @@ def resumer(outil: str, r) -> str:
         if outil == "lire_fiche_client":
             d = r.get("deduit", {})
             contraintes = d.get("contraintes_strictes", {}).get("valeur") or []
-            noms = ", ".join(c.get("theme", str(c)) if isinstance(c, dict) else str(c) for c in contraintes)
+            noms = ", ".join(ETIQUETTES.get(n, n) for n in (c.get("theme", str(c)) if isinstance(c, dict) else str(c)
+                                                            for c in contraintes))
             return (f"{r.get('nom')} : profil {d.get('profil', {}).get('libelle') or d.get('profil', {}).get('valeur')}, "
                     f"horizon {d.get('horizon_annees', {}).get('valeur')} ans, "
-                    f"contraintes strictes : {noms or 'aucune'}, détail {d.get('niveau_detail', {}).get('valeur')}.")
+                    f"contraintes strictes : {noms or 'aucune'}, "
+                    f"détail {NIVEAUX.get(d.get('niveau_detail', {}).get('valeur'), d.get('niveau_detail', {}).get('valeur'))}.")
         if outil == "lire_fiche_instrument":
             s = r.get("statistiques_cad", {})
             et = r.get("etiquettes", {})
-            vraies = [k for k, v in et.items() if v.get("valeur") is True]
-            indet = [k for k, v in et.items() if v.get("valeur") == "indetermine"]
-            texte = (f"{r.get('nom')} ({r.get('classe_politique')}, {r.get('devise')}) : volatilité "
+            vraies = [ETIQUETTES.get(k, k) for k, v in et.items() if v.get("valeur") is True]
+            indet = [ETIQUETTES.get(k, k) for k, v in et.items() if v.get("valeur") == "indetermine"]
+            texte = (f"{r.get('nom')} ({CLASSES.get(r.get('classe_politique'), r.get('classe_politique'))}, "
+                     f"{r.get('devise')}) : volatilité "
                      f"{_pct(s.get('volatilite_annualisee'))}, pire baisse {_pct(s.get('pire_baisse'))} ; "
                      f"étiquettes : {', '.join(vraies) or 'aucune'}")
             return texte + (f" ; indéterminées : {', '.join(indet)}." if indet else ".")
@@ -151,13 +176,14 @@ def resumer(outil: str, r) -> str:
             v = r.get("verdict", {})
             texte = (f"Verdict : {v.get('libelle')} ; score {_nombre(r.get('score'))} "
                      f"(avant {_nombre(r.get('avant', {}).get('score'))}) ; note la plus basse : "
-                     f"{r.get('dimension_min')} / {r.get('mesure_min')} ; {r.get('direction', {}).get('libelle')}.")
+                     f"{DIMENSIONS.get(r.get('dimension_min'), r.get('dimension_min'))} / {_mesure(r.get('mesure_min'))} ; "
+                     f"{r.get('direction', {}).get('libelle')}.")
             so = r.get("solidite") or {}
             if so.get("libelle"):
                 texte += f" Solidité : {so['libelle'].lower()}."
             cs = r.get("contraintes_strictes", {})
             if cs.get("violee"):
-                texte += f" Contrainte stricte violée : {', '.join(cs.get('themes_violes') or [])}."
+                texte += f" Contrainte stricte violée : {', '.join(ETIQUETTES.get(t, t) for t in cs.get('themes_violes') or [])}."
             op = r.get("operation") or {}
             if op.get("code") not in (None, "comptant"):
                 texte += (f" {op.get('libelle')} : levier {_nombre(op.get('levier_apres'), 2)}, contrôle d'expérience "
@@ -169,9 +195,9 @@ def resumer(outil: str, r) -> str:
             if r.get("taille_compatible_pct") is None:
                 return f"Aucune taille compatible jusqu'à {_nombre(r.get('taille_demandee_pct'))} %."
             return (f"Taille compatible : {_nombre(r.get('taille_compatible_pct'))} % sur "
-                    f"{_nombre(r.get('taille_demandee_pct'))} % demandés ({r.get('issue')}).")
+                    f"{_nombre(r.get('taille_demandee_pct'))} % demandés ({ISSUES.get(r.get('issue'), r.get('issue'))}).")
         if outil == "lister_instruments":
-            return f"{r.get('nombre')} instruments (classe : {r.get('classe')})."
+            return f"{r.get('nombre')} instruments (classe : {CLASSES.get(r.get('classe'), r.get('classe'))})."
     except Exception:
         pass
     return "Résultat reçu."
@@ -188,13 +214,39 @@ def extraire_trace(messages) -> list:
                 appels.append(bloc["toolUse"])
             elif "toolResult" in bloc:
                 resultats[bloc["toolResult"].get("toolUseId")] = bloc["toolResult"]
-    trace = []
+    trace, ticker_ordre = [], None
     for etape, appel in enumerate(appels, start=1):
         outil = appel.get("name")
+        arguments = appel.get("input") or {}
         resultat = _contenu_resultat(resultats.get(appel.get("toolUseId")))
-        trace.append({"etape": etape, "outil": outil, "arguments": appel.get("input") or {},
-                      "resultat_resume": resumer(outil, resultat), "resultat": resultat})
+        resume = resumer(outil, resultat)
+        if outil == "simuler_ordre":
+            ticker = str(arguments.get("ticker", "")).strip().upper()
+            if ticker_ordre is None:
+                ticker_ordre = ticker
+            elif ticker != ticker_ordre:
+                resume = f"Substitut testé ({ticker}) : {resume}"
+        trace.append({"etape": etape, "outil": outil, "arguments": arguments,
+                      "resultat_resume": resume, "resultat": resultat})
     return trace
+
+
+def extraire_substitut(trace: list, ticker_ordre: str) -> dict | None:
+    """Le substitut testé par l'agent : un `simuler_ordre` sur un autre symbole que celui de l'ordre."""
+    ticker_ordre = str(ticker_ordre).strip().upper()
+    for e in trace or []:
+        if e.get("outil") != "simuler_ordre":
+            continue
+        ticker = str((e.get("arguments") or {}).get("ticker", "")).strip().upper()
+        r = e.get("resultat")
+        if ticker and ticker != ticker_ordre and isinstance(r, dict) and "erreur" not in r:
+            return {"ticker": ticker, "etape": e.get("etape"), "verdict": r.get("verdict"), "score": r.get("score"),
+                    "dimension_min": r.get("dimension_min"), "mesure_min": r.get("mesure_min"),
+                    "direction": r.get("direction"), "solidite": (r.get("solidite") or {}).get("statut"),
+                    "pourcentage": (r.get("ordre") or {}).get("pourcentage"),
+                    "nature": "possibilite_testee",
+                    "avertissement": "Possibilité testée par l'agent, pas une recommandation."}
+    return None
 
 
 # --- Erreurs ------------------------------------------------------------------------------------
@@ -265,7 +317,8 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
                                   if config is None else "Modèle simulé : garde-fou non appliqué.")
     return {"explication": explication, "trace": trace, "modele": modele_nom,
             "duree_s": round(time.monotonic() - debut, 2), "erreur": erreur,
-            "garde_fou": etat_garde_fou, "ancrage": ancrage}
+            "garde_fou": etat_garde_fou, "ancrage": ancrage,
+            "substitut": extraire_substitut(trace, ticker)}
 
 
 def _afficher(r: dict) -> None:

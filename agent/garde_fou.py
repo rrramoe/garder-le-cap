@@ -210,7 +210,7 @@ def _ancrage_garde_fou(explication: str, trace: list, requete: str, client=None)
                                "du moteur.")
     else:
         resultat["message"] = ("Explication vérifiée par le garde-fou Bedrock : chaque paragraphe est appuyé par les "
-                               "résultats des outils de cette inspection.")
+                               "résultats des outils de cette analyse.")
     return resultat
 
 
@@ -221,7 +221,7 @@ SUJETS_FR = {
     "Transaction reelle": "demande de transaction réelle",
 }
 AVIS_ESSAI = ("Aucune réponse n'est produite : Garder le cap n'est pas un agent conversationnel, il montre un "
-              "rapport d'inspection. Cet essai montre seulement ce que le garde-fou laisse passer.")
+              "rapport d'analyse. Cet essai montre seulement ce que le garde-fou laisse passer.")
 
 
 def essayer_garde_fou(texte: str, client=None) -> dict:
