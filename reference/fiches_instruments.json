@@ -1,0 +1,2071 @@
+{
+  "genere_le": "2026-11-15",
+  "periode": {
+    "debut": "2021-11-12",
+    "fin": "2026-11-12"
+  },
+  "volatilite_spy_cad": 0.164982,
+  "seuil_speculatif": 0.329963,
+  "instruments": {
+    "RY.TO": {
+      "symbole": "RY.TO",
+      "nom": "Royal Bank of Canada",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Financials",
+      "marche": "TSX",
+      "devise": "CAD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.153038,
+        "pire_baisse": -0.212138,
+        "temps_sous_l_eau_annees": 2.1739,
+        "temps_sous_l_eau_debut": "2022-01-17",
+        "temps_sous_l_eau_fin": "2024-03-21",
+        "non_recupere": false
+      },
+      "premiere_cotation": {
+        "date": "1995-01-12",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.153,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": true,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "1995-01-12",
+            "anciennete_annees": 31.8,
+            "speculatif": false,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": false,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Financials"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": false,
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "retenu",
+            "preuve": "Principales positions du fonds VSGX de Vanguard (2026)."
+          },
+          "source": "vanguard_vsgx_2026"
+        }
+      }
+    },
+    "TD.TO": {
+      "symbole": "TD.TO",
+      "nom": "Toronto-Dominion Bank",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Financials",
+      "marche": "TSX",
+      "devise": "CAD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.175129,
+        "pire_baisse": -0.26065,
+        "temps_sous_l_eau_annees": 3.2772,
+        "temps_sous_l_eau_debut": "2022-02-10",
+        "temps_sous_l_eau_fin": "2025-05-22",
+        "non_recupere": false
+      },
+      "premiere_cotation": {
+        "date": "1995-01-12",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.1751,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": true,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "1995-01-12",
+            "anciennete_annees": 31.8,
+            "speculatif": false,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": false,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Financials"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "indetermine",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "indetermine",
+            "preuve": "Non vérifié."
+          },
+          "source": "vanguard_vsgx_2026"
+        }
+      }
+    },
+    "MFC.TO": {
+      "symbole": "MFC.TO",
+      "nom": "Manulife Financial",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Financials",
+      "marche": "TSX",
+      "devise": "CAD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.213961,
+        "pire_baisse": -0.210465,
+        "temps_sous_l_eau_annees": 0.9582,
+        "temps_sous_l_eau_debut": "2022-02-10",
+        "temps_sous_l_eau_fin": "2023-01-26",
+        "non_recupere": false
+      },
+      "premiere_cotation": {
+        "date": "1999-09-30",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.214,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": true,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "1999-09-30",
+            "anciennete_annees": 27.1,
+            "speculatif": false,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": false,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Financials"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "indetermine",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "indetermine",
+            "preuve": "Non vérifié."
+          },
+          "source": "vanguard_vsgx_2026"
+        }
+      }
+    },
+    "ENB.TO": {
+      "symbole": "ENB.TO",
+      "nom": "Enbridge",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Energy",
+      "marche": "TSX",
+      "devise": "CAD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.159231,
+        "pire_baisse": -0.213775,
+        "temps_sous_l_eau_annees": 2.152,
+        "temps_sous_l_eau_debut": "2022-06-07",
+        "temps_sous_l_eau_fin": "2024-08-01",
+        "non_recupere": false
+      },
+      "premiere_cotation": {
+        "date": "1995-01-12",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.1592,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": true,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "1995-01-12",
+            "anciennete_annees": 31.8,
+            "speculatif": false,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": false,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Energy"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": true,
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "ecarte_deduit",
+            "preuve": "Déduction : secteur Énergie et règle publiée « charbon, pétrole ou gaz »."
+          },
+          "source": "hypothese_esg_deduit"
+        }
+      }
+    },
+    "CNQ.TO": {
+      "symbole": "CNQ.TO",
+      "nom": "Canadian Natural Resources",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Energy",
+      "marche": "TSX",
+      "devise": "CAD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.303675,
+        "pire_baisse": -0.331149,
+        "temps_sous_l_eau_annees": 1.8207,
+        "temps_sous_l_eau_debut": "2024-04-10",
+        "temps_sous_l_eau_fin": "2026-02-04",
+        "non_recupere": false
+      },
+      "premiere_cotation": {
+        "date": "1995-01-12",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.3037,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": true,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "1995-01-12",
+            "anciennete_annees": 31.8,
+            "speculatif": false,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": false,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Energy"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": true,
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "ecarte_deduit",
+            "preuve": "Déduction : secteur Énergie et règle publiée « charbon, pétrole ou gaz »."
+          },
+          "source": "hypothese_esg_deduit"
+        }
+      }
+    },
+    "CNR.TO": {
+      "symbole": "CNR.TO",
+      "nom": "Canadian National Railway",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Industrials",
+      "marche": "TSX",
+      "devise": "CAD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.196528,
+        "pire_baisse": -0.272475,
+        "temps_sous_l_eau_annees": 2.2615,
+        "temps_sous_l_eau_debut": "2024-03-21",
+        "temps_sous_l_eau_fin": "2026-06-25",
+        "non_recupere": false
+      },
+      "premiere_cotation": {
+        "date": "1996-11-22",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.1965,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": true,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "1996-11-22",
+            "anciennete_annees": 30.0,
+            "speculatif": false,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": false,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Industrials"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "indetermine",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "indetermine",
+            "preuve": "Non vérifié."
+          },
+          "source": "vanguard_vsgx_2026"
+        }
+      }
+    },
+    "FTS.TO": {
+      "symbole": "FTS.TO",
+      "nom": "Fortis",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Utilities",
+      "marche": "TSX",
+      "devise": "CAD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.145588,
+        "pire_baisse": -0.240108,
+        "temps_sous_l_eau_annees": 2.2313,
+        "temps_sous_l_eau_debut": "2022-05-24",
+        "temps_sous_l_eau_fin": "2024-08-16",
+        "non_recupere": false
+      },
+      "premiere_cotation": {
+        "date": "1995-01-12",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.1456,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": true,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "1995-01-12",
+            "anciennete_annees": 31.8,
+            "speculatif": false,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": false,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Utilities"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "indetermine",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "indetermine",
+            "preuve": "Non vérifié."
+          },
+          "source": "vanguard_vsgx_2026"
+        }
+      }
+    },
+    "ATD.TO": {
+      "symbole": "ATD.TO",
+      "nom": "Alimentation Couche-Tard",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Consumer Staples",
+      "marche": "TSX",
+      "devise": "CAD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.238334,
+        "pire_baisse": -0.221591,
+        "temps_sous_l_eau_annees": 2.0014,
+        "temps_sous_l_eau_debut": "2024-02-23",
+        "temps_sous_l_eau_fin": "2026-02-23",
+        "non_recupere": false
+      },
+      "premiere_cotation": {
+        "date": "1996-08-06",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.2383,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": true,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "1996-08-06",
+            "anciennete_annees": 30.3,
+            "speculatif": false,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": false,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Consumer Staples"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "indetermine",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "indetermine",
+            "preuve": "Non vérifié."
+          },
+          "source": "vanguard_vsgx_2026"
+        }
+      }
+    },
+    "SHOP.TO": {
+      "symbole": "SHOP.TO",
+      "nom": "Shopify",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Information Technology",
+      "marche": "TSX",
+      "devise": "CAD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.637588,
+        "pire_baisse": -0.834706,
+        "temps_sous_l_eau_annees": 3.8412,
+        "temps_sous_l_eau_debut": "2021-11-19",
+        "temps_sous_l_eau_fin": "2025-09-22",
+        "non_recupere": false
+      },
+      "premiere_cotation": {
+        "date": "2015-05-21",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": true,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.6376,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": false,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "2015-05-21",
+            "anciennete_annees": 11.5,
+            "speculatif": true,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": true,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Information Technology"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "indetermine",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "indetermine",
+            "preuve": "Non vérifié."
+          },
+          "source": "vanguard_vsgx_2026"
+        }
+      }
+    },
+    "CSU.TO": {
+      "symbole": "CSU.TO",
+      "nom": "Constellation Software",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Information Technology",
+      "marche": "TSX",
+      "devise": "CAD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.302041,
+        "pire_baisse": -0.56378,
+        "temps_sous_l_eau_annees": 1.514,
+        "temps_sous_l_eau_debut": "2025-05-08",
+        "temps_sous_l_eau_fin": "2026-11-12",
+        "non_recupere": true
+      },
+      "premiere_cotation": {
+        "date": "2007-10-25",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.302,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": false,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "2007-10-25",
+            "anciennete_annees": 19.0,
+            "speculatif": false,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": true,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Information Technology"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "indetermine",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "indetermine",
+            "preuve": "Non vérifié."
+          },
+          "source": "vanguard_vsgx_2026"
+        }
+      }
+    },
+    "AAPL": {
+      "symbole": "AAPL",
+      "nom": "Apple",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Information Technology",
+      "marche": "NASDAQ",
+      "devise": "USD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.275304,
+        "pire_baisse": -0.342406,
+        "temps_sous_l_eau_annees": 1.3662,
+        "temps_sous_l_eau_debut": "2021-12-15",
+        "temps_sous_l_eau_fin": "2023-04-28",
+        "non_recupere": false
+      },
+      "premiere_cotation": {
+        "date": "1980-12-12",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.2753,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": true,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "1980-12-12",
+            "anciennete_annees": 45.9,
+            "speculatif": false,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": true,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Information Technology"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": false,
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "retenu",
+            "preuve": "Dix premières positions d'ESGV, fiche du 30 sept. 2026."
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "MSFT": {
+      "symbole": "MSFT",
+      "nom": "Microsoft",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Information Technology",
+      "marche": "NASDAQ",
+      "devise": "USD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.277864,
+        "pire_baisse": -0.343078,
+        "temps_sous_l_eau_annees": 1.399,
+        "temps_sous_l_eau_debut": "2021-12-27",
+        "temps_sous_l_eau_fin": "2023-05-22",
+        "non_recupere": false
+      },
+      "premiere_cotation": {
+        "date": "1986-03-13",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.2779,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": true,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "1986-03-13",
+            "anciennete_annees": 40.7,
+            "speculatif": false,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": true,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Information Technology"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": false,
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "retenu",
+            "preuve": "Dix premières positions d'ESGV, fiche du 30 sept. 2026."
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "NVDA": {
+      "symbole": "NVDA",
+      "nom": "NVIDIA",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Information Technology",
+      "marche": "NASDAQ",
+      "devise": "USD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.50598,
+        "pire_baisse": -0.634578,
+        "temps_sous_l_eau_annees": 1.4648,
+        "temps_sous_l_eau_debut": "2021-11-29",
+        "temps_sous_l_eau_fin": "2023-05-18",
+        "non_recupere": false
+      },
+      "premiere_cotation": {
+        "date": "1999-01-22",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": true,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.506,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": false,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "1999-01-22",
+            "anciennete_annees": 27.8,
+            "speculatif": true,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": true,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Information Technology"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": false,
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "retenu",
+            "preuve": "Dix premières positions d'ESGV, fiche du 30 sept. 2026."
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "GOOGL": {
+      "symbole": "GOOGL",
+      "nom": "Alphabet (Class A)",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Communication Services",
+      "marche": "NASDAQ",
+      "devise": "USD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.319522,
+        "pire_baisse": -0.394721,
+        "temps_sous_l_eau_annees": 1.7878,
+        "temps_sous_l_eau_debut": "2021-12-27",
+        "temps_sous_l_eau_fin": "2023-10-11",
+        "non_recupere": false
+      },
+      "premiere_cotation": {
+        "date": "2004-08-19",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.3195,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": true,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "2004-08-19",
+            "anciennete_annees": 22.2,
+            "speculatif": false,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": false,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Communication Services"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": false,
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "retenu",
+            "preuve": "Dix premières positions d'ESGV, fiche du 30 sept. 2026."
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "AMZN": {
+      "symbole": "AMZN",
+      "nom": "Amazon",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Consumer Discretionary",
+      "marche": "NASDAQ",
+      "devise": "USD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.360511,
+        "pire_baisse": -0.523917,
+        "temps_sous_l_eau_annees": 2.2259,
+        "temps_sous_l_eau_debut": "2021-11-18",
+        "temps_sous_l_eau_fin": "2024-02-09",
+        "non_recupere": false
+      },
+      "premiere_cotation": {
+        "date": "1997-05-15",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": true,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.3605,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": false,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "1997-05-15",
+            "anciennete_annees": 29.5,
+            "speculatif": true,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": false,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Consumer Discretionary"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": false,
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "retenu",
+            "preuve": "Dix premières positions d'ESGV, fiche du 30 sept. 2026."
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "TSLA": {
+      "symbole": "TSLA",
+      "nom": "Tesla",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Consumer Discretionary",
+      "marche": "NASDAQ",
+      "devise": "USD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.583022,
+        "pire_baisse": -0.708806,
+        "temps_sous_l_eau_annees": 2.9213,
+        "temps_sous_l_eau_debut": "2022-01-03",
+        "temps_sous_l_eau_fin": "2024-12-05",
+        "non_recupere": false
+      },
+      "premiere_cotation": {
+        "date": "2010-06-29",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": true,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.583,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": false,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "2010-06-29",
+            "anciennete_annees": 16.4,
+            "speculatif": true,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": false,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Consumer Discretionary"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": false,
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "retenu",
+            "preuve": "Dix premières positions d'ESGV, fiche du 30 sept. 2026."
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "JPM": {
+      "symbole": "JPM",
+      "nom": "JPMorgan Chase",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Financials",
+      "marche": "NYSE",
+      "devise": "USD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.235969,
+        "pire_baisse": -0.322449,
+        "temps_sous_l_eau_annees": 1.6509,
+        "temps_sous_l_eau_debut": "2021-11-23",
+        "temps_sous_l_eau_fin": "2023-07-19",
+        "non_recupere": false
+      },
+      "premiere_cotation": {
+        "date": "1980-03-17",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.236,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": true,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "1980-03-17",
+            "anciennete_annees": 46.7,
+            "speculatif": false,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": false,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Financials"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "indetermine",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "indetermine",
+            "preuve": "Non vérifié."
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "JNJ": {
+      "symbole": "JNJ",
+      "nom": "Johnson & Johnson",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Health Care",
+      "marche": "NYSE",
+      "devise": "USD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.181849,
+        "pire_baisse": -0.155494,
+        "temps_sous_l_eau_annees": 2.1903,
+        "temps_sous_l_eau_debut": "2022-12-14",
+        "temps_sous_l_eau_fin": "2025-02-21",
+        "non_recupere": false
+      },
+      "premiere_cotation": {
+        "date": "1962-01-02",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.1818,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": true,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "1962-01-02",
+            "anciennete_annees": 64.9,
+            "speculatif": false,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": false,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Health Care"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "indetermine",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "indetermine",
+            "preuve": "Non vérifié."
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "PG": {
+      "symbole": "PG",
+      "nom": "Procter & Gamble",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Consumer Staples",
+      "marche": "NYSE",
+      "devise": "USD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.186024,
+        "pire_baisse": -0.234682,
+        "temps_sous_l_eau_annees": 1.6756,
+        "temps_sous_l_eau_debut": "2025-03-10",
+        "temps_sous_l_eau_fin": "2026-11-12",
+        "non_recupere": true
+      },
+      "premiere_cotation": {
+        "date": "1962-01-02",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.186,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": true,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "1962-01-02",
+            "anciennete_annees": 64.9,
+            "speculatif": false,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": false,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Consumer Staples"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "indetermine",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "indetermine",
+            "preuve": "Non vérifié."
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "XOM": {
+      "symbole": "XOM",
+      "nom": "Exxon Mobil",
+      "classe_actif": "equity",
+      "classe_politique": "actions",
+      "secteur": "Energy",
+      "marche": "NYSE",
+      "devise": "USD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.257106,
+        "pire_baisse": -0.190812,
+        "temps_sous_l_eau_annees": 0.616,
+        "temps_sous_l_eau_debut": "2025-03-31",
+        "temps_sous_l_eau_fin": "2025-11-11",
+        "non_recupere": false
+      },
+      "premiere_cotation": {
+        "date": "1962-01-02",
+        "recupere_le": "2026-11-15",
+        "source": "yfinance_first_trade_date"
+      },
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.2571,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": true,
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": {
+            "premiere_cotation": "1962-01-02",
+            "anciennete_annees": 64.9,
+            "speculatif": false,
+            "recupere_le": "2026-11-15"
+          },
+          "source": "yfinance_first_trade_date"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": false,
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Energy"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": true,
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "ecarte",
+            "preuve": "Fiche du fonds ESGV du 30 sept. 2026, tableau des exclusions : énergie non renouvelable."
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "XIU.TO": {
+      "symbole": "XIU.TO",
+      "nom": "iShares S&P/TSX 60 Index ETF",
+      "classe_actif": "etf_equity",
+      "classe_politique": "actions",
+      "secteur": "Broad market (Canada)",
+      "marche": "TSX",
+      "devise": "CAD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.129249,
+        "pire_baisse": -0.163601,
+        "temps_sous_l_eau_annees": 1.7303,
+        "temps_sous_l_eau_debut": "2022-04-04",
+        "temps_sous_l_eau_fin": "2023-12-27",
+        "non_recupere": false
+      },
+      "premiere_cotation": null,
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.1292,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": "sans_objet",
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": null,
+          "source": "hypothese_etiquettes"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "etf_equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": "sans_objet",
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Broad market (Canada)"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "sans_objet",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "sans_objet"
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "SPY": {
+      "symbole": "SPY",
+      "nom": "SPDR S&P 500 ETF Trust",
+      "classe_actif": "etf_equity",
+      "classe_politique": "actions",
+      "secteur": "Broad market (U.S.)",
+      "marche": "NYSE Arca",
+      "devise": "USD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.164982,
+        "pire_baisse": -0.222457,
+        "temps_sous_l_eau_annees": 1.5551,
+        "temps_sous_l_eau_debut": "2021-12-27",
+        "temps_sous_l_eau_fin": "2023-07-18",
+        "non_recupere": false
+      },
+      "premiere_cotation": null,
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.165,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": "sans_objet",
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": null,
+          "source": "hypothese_etiquettes"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "etf_equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": "sans_objet",
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Broad market (U.S.)"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "sans_objet",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "sans_objet"
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "QQQ": {
+      "symbole": "QQQ",
+      "nom": "Invesco QQQ Trust (Nasdaq-100)",
+      "classe_actif": "etf_equity",
+      "classe_politique": "actions",
+      "secteur": "Broad market (U.S. growth/tech-heavy)",
+      "marche": "NASDAQ",
+      "devise": "USD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.225345,
+        "pire_baisse": -0.320501,
+        "temps_sous_l_eau_annees": 1.6783,
+        "temps_sous_l_eau_debut": "2021-12-27",
+        "temps_sous_l_eau_fin": "2023-09-01",
+        "non_recupere": false
+      },
+      "premiere_cotation": null,
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.2253,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": "sans_objet",
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": null,
+          "source": "hypothese_etiquettes"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "etf_equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": "sans_objet",
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Broad market (U.S. growth/tech-heavy)"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "sans_objet",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "sans_objet"
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "ESGV": {
+      "symbole": "ESGV",
+      "nom": "Vanguard ESG U.S. Stock ETF",
+      "classe_actif": "etf_equity",
+      "classe_politique": "actions",
+      "secteur": "Broad market (U.S., ESG-screened)",
+      "marche": "Cboe BZX",
+      "devise": "USD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.178469,
+        "pire_baisse": -0.268629,
+        "temps_sous_l_eau_annees": 1.9439,
+        "temps_sous_l_eau_debut": "2021-12-27",
+        "temps_sous_l_eau_fin": "2023-12-07",
+        "non_recupere": false
+      },
+      "premiere_cotation": null,
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.1785,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": "sans_objet",
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": null,
+          "source": "hypothese_etiquettes"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "etf_equity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": "sans_objet",
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Broad market (U.S., ESG-screened)"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "sans_objet",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "sans_objet"
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "XBB.TO": {
+      "symbole": "XBB.TO",
+      "nom": "iShares Core Canadian Universe Bond Index ETF",
+      "classe_actif": "etf_bond",
+      "classe_politique": "revenu_fixe",
+      "secteur": "Bonds (Canada aggregate)",
+      "marche": "TSX",
+      "devise": "CAD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.065737,
+        "pire_baisse": -0.154797,
+        "temps_sous_l_eau_annees": 3.2088,
+        "temps_sous_l_eau_debut": "2021-12-17",
+        "temps_sous_l_eau_fin": "2025-03-03",
+        "non_recupere": false
+      },
+      "premiere_cotation": null,
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.0657,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": "sans_objet",
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": null,
+          "source": "hypothese_etiquettes"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "etf_bond"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": "sans_objet",
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Bonds (Canada aggregate)"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "sans_objet",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "sans_objet"
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "ZST.TO": {
+      "symbole": "ZST.TO",
+      "nom": "BMO Ultra Short-Term Bond ETF",
+      "classe_actif": "etf_bond",
+      "classe_politique": "liquidites",
+      "secteur": "Bonds (Canada ultra short-term)",
+      "marche": "TSX",
+      "devise": "CAD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.005517,
+        "pire_baisse": -0.004283,
+        "temps_sous_l_eau_annees": 0.4572,
+        "temps_sous_l_eau_debut": "2022-03-01",
+        "temps_sous_l_eau_fin": "2022-08-15",
+        "non_recupere": false
+      },
+      "premiere_cotation": null,
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.0055,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": "sans_objet",
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": null,
+          "source": "hypothese_etiquettes"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "etf_bond"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": "sans_objet",
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Bonds (Canada ultra short-term)"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "sans_objet",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "sans_objet"
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "AGG": {
+      "symbole": "AGG",
+      "nom": "iShares Core U.S. Aggregate Bond ETF",
+      "classe_actif": "etf_bond",
+      "classe_politique": "revenu_fixe",
+      "secteur": "Bonds (U.S. aggregate)",
+      "marche": "NYSE Arca",
+      "devise": "USD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.073116,
+        "pire_baisse": -0.12751,
+        "temps_sous_l_eau_annees": 2.6146,
+        "temps_sous_l_eau_debut": "2021-12-20",
+        "temps_sous_l_eau_fin": "2024-08-01",
+        "non_recupere": false
+      },
+      "premiere_cotation": null,
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.0731,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": "sans_objet",
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": null,
+          "source": "hypothese_etiquettes"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "etf_bond"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": "sans_objet",
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Bonds (U.S. aggregate)"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "sans_objet",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "sans_objet"
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "TLT": {
+      "symbole": "TLT",
+      "nom": "iShares 20+ Year Treasury Bond ETF",
+      "classe_actif": "etf_bond",
+      "classe_politique": "revenu_fixe",
+      "secteur": "Bonds (U.S. long Treasury)",
+      "marche": "NASDAQ",
+      "devise": "USD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.15881,
+        "pire_baisse": -0.397282,
+        "temps_sous_l_eau_annees": 4.9418,
+        "temps_sous_l_eau_debut": "2021-12-03",
+        "temps_sous_l_eau_fin": "2026-11-12",
+        "non_recupere": true
+      },
+      "premiere_cotation": null,
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.1588,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": "sans_objet",
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": null,
+          "source": "hypothese_etiquettes"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "etf_bond"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": "sans_objet",
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Bonds (U.S. long Treasury)"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "sans_objet",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "sans_objet"
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "GLD": {
+      "symbole": "GLD",
+      "nom": "SPDR Gold Shares",
+      "classe_actif": "etf_commodity",
+      "classe_politique": "alternatifs",
+      "secteur": "Gold",
+      "marche": "NYSE Arca",
+      "devise": "USD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.182216,
+        "pire_baisse": -0.259993,
+        "temps_sous_l_eau_annees": 1.024,
+        "temps_sous_l_eau_debut": "2022-03-08",
+        "temps_sous_l_eau_fin": "2023-03-17",
+        "non_recupere": false
+      },
+      "premiere_cotation": null,
+      "etiquettes": {
+        "speculatif": {
+          "valeur": false,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.1822,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": "sans_objet",
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": null,
+          "source": "hypothese_etiquettes"
+        },
+        "crypto": {
+          "valeur": false,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "etf_commodity"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": "sans_objet",
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Gold"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "sans_objet",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "sans_objet"
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "BTC-USD": {
+      "symbole": "BTC-USD",
+      "nom": "Bitcoin",
+      "classe_actif": "crypto",
+      "classe_politique": "alternatifs",
+      "secteur": "Crypto asset",
+      "marche": "Crypto (24/7)",
+      "devise": "USD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.502942,
+        "pire_baisse": -0.736552,
+        "temps_sous_l_eau_annees": 2.2943,
+        "temps_sous_l_eau_debut": "2021-11-12",
+        "temps_sous_l_eau_fin": "2024-02-28",
+        "non_recupere": false
+      },
+      "premiere_cotation": null,
+      "etiquettes": {
+        "speculatif": {
+          "valeur": true,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.5029,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": "sans_objet",
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": null,
+          "source": "hypothese_etiquettes"
+        },
+        "crypto": {
+          "valeur": true,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "crypto"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": "sans_objet",
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Crypto asset"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "sans_objet",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "sans_objet"
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    },
+    "ETH-USD": {
+      "symbole": "ETH-USD",
+      "nom": "Ether",
+      "classe_actif": "crypto",
+      "classe_politique": "alternatifs",
+      "secteur": "Crypto asset",
+      "marche": "Crypto (24/7)",
+      "devise": "USD",
+      "statistiques_cad": {
+        "volatilite_annualisee": 0.672848,
+        "pire_baisse": -0.771932,
+        "temps_sous_l_eau_annees": 3.6988,
+        "temps_sous_l_eau_debut": "2021-11-30",
+        "temps_sous_l_eau_fin": "2025-08-12",
+        "non_recupere": false
+      },
+      "premiere_cotation": null,
+      "etiquettes": {
+        "speculatif": {
+          "valeur": true,
+          "regle": "Volatilité annualisée en CAD > 2 x celle de SPY en CAD.",
+          "declencheur": {
+            "volatilite_annualisee_cad": 0.6728,
+            "volatilite_spy_cad": 0.165,
+            "seuil": 0.33
+          },
+          "source": "hypothese_etiquettes"
+        },
+        "etablie": {
+          "valeur": "sans_objet",
+          "regle": "Première cotation il y a au moins 20 ans (au 2026-11-12) et non spéculatif. Actions individuelles seulement.",
+          "declencheur": null,
+          "source": "hypothese_etiquettes"
+        },
+        "crypto": {
+          "valeur": true,
+          "regle": "Classe d'actifs crypto.",
+          "declencheur": {
+            "classe_actif": "crypto"
+          },
+          "source": "donnees_marche"
+        },
+        "techno": {
+          "valeur": "sans_objet",
+          "regle": "Secteur « Information Technology ». Actions individuelles seulement.",
+          "declencheur": {
+            "secteur": "Crypto asset"
+          },
+          "source": "donnees_marche"
+        },
+        "ecarte_esg": {
+          "valeur": "sans_objet",
+          "regle": "Statut dans le tableau ESG (méthode FTSE Global Choice, fonds ESGV et VSGX). Actions individuelles seulement.",
+          "declencheur": {
+            "statut": "sans_objet"
+          },
+          "source": "vanguard_esgv_2026"
+        }
+      }
+    }
+  }
+}
