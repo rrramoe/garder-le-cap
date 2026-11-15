@@ -314,3 +314,32 @@ def test_decouvert_debutante_ne_cherche_pas_de_taille():
     assert simulation["arguments"].get("operation") == "decouvert"
     assert simulation["resultat"]["verdict"]["code"] == "incompatible"
     assert len(r["explication"].split()) <= 200  # limite de 180 mots dans le prompt, marge pour les marqueurs **
+
+
+# --- Suivi en direct des étapes ------------------------------------------------------------------
+
+def test_suivi_des_etapes_avec_modele_simule():
+    evenements = []
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(SCENARIO_SUBSTITUT),
+                             sur_etape=evenements.append)
+    assert r["erreur"] is None
+    assert all(e["agent"] == "principal" for e in evenements)
+    moments = [e["moment"] for e in evenements]
+    assert moments[-3:] == ["redaction", "verification", "fin"]
+    debuts = [e for e in evenements if e["moment"] == "debut_outil"]
+    fins = [e for e in evenements if e["moment"] == "fin_outil"]
+    assert [e["outil"] for e in debuts] == [e["outil"] for e in r["trace"]]
+    assert [e["etape"] for e in debuts] == [1, 2, 3, 4, 5, 6] == [e["etape"] for e in fins]
+    assert debuts[0]["libelle"] == "Je lis votre fiche." and debuts[2]["arguments"] == ORDRE_ROBERT
+    assert "SPY" in debuts[5]["libelle"]
+    assert [e["resultat_resume"] for e in fins] == [e["resultat_resume"] for e in r["trace"]]
+    for e in evenements:
+        assert set(e) <= {"moment", "agent", "etape", "outil", "arguments", "libelle", "resultat_resume"}
+        assert e["moment"] != "debut_outil" or e["libelle"].endswith(".")
+
+
+def test_suivi_qui_leve_ne_casse_pas_l_analyse():
+    def casse(evenement):
+        raise RuntimeError("affichage en panne")
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(SCENARIO_ROBERT), sur_etape=casse)
+    assert r["erreur"] is None and r["explication"] == "**Verdict** : en tension." and len(r["trace"]) == 4

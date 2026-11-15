@@ -18,6 +18,7 @@ from pathlib import Path
 from . import garde_fou as _garde_fou
 from . import identifiants
 from .outils import creer_outils, identifiant_client
+from .suivi import Suivi
 
 MODELE_DEFAUT = "global.anthropic.claude-sonnet-5"
 REGION = identifiants.REGION
@@ -56,15 +57,19 @@ def creer_modele(model_id: str):
                         **options_garde_fou())
 
 
-def creer_agent(client, modele=None):
-    """Agent Strands d'une inspection. `modele` : identifiant Bedrock, ou objet modèle Strands (essais)."""
+def creer_agent(client, modele=None, suivi=None):
+    """Agent Strands d'une inspection. `modele` : identifiant Bedrock, ou objet modèle Strands (essais).
+
+    `suivi` : un `agent.suivi.Suivi` qui relaie les étapes en direct, ou None.
+    """
     from strands import Agent, ModelRetryStrategy
 
     if modele is None or isinstance(modele, str):
         identifiants.charger_identifiants()
         modele = creer_modele(nom_modele(modele))
     return Agent(model=modele, tools=creer_outils(client), system_prompt=PROMPT_SYSTEME.read_text(encoding="utf-8"),
-                 callback_handler=None, name="inspection",
+                 callback_handler=suivi.rappel if suivi is not None else None, name="inspection",
+                 hooks=[suivi] if suivi is not None else None,
                  retry_strategy=ModelRetryStrategy(max_attempts=3, initial_delay=2, max_delay=16))
 
 
@@ -203,6 +208,16 @@ def resumer(outil: str, r) -> str:
     return "Résultat reçu."
 
 
+def resume_etape(outil: str, arguments: dict, resultat, ticker_ordre: str | None = None) -> str:
+    """Résumé d'une étape, tel que la trace et le suivi en direct l'affichent."""
+    resume = resumer(outil, resultat)
+    if outil == "simuler_ordre" and ticker_ordre:
+        ticker = str((arguments or {}).get("ticker", "")).strip().upper()
+        if ticker and ticker != str(ticker_ordre).strip().upper():
+            resume = f"Substitut testé ({ticker}) : {resume}"
+    return resume
+
+
 def extraire_trace(messages) -> list:
     """Trace des appels d'outils, dans l'ordre, lue dans `agent.messages` (blocs toolUse et toolResult)."""
     appels, resultats = [], {}
@@ -219,13 +234,9 @@ def extraire_trace(messages) -> list:
         outil = appel.get("name")
         arguments = appel.get("input") or {}
         resultat = _contenu_resultat(resultats.get(appel.get("toolUseId")))
-        resume = resumer(outil, resultat)
-        if outil == "simuler_ordre":
-            ticker = str(arguments.get("ticker", "")).strip().upper()
-            if ticker_ordre is None:
-                ticker_ordre = ticker
-            elif ticker != ticker_ordre:
-                resume = f"Substitut testé ({ticker}) : {resume}"
+        if outil == "simuler_ordre" and ticker_ordre is None:
+            ticker_ordre = str(arguments.get("ticker", "")).strip().upper()
+        resume = resume_etape(outil, arguments, resultat, ticker_ordre)
         trace.append({"etape": etape, "outil": outil, "arguments": arguments,
                       "resultat_resume": resume, "resultat": resultat})
     return trace
@@ -274,9 +285,16 @@ def message_erreur(e: Exception) -> str:
 
 # --- Point d'entrée -----------------------------------------------------------------------------
 
-def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptant") -> dict:
-    """Fait inspecter l'ordre par l'agent. Ne lève jamais d'exception."""
+def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptant", sur_etape=None) -> dict:
+    """Fait inspecter l'ordre par l'agent. Ne lève jamais d'exception.
+
+    `sur_etape(evenement)`, si elle est donnée, reçoit chaque étape au moment où l'agent la fait (voir
+    `agent/suivi.py` pour la forme des événements). `debut_outil`, `fin_outil` et `redaction` arrivent du fil
+    où Strands fait tourner l'agent ; `verification`, `correction` et `fin`, du fil qui appelle `inspecter`.
+    Une fonction qui lève une exception ne casse pas l'analyse.
+    """
     debut = time.monotonic()
+    suivi = Suivi(sur_etape, agent="principal", ticker_ordre=ticker)
     agent, explication, erreur, trace = None, None, None, []
     config = _garde_fou.configuration_garde_fou()
     simule = not (modele is None or isinstance(modele, str))
@@ -287,7 +305,7 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
     except Exception:
         modele_nom = str(modele)
     try:
-        agent = creer_agent(client, modele)
+        agent = creer_agent(client, modele, suivi=suivi)
         resultat = agent(consigne(identifiant_client(client), str(ticker).strip().upper(),
                                   str(sens).strip().lower(), pourcentage, str(operation or "comptant").strip().lower()),
                          limits={"turns": LIMITE_TOURS})
@@ -306,6 +324,8 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
         trace = extraire_trace(agent.messages) if agent is not None else []
     except Exception:
         trace = []
+    if explication:
+        suivi.emettre("verification")
     try:
         ancrage = _garde_fou.verifier_ancrage(explication, trace, consigne(
             identifiant_client(client), str(ticker).strip().upper(), str(sens).strip().lower(), pourcentage),
@@ -315,6 +335,7 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
     if not etat_garde_fou["actif"]:
         etat_garde_fou["avis"] = ("Garde-fou Bedrock non configuré : les appels au modèle ne sont pas filtrés."
                                   if config is None else "Modèle simulé : garde-fou non appliqué.")
+    suivi.emettre("fin")
     return {"explication": explication, "trace": trace, "modele": modele_nom,
             "duree_s": round(time.monotonic() - debut, 2), "erreur": erreur,
             "garde_fou": etat_garde_fou, "ancrage": ancrage,
