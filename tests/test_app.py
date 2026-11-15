@@ -87,7 +87,7 @@ def test_horizon_change_la_note_de_duree(sans_agent):
     at.button(key="inspecter").click().run()
     assert not at.exception, at.exception
     texte = _textes(at)
-    assert "Depuis l'inspection précédente" in texte
+    assert "Depuis l'analyse précédente" in texte
     assert "15 ans et plus" in texte
     assert "En tension" in _verdict(at)
 

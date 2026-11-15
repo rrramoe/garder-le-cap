@@ -1,4 +1,4 @@
-"""Garder le cap : interface locale (Streamlit) de l'inspection d'ordres.
+"""Garder le cap : interface locale (Streamlit), prototype de service de gestion des risques.
 
 Lancement : streamlit run app.py --server.address localhost
 
@@ -27,6 +27,18 @@ BANDEAU = ("Simulation à but éducatif. Aucune transaction réelle. "
 AVIS_SANS_AGENT = ("Explication de l'agent indisponible : le rapport ci-dessous vient "
                    "directement du moteur de calcul")
 LIMITE = 50
+
+# Vocabulaire de l'action principale, en un seul endroit.
+BOUTON_ACTION = "Analyser l'ordre"
+TITRE_RAPPORT = "Analyse de l'ordre"
+TITRE_ETAPES = "Étapes de l'analyse"
+DEPUIS_PRECEDENT = "Depuis l'analyse précédente"
+ATTENTE_AGENT = "L'agent rédige l'explication…"
+
+# Ce que l'outil est : il renseigne, il ne conseille pas.
+SOUS_TITRE = "Le service de gestion des risques de l'investisseur particulier (prototype)"
+MISSION = ("L'outil renseigne, il ne conseille pas. Il vous aide à garder le cap sur vos objectifs : "
+           "un placement est un moyen, pas une fin.")
 
 # Palette : thème de la présentation du Datathon (marine, rouge, gris chauds, or, vert sauge).
 MARINE = "#152532"
@@ -451,6 +463,11 @@ def appeler_agent(fiche: dict, ticker: str, sens: str, pourcentage: float) -> di
 # ---------------------------------------------------------------- graphiques
 
 def graphique_anneau(df: pd.DataFrame, categorie: str, couleurs: dict | list, titre: str) -> alt.Chart:
+    df = df.sort_values("pct", ascending=False).copy()
+    if isinstance(couleurs, dict):
+        couleurs = {f"{c} · {pct(float(df.loc[df[categorie] == c, 'pct'].sum()), 0)}": v
+                    for c, v in couleurs.items() if c in set(df[categorie])}
+    df[categorie] = [f"{c} · {pct(w, 0)}" for c, w in zip(df[categorie], df["pct"])]
     if isinstance(couleurs, dict):
         domaine = [c for c in couleurs if c in set(df[categorie])]
         echelle = alt.Scale(domain=domaine, range=[couleurs[c] for c in domaine])
@@ -460,11 +477,13 @@ def graphique_anneau(df: pd.DataFrame, categorie: str, couleurs: dict | list, ti
     return alt.Chart(df).mark_arc(innerRadius=62, outerRadius=110, stroke="white", strokeWidth=1.5).encode(
         theta=alt.Theta("pct:Q", stack=True),
         color=alt.Color(f"{categorie}:N", scale=echelle, sort=domaine,
-                        legend=alt.Legend(title=None, orient="right", labelFontSize=12)),
+                        legend=alt.Legend(title=None, orient="right", labelFontSize=13, rowPadding=2,
+                                          columns=1 if len(domaine) <= 6 else 2, columnPadding=12,
+                                          symbolSize=110, symbolType="circle", labelLimit=200)),
         order=alt.Order("pct:Q", sort="descending"),
         tooltip=[alt.Tooltip(f"{categorie}:N", title=titre), alt.Tooltip("pct:Q", title="Part (%)", format=".1f"),
                  alt.Tooltip("montant:N", title="Montant")],
-    ).properties(height=250, title=alt.TitleParams(titre, anchor="start", fontSize=14))
+    ).properties(height=260, title=alt.TitleParams(titre, anchor="start", fontSize=15, color=MARINE))
 
 
 def graphique_classes(poids: dict, fourchettes: dict) -> alt.Chart:
@@ -486,9 +505,9 @@ def graphique_classes(poids: dict, fourchettes: dict) -> alt.Chart:
         y=y, x="poids:Q",
         color=alt.Color("etat:N", scale=alt.Scale(domain=["Dans la zone permise", "Hors de la zone"],
                                                   range=[MARINE, COULEURS_VERDICT["en_tension"]]),
-                        legend=alt.Legend(title=None, orient="bottom")),
+                        legend=None),
         tooltip=[alt.Tooltip("classe:N", title="Classe"), alt.Tooltip("poids:Q", title="Part (%)", format=".1f")])
-    return (bande + barre).properties(height=190)
+    return (bande + barre).properties(height=210)
 
 
 def graphique_courbe(taille: dict, valeur: float) -> alt.Chart:
@@ -662,8 +681,11 @@ def onglet_portefeuille(persona: str, fiche: dict, fiche_client: dict) -> None:
                     continue
                 ligne_note(DIMENSIONS[dim], n["note"], aide=AIDE_DIMENSIONS[dim])
                 m = n["mesures"].get(n["mesure_min"], {})
-                st.caption(f"Point faible : {libelle_mesure(dim, n['mesure_min'])} — "
-                           f"{decrire_mesure(dim, n['mesure_min'], m)}.")
+                if n["note"] >= 99.95:
+                    st.caption("Sur la cible.")
+                else:
+                    st.caption(f"Point faible : {libelle_mesure(dim, n['mesure_min'])} — "
+                               f"{decrire_mesure(dim, n['mesure_min'], m)}.")
         legende_jauge()
 
     st.subheader("Répartition")
@@ -682,15 +704,12 @@ def onglet_portefeuille(persona: str, fiche: dict, fiche_client: dict) -> None:
     st.markdown(f"**Chaque classe face à la zone permise par le profil {profil}**")
     st.altair_chart(graphique_classes(fiche_client["poids_par_classe_pct"],
                                       fiche_client["deduit"]["fourchettes_pct"]["valeur"]), width="stretch")
-    st.caption("Bande verte : zone permise. Barre : part actuelle.")
+    st.caption("Bande verte : zone permise. Barre : part actuelle (foncée si dans la zone, ambre sinon).")
 
     st.markdown("**Positions**")
     tableau = pd.DataFrame([{"Titre": l["position"], "Nom": l["nom"], "Classe": l["classe"],
-                             "Montant ($ CA)": round(l["pct"] * valeur / 100), "Part (%)": l["pct"]}
-                            for l in lignes])
-    st.dataframe(tableau, hide_index=True, width="stretch",
-                 column_config={"Montant ($ CA)": st.column_config.NumberColumn(format="%d $"),
-                                "Part (%)": st.column_config.NumberColumn(format="%.1f %%")})
+                             "Montant": l["montant"], "Part": pct(l["pct"])} for l in lignes])
+    st.dataframe(tableau, hide_index=True, width="stretch")
     if ordres:
         st.markdown("**Ordres simulés de la session**")
         st.dataframe(pd.DataFrame(ordres), hide_index=True, width="stretch")
@@ -718,14 +737,15 @@ def bloc_verdict(sim: dict, rapport: dict, valeur: float) -> None:
                    aide="De 0 à 100. À partir de 50, l'ordre respecte votre politique.")
         legende_jauge(avec_avant=True)
     with c2:
-        st.markdown(f"**{d['libelle']}.** {DIRECTIONS_TEXTE.get(d['cas'], '')}")
+        if code == "incompatible":
+            st.markdown(f"**Notes seules : {d['libelle'].lower()}.** Une règle stricte passe avant le score.")
+        else:
+            st.markdown(f"**{d['libelle']}.** {DIRECTIONS_TEXTE.get(d['cas'], '')}")
         c = sim.get("contribution_risque_apres")
         if c and c.get("part_du_risque_pct") is not None:
+            lien = "mais" if c["part_du_risque_pct"] > 1.25 * c["poids_pct"] else "et"
             st.markdown(f"{c['ticker']} ferait {pct(c['poids_pct'], 0)} du portefeuille, "
-                        f"mais **{pct(c['part_du_risque_pct'], 0)} de son risque**.")
-    if code == "incompatible":
-        st.caption(f"Les notes seules donneraient {note_txt(sim['score'])} / 100, mais une règle stricte "
-                   "passe avant le score.")
+                        f"{lien} **{pct(c['part_du_risque_pct'], 0)} de son risque**.")
 
 
 def section_possible(taille: dict | None, valeur: float) -> None:
@@ -775,7 +795,7 @@ def bloc_changements(rapport: dict, precedent: dict | None) -> None:
             lignes.append({"Note": DIMENSIONS[cle[0]], "Mesure": libelle_mesure(*cle),
                            "Avant": round(a0[cle]), "Maintenant": round(a1[cle])})
     with st.container(border=True):
-        st.markdown("**Depuis l'inspection précédente**")
+        st.markdown(f"**{DEPUIS_PRECEDENT}**")
         st.markdown("Changé : " + " ; ".join(changements) + ".")
         st.markdown(f"{s0['verdict']['libelle']} → **{s1['verdict']['libelle']}** · score "
                     f"{note_txt(s0['score'])} → **{note_txt(s1['score'])}**")
@@ -810,7 +830,8 @@ def section_notes(sim: dict, niveau: str) -> None:
                 ligne_note(DIMENSIONS[dim], None)
                 continue
             ligne_note(DIMENSIONS[dim], n1["note"], n0["note"], aide=AIDE_DIMENSIONS[dim])
-            st.caption(f"Point faible : {libelle_mesure(dim, n1['mesure_min'])}.")
+            st.caption("Sur la cible." if n1["note"] >= 99.95
+                       else f"Point faible : {libelle_mesure(dim, n1['mesure_min'])}.")
     legende_jauge(avec_avant=True)
     if niveau == "essentiel":
         return
@@ -887,7 +908,7 @@ def section_sources(rapport: dict, persona: str) -> None:
         st.markdown(f"- {s['libelle']} — {s['source']}")
     st.markdown(f"- Valeur du portefeuille de {PERSONAS[persona]['nom']} : {dollars(valeur_pf(persona))}, "
                 f"montant fictif choisi par l'interface. {RAISONS_VALEUR[persona]}")
-    st.markdown("- L'inspection suppose que l'ordre est exécuté, quel que soit son type.")
+    st.markdown("- Le rapport suppose que l'ordre est exécuté, quel que soit son type.")
     p = rapport["simulation"].get("periode", {})
     st.markdown("**Scénarios**")
     st.markdown(f"- Les notes de risque rejouent l'historique du {p.get('debut', '?')} au {p.get('fin', '?')}, "
@@ -907,9 +928,9 @@ def afficher_rapport(persona: str, rapport: dict, fiche_actuelle: dict) -> None:
     sim = rapport["simulation"]
     valeur = valeur_pf(persona)
     st.divider()
-    st.subheader("Rapport d'inspection")
+    st.subheader(TITRE_RAPPORT)
     if rapport["fiche"] != fiche_actuelle:
-        st.warning("Votre fiche a changé. Cliquez sur « Inspecter » pour mettre le rapport à jour.")
+        st.warning(f"Votre fiche a changé. Cliquez sur « {BOUTON_ACTION} » pour mettre le rapport à jour.")
     if "erreur" in sim:
         st.error(sim["erreur"])
         return
@@ -921,7 +942,7 @@ def afficher_rapport(persona: str, rapport: dict, fiche_actuelle: dict) -> None:
     bloc_verdict(sim, rapport, valeur)
     bloc_changements(rapport, st.session_state.get(f"precedent_{persona}"))
     section_possible(rapport["taille"], valeur)
-    st.caption(rapport["ordre"].get("hypothese_execution", "L'inspection suppose que l'ordre est exécuté."))
+    st.caption(rapport["ordre"].get("hypothese_execution", "Le rapport suppose que l'ordre est exécuté."))
 
     st.markdown("#### En détail")
     if not ouvert:
@@ -933,24 +954,24 @@ def afficher_rapport(persona: str, rapport: dict, fiche_actuelle: dict) -> None:
         section_notes(sim, niveau)
 
     if rapport.get("agent") is None:
-        with st.spinner("L'agent rédige l'explication…"):
+        with st.spinner(ATTENTE_AGENT):
             o = rapport["ordre"]
             rapport["agent"] = appeler_agent(rapport["fiche"], o["ticker"], o["sens"], o["pourcentage"])
     with st.expander("Explication de l'agent", expanded=ouvert):
         section_agent(rapport)
-    with st.expander("Étapes de l'inspection", expanded=False):
+    with st.expander(TITRE_ETAPES, expanded=False):
         section_etapes(rapport, niveau)
     with st.expander("Sources, hypothèses et limites", expanded=False):
         section_sources(rapport, persona)
-    st.caption("Vous décidez. L'inspection ne bloque rien.")
+    st.caption("Vous décidez. Le rapport renseigne ; il ne bloque rien et ne conseille rien.")
 
 
 # ---------------------------------------------------------------- rendu : ordre
 
 def phrase_execution(type_ordre: str, prix: float | None) -> str:
     if type_ordre == "marche" or prix is None:
-        return "L'inspection suppose que l'ordre est exécuté au prix du moment."
-    return f"L'inspection suppose que l'ordre est exécuté à {dollars(prix, 2)}."
+        return "Le rapport suppose que l'ordre est exécuté au prix du moment."
+    return f"Le rapport suppose que l'ordre est exécuté à {dollars(prix, 2)}."
 
 
 def onglet_ordre(persona: str, fiche: dict) -> None:
@@ -988,15 +1009,16 @@ def onglet_ordre(persona: str, fiche: dict) -> None:
         c5.markdown(f"Dernier prix connu  \n**{dollars(dernier, 2)}**")
     c4.caption(TYPES_ORDRE[type_ordre]["aide"])
 
+    detenu = pf.get(ticker, 0.0) * valeur / 100
+    deja = f"Vous détenez {dollars(detenu)} de {ticker}." if detenu > 0 else f"Vous ne détenez pas de {ticker}."
     if sens == "achat":
         st.caption(f"Un achat est payé avec vos liquidités : {dollars(pf.get('ZST.TO', 0.0) * valeur / 100)} "
-                   f"disponibles. Vous détenez déjà {dollars(pf.get(ticker, 0.0) * valeur / 100)} de {ticker}.")
+                   f"disponibles. {deja}")
     else:
-        st.caption(f"Une vente est versée dans vos liquidités. Vous détenez "
-                   f"{dollars(pf.get(ticker, 0.0) * valeur / 100)} de {ticker}.")
+        st.caption(f"Une vente est versée dans vos liquidités. {deja}")
 
     b1, b2, _ = st.columns([1, 1.4, 2])
-    inspecter = b1.button("Inspecter", type="primary", key="inspecter", width="stretch")
+    inspecter = b1.button(BOUTON_ACTION, type="primary", key="inspecter", width="stretch")
     passer = b2.button("Passer l'ordre (simulé)", key="passer", width="stretch")
 
     details = {"operation": operation, "montant": montant, "type": type_ordre, "prix": prix_ordre,
@@ -1033,7 +1055,8 @@ def onglet_ordre(persona: str, fiche: dict) -> None:
     if rapport is not None:
         afficher_rapport(persona, rapport, fiche)
     else:
-        st.markdown("Cliquez sur **Inspecter** pour savoir si cet ordre respecte votre politique, avant de le passer.")
+        st.markdown(f"Cliquez sur **{BOUTON_ACTION}** pour savoir si cet ordre respecte votre politique, "
+                    "avant de le passer.")
 
 
 # ---------------------------------------------------------------- page
@@ -1058,7 +1081,7 @@ def main() -> None:
 
     with st.sidebar:
         st.title("Garder le cap")
-        st.caption("Vérifier un ordre avant de le passer")
+        st.caption(SOUS_TITRE)
         persona = st.radio("Client", ORDRE_PERSONAS, key="persona",
                            format_func=lambda p: PERSONAS[p]["nom"])
     initialiser(persona)
@@ -1083,7 +1106,7 @@ def main() -> None:
                                 ("incompatible", "Incompatible", "touche une règle stricte.")):
             st.markdown(f'<span style="color:{COULEURS_VERDICT[code]};font-weight:700;">{lib}</span> : '
                         f"l'ordre {sens}", unsafe_allow_html=True)
-        st.caption("L'outil n'interdit rien et ne recommande rien.")
+        st.caption(MISSION)
 
     st.title(PERSONAS[persona]["nom"])
     onglets = st.tabs(["Fiche", "Portefeuille", "Ordre"])
