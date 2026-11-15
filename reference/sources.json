@@ -133,5 +133,11 @@
     "source": "Hypothèse du projet",
     "date": "2026-11-15",
     "nature": "hypothese"
+  },
+  "hypothese_experience_operations": {
+    "libelle": "Achat sur marge et vente à découvert selon l'expérience : exclus pour « Débutante », à éviter pour « Intermédiaire » (repère de 15 %), sans effet pour « Avancée » (reference/operations_experience.json)",
+    "source": "Hypothèse du projet",
+    "date": "2026-11-15",
+    "nature": "hypothese"
   }
 }

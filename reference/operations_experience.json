@@ -1,0 +1,19 @@
+{
+  "note": "Hypothèse du projet, pas une règle publiée. Niveau de l'échelle des thèmes appliqué aux opérations avancées selon l'expérience du client : « exclure » = contrainte stricte (ordre incompatible, aucune taille cherchée) ; « eviter » = préférence souple, notée 100 - 50 x e / 15, où e est le poids détenu à découvert ou acheté avec de l'argent emprunté après l'ordre ; « neutre » = aucun effet. Modifiable ici sans toucher au code.",
+  "source": "hypothese_experience_operations",
+  "niveaux_permis": ["exclure", "eviter", "neutre"],
+  "operations": {
+    "marge": {
+      "id": "achat_sur_marge",
+      "libelle": "Achat sur marge",
+      "libelle_exposition": "Poids acheté avec de l'argent emprunté",
+      "niveau_par_experience": {"debutante": "exclure", "intermediaire": "eviter", "avancee": "neutre"}
+    },
+    "decouvert": {
+      "id": "vente_a_decouvert",
+      "libelle": "Vente à découvert",
+      "libelle_exposition": "Poids détenu à découvert",
+      "niveau_par_experience": {"debutante": "exclure", "intermediaire": "eviter", "avancee": "neutre"}
+    }
+  }
+}

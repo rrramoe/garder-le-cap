@@ -23,8 +23,8 @@ class ErreurOrdre(Exception):
 
 # ---------------------------------------------------------------- ordre
 
-SOURCES_OPERATIONS = {"comptant": (), "marge": ("hypothese_marge", "hypothese_levier"),
-                      "decouvert": ("hypothese_decouvert", "hypothese_levier")}
+SOURCES_OPERATIONS = {"comptant": (), "marge": ("hypothese_marge", "hypothese_levier", "hypothese_experience_operations"),
+                      "decouvert": ("hypothese_decouvert", "hypothese_levier", "hypothese_experience_operations")}
 OPERATIONS = {"comptant": ("achat", "vente"), "marge": ("achat",), "decouvert": ("vente",)}
 LIBELLES_OPERATIONS = {"comptant": "Au comptant", "marge": "Achat sur marge", "decouvert": "Vente à découvert"}
 
@@ -101,8 +101,29 @@ def levier(port: dict) -> dict:
 
 # ---------------------------------------------------------------- contraintes strictes
 
-def contraintes_strictes(fiche: dict, ticker: str, sens: str) -> dict:
-    """Section 7.1 : vérifiées pour un achat seulement."""
+def controle_experience(fiche: dict, operation: str) -> dict | None:
+    """Niveau (exclure, eviter, neutre) de l'opération avancée pour l'expérience du client.
+
+    Lu dans `reference/operations_experience.json` (hypothèse du projet). `None` au comptant.
+    """
+    if operation == "comptant":
+        return None
+    ref = references.charger("operations_experience")
+    op = ref["operations"].get(operation)
+    if op is None:
+        raise ErreurOrdre(f"reference/operations_experience.json : l'opération « {operation} » n'y figure pas.")
+    experience = fiche["questionnaire"]["experience"]
+    niveau = op["niveau_par_experience"].get(experience)
+    if niveau not in ref["niveaux_permis"]:
+        raise ErreurOrdre(f"reference/operations_experience.json : niveau invalide ou absent pour l'expérience « {experience} » "
+                          f"({LIBELLES_OPERATIONS[operation]}). Choix possibles : {', '.join(ref['niveaux_permis'])}.")
+    libelle_exp = references.charger("questionnaire")["experience"]["options"].get(experience, experience)
+    return {"id": op["id"], "operation": operation, "libelle": op["libelle"], "libelle_exposition": op["libelle_exposition"],
+            "experience": experience, "libelle_experience": libelle_exp, "niveau": niveau, "source": ref["source"]}
+
+
+def contraintes_strictes(fiche: dict, ticker: str, sens: str, operation: str = "comptant") -> dict:
+    """Section 7.1 : vérifiées pour un achat seulement. S'y ajoute l'opération avancée exclue pour l'expérience."""
     themes = {t["id"]: t for t in references.charger("themes")["themes"]}
     resultats = []
     for theme_id, reponse in fiche["questionnaire"]["themes"].items():
@@ -132,6 +153,12 @@ def contraintes_strictes(fiche: dict, ticker: str, sens: str) -> dict:
         resultats.append({"theme": theme_id, "reponse": reponse, "etiquette": etiquette, "valeur_etiquette": valeur,
                           "statut": statut, "raison": raison, "declencheur": detail.get("declencheur"),
                           "source": detail.get("source")})
+    ce = controle_experience(fiche, operation)
+    if ce and ce["niveau"] == "exclure":
+        resultats.append({"theme": ce["id"], "reponse": "exclure", "etiquette": None, "valeur_etiquette": None,
+                          "statut": "violee", "controle": "experience_operation",
+                          "raison": f"{ce['libelle']} exclu pour l'expérience « {ce['libelle_experience']} » (hypothèse du projet).",
+                          "declencheur": f"experience = {ce['experience']}", "source": ce["source"]})
     violees = [r["theme"] for r in resultats if r["statut"] == "violee"]
     return {"violee": bool(violees), "themes_violes": violees, "detail": resultats}
 
@@ -295,6 +322,13 @@ def note_preferences(port: dict, fiche: dict, ordre: dict | None = None) -> dict
                     signalements.append({"theme": theme_id, "message": f"Achat dans le thème recherché « {theme_id} » : favorable à la préférence."})
             mesures[theme_id] = {"note": note, "reponse": reponse, "poids_vendu": vendu,
                                  "libelle": f"Thème recherché « {theme_id} »"}
+    ce = controle_experience(fiche, ordre.get("operation", "comptant")) if ordre else None
+    if ce and ce["niveau"] == "eviter":
+        e = exposition_empruntee(port)
+        mesures[ce["id"]] = {"note": max(0.0, 100.0 - 50.0 * e / repere), "reponse": "eviter", "poids_expose": e,
+                             "operation": ce["operation"], "experience": ce["experience"], "source": ce["source"],
+                             "libelle": f"{ce['libelle_exposition']} ({ce['libelle'].lower()}, "
+                                        f"expérience « {ce['libelle_experience']} »)"}
     if not mesures:
         return {"note": 100.0, "mesure_min": None, "sans_objet": True, "mesures": {}, "signalements": [],
                 "libelle": "Aucune préférence souple : sans objet."}
@@ -353,7 +387,7 @@ def verdict(contraintes: dict, score: float) -> dict:
     return {"code": "en_tension", "libelle": "En tension", "raison": "Score sous 50 : au-delà d'une limite de la politique."}
 
 
-def bloc_operation(port_avant: dict, port_apres: dict, operation: str) -> dict:
+def bloc_operation(port_avant: dict, port_apres: dict, operation: str, fiche: dict, apres: dict) -> dict:
     """Type d'opération, levier avant et après (affiché, non noté), hypothèses et limites."""
     lv_avant, lv_apres = levier(port_avant), levier(port_apres)
     bloc = {"code": operation, "libelle": LIBELLES_OPERATIONS[operation],
@@ -366,6 +400,21 @@ def bloc_operation(port_avant: dict, port_apres: dict, operation: str) -> dict:
             bloc["hypotheses"].append({"id": s["id"], "libelle": s["libelle"]})
             if s.get("limite"):
                 bloc["limites"].append(s["limite"])
+    ce = controle_experience(fiche, operation)
+    if ce is None:
+        bloc["controle_experience"] = {"effet": "aucun", "raison": "Opération au comptant."}
+    else:
+        controle = {"id": ce["id"], "experience": ce["experience"], "niveau": ce["niveau"], "source": ce["source"]}
+        if ce["niveau"] == "exclure":
+            controle.update(effet="contrainte_stricte", statut="violee",
+                            raison=f"{ce['libelle']} exclu pour l'expérience « {ce['libelle_experience']} ».")
+        elif ce["niveau"] == "eviter":
+            m = apres["notes"]["preferences"]["mesures"][ce["id"]]
+            controle.update(effet="preference_souple", note=m["note"], poids_expose=m["poids_expose"],
+                            raison=f"{ce['libelle']} à éviter pour l'expérience « {ce['libelle_experience']} ».")
+        else:
+            controle.update(effet="aucun", raison=f"{ce['libelle']} sans effet pour l'expérience « {ce['libelle_experience']} ».")
+        bloc["controle_experience"] = controle
     return bloc
 
 
@@ -373,7 +422,7 @@ def simuler(fiche: dict, ticker: str, sens: str, pourcentage: float, operation: 
     port_avant = fiche["portefeuille_pct"]
     port_apres = appliquer_ordre(port_avant, ticker, sens, pourcentage, operation)
     ordre = {"ticker": ticker, "sens": sens, "pourcentage": float(pourcentage), "operation": operation}
-    cs = contraintes_strictes(fiche, ticker, sens)
+    cs = contraintes_strictes(fiche, ticker, sens, operation)
     avant = evaluer(port_avant, fiche)
     apres = evaluer(port_apres, fiche, ordre)
     dirn = direction(avant["score"], apres["score"])
@@ -389,7 +438,7 @@ def simuler(fiche: dict, ticker: str, sens: str, pourcentage: float, operation: 
         "verdict": verdict(cs, apres["score"]),
         "direction": dirn,
         "contribution_risque_apres": contribution_risque(port_apres, ticker),
-        "operation": bloc_operation(port_avant, port_apres, operation),
+        "operation": bloc_operation(port_avant, port_apres, operation, fiche, apres),
     }
 
 
@@ -397,7 +446,7 @@ def taille_compatible(fiche: dict, ticker: str, sens: str, pourcentage: float, o
     """Plus grande taille, par pas de 0,5 %, jusqu'au montant demandé, avec score >= 50."""
     port = fiche["portefeuille_pct"]
     appliquer_ordre(port, ticker, sens, pourcentage, operation)  # valide l'ordre demandé
-    cs = contraintes_strictes(fiche, ticker, sens)
+    cs = contraintes_strictes(fiche, ticker, sens, operation)
     if cs["violee"]:
         return {"lancee": False, "taille_compatible_pct": None, "courbe": [], "contraintes_strictes": cs,
                 "raison": "Contrainte stricte violée : aucune taille ne réparerait la violation."}
