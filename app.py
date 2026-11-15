@@ -66,7 +66,19 @@ RAISONS_VALEUR = {
 OPERATIONS = {
     "achat": {"libelle": "Acheter", "nom": "Achat", "sens": "achat"},
     "vente": {"libelle": "Vendre", "nom": "Vente", "sens": "vente"},
+    "marge": {"libelle": "Acheter sur marge", "nom": "Achat sur marge", "sens": "achat", "operation": "marge",
+              "aide": "Opération avancée : l'achat peut dépasser vos liquidités. La différence est empruntée."},
+    "decouvert": {"libelle": "Vendre à découvert", "nom": "Vente à découvert", "sens": "vente",
+                  "operation": "decouvert",
+                  "aide": "Opération avancée : vous vendez un titre emprunté, que vous ne détenez pas."},
 }
+# Mesure de préférence ajoutée par le moteur pour une opération avancée (expérience « intermédiaire »).
+MESURES_OPERATION = {"achat_sur_marge": "argent emprunté", "vente_a_decouvert": "titres vendus à découvert"}
+
+
+def operation_moteur(cle: str | None) -> str:
+    """Opération du moteur (comptant, marge, decouvert) pour une opération du formulaire."""
+    return OPERATIONS.get(cle or "", {}).get("operation", "comptant")
 TYPES_ORDRE = {
     "marche": {"libelle": "Au marché", "prix": None,
                "aide": "Exécuté tout de suite, au prix du moment."},
@@ -185,6 +197,8 @@ def libelle_theme_reponse(cle: str) -> str:
 
 def libelle_mesure(dimension: str, cle: str) -> str:
     if dimension == "preferences":
+        if cle in MESURES_OPERATION:
+            return MESURES_OPERATION[cle]
         return f"thème « {THEMES.get(cle, cle)} »"
     return MESURES.get(cle, cle)
 
@@ -223,6 +237,8 @@ def decrire_mesure(dimension: str, cle: str, m: dict) -> str:
             return "aucune action seule"
         return f"{secteur_fr(m['secteur'])} : {pct(m['poids'])} ; maximum {pct(m['plafond'], 0)}"
     if dimension == "preferences":
+        if m.get("operation") and "poids_expose" in m:
+            return f"{pct(m['poids_expose'])} du portefeuille ; repère de 15 %"
         if "poids_expose" in m:
             texte = f"{pct(m['poids_expose'])} du portefeuille dans ce thème à éviter"
             if m.get("etiquette_indeterminee"):
@@ -236,8 +252,13 @@ def decrire_mesure(dimension: str, cle: str, m: dict) -> str:
 def pourquoi_simple(sim: dict) -> str:
     """Une phrase claire qui dit pourquoi, à partir de la mesure qui donne le score."""
     if sim["verdict"]["code"] == "incompatible":
-        violees = [THEMES.get(d["theme"], d["theme"]) for d in sim["contraintes_strictes"].get("detail", [])
-                   if d["statut"] == "violee"]
+        detail = sim["contraintes_strictes"].get("detail", [])
+        ce = (sim.get("operation") or {}).get("controle_experience", {})
+        if any(d.get("controle") == "experience_operation" and d["statut"] == "violee" for d in detail):
+            return (f"La {sim['operation']['libelle'].lower()} est exclue pour l'expérience "
+                    f"« {libelle_option('experience', ce.get('experience', 'debutante'))} ». "
+                    "C'est une règle stricte.")
+        violees = [THEMES.get(d["theme"], d["theme"]) for d in detail if d["statut"] == "violee"]
         if violees:
             return (f"Ce titre touche un thème que vous excluez : {', '.join(violees)}. "
                     "C'est une règle stricte de votre fiche.")
@@ -424,12 +445,15 @@ def inspecter_moteur(persona: str, fiche: dict, ticker: str, sens: str, pourcent
 
     fiche_client = appel("lire_fiche_client", api.lire_fiche_client, fiche, client=client_affiche)
     fiche_instr = appel("lire_fiche_instrument", api.lire_fiche_instrument, ticker, ticker=ticker)
-    simulation = appel("simuler_ordre", api.simuler_ordre, fiche, ticker, sens, pourcentage,
-                       client=client_affiche, ticker=ticker, sens=sens, pourcentage=pourcentage)
+    op = operation_moteur((details_ordre or {}).get("operation"))
+    arg_op = {"operation": op} if op != "comptant" else {}
+    simulation = appel("simuler_ordre", api.simuler_ordre, fiche, ticker, sens, pourcentage, op,
+                       client=client_affiche, ticker=ticker, sens=sens, pourcentage=pourcentage, **arg_op)
     taille = None
     if "erreur" not in simulation:
         taille = appel("chercher_taille_compatible", api.chercher_taille_compatible, fiche, ticker, sens,
-                       pourcentage, client=client_affiche, ticker=ticker, sens=sens, pourcentage=pourcentage)
+                       pourcentage, op, client=client_affiche, ticker=ticker, sens=sens, pourcentage=pourcentage,
+                       **arg_op)
     return {
         "ordre": {"ticker": ticker, "sens": sens, "pourcentage": pourcentage, **(details_ordre or {})},
         "fiche": copy.deepcopy(fiche),
@@ -442,14 +466,14 @@ def inspecter_moteur(persona: str, fiche: dict, ticker: str, sens: str, pourcent
     }
 
 
-def appeler_agent(fiche: dict, ticker: str, sens: str, pourcentage: float) -> dict:
+def appeler_agent(fiche: dict, ticker: str, sens: str, pourcentage: float, operation: str = "comptant") -> dict:
     """Appelle l'agent s'il existe ; renvoie toujours un dict {explication, trace, erreur, ...}."""
     try:
         from agent.inspection import inspecter  # import paresseux : le module peut être absent
     except Exception:
         return {"explication": None, "trace": [], "erreur": "module de l'agent absent"}
     try:
-        r = inspecter(copy.deepcopy(fiche), ticker, sens, pourcentage)
+        r = inspecter(copy.deepcopy(fiche), ticker, sens, pourcentage, operation=operation)
     except Exception as exc:  # l'agent ne doit jamais faire tomber le rapport
         return {"explication": None, "trace": [], "erreur": f"l'agent a échoué ({type(exc).__name__})"}
     if not isinstance(r, dict):
@@ -744,8 +768,32 @@ def bloc_verdict(sim: dict, rapport: dict, valeur: float) -> None:
         c = sim.get("contribution_risque_apres")
         if c and c.get("part_du_risque_pct") is not None:
             lien = "mais" if c["part_du_risque_pct"] > 1.25 * c["poids_pct"] else "et"
-            st.markdown(f"{c['ticker']} ferait {pct(c['poids_pct'], 0)} du portefeuille, "
-                        f"{lien} **{pct(c['part_du_risque_pct'], 0)} de son risque**.")
+            if c["poids_pct"] < 0:  # vente à découvert
+                st.markdown(f"La position à découvert sur {c['ticker']} ({pct(-c['poids_pct'], 0)} du portefeuille) "
+                            f"porterait **{pct(c['part_du_risque_pct'], 0)} de son risque**.")
+            else:
+                st.markdown(f"{c['ticker']} ferait {pct(c['poids_pct'], 0)} du portefeuille, "
+                            f"{lien} **{pct(c['part_du_risque_pct'], 0)} de son risque**.")
+
+
+def bloc_operation(sim: dict) -> None:
+    """Achat sur marge ou vente à découvert : le contrôle d'expérience et le levier, une phrase chacun."""
+    op = sim.get("operation") or {}
+    if op.get("code") in (None, "comptant"):
+        return
+    ce = op.get("controle_experience", {})
+    exp = libelle_option("experience", ce.get("experience", "intermediaire"))
+    nom = op["libelle"].lower()
+    if ce.get("effet") == "contrainte_stricte":
+        phrase = f"Votre expérience ({exp}) exclut la {nom}."
+    elif ce.get("effet") == "preference_souple":
+        phrase = f"Votre expérience ({exp}) : la {nom} est à éviter. Note : {note_txt(ce.get('note'))} sur 100."
+    else:
+        phrase = f"Votre expérience ({exp}) : la {nom} ne change pas le score."
+    st.markdown(f"**Expérience.** {phrase}")
+    if op.get("levier_apres") is not None:
+        st.markdown(f"**Levier : {nombre(op['levier_apres'], 2)}.** Votre exposition serait de "
+                    f"{nombre(op['exposition_brute_apres_pct'], 0)} $ pour 100 $ qui vous appartiennent.")
 
 
 def section_possible(taille: dict | None, valeur: float) -> None:
@@ -781,7 +829,8 @@ def bloc_changements(rapport: dict, precedent: dict | None) -> None:
         return
     changements = ecarts_questionnaire(precedent["fiche"]["questionnaire"], rapport["fiche"]["questionnaire"])
     o0, o1 = precedent["ordre"], rapport["ordre"]
-    if (o0["ticker"], o0["sens"], o0["pourcentage"]) != (o1["ticker"], o1["sens"], o1["pourcentage"]):
+    if (o0["ticker"], o0["sens"], o0["pourcentage"], o0.get("operation")) != \
+            (o1["ticker"], o1["sens"], o1["pourcentage"], o1.get("operation")):
         changements.insert(0, f"Ordre : {o0['sens']} {pct(o0['pourcentage'])} {o0['ticker']} → "
                               f"{o1['sens']} {pct(o1['pourcentage'])} {o1['ticker']}")
     if precedent["fiche"]["portefeuille_pct"] != rapport["fiche"]["portefeuille_pct"]:
@@ -812,6 +861,11 @@ def section_contraintes(sim: dict) -> None:
         return
     for d in cs["detail"]:
         statut = STATUTS_CONTRAINTE.get(d["statut"], d["statut"])
+        if d.get("controle") == "experience_operation":
+            op = sim.get("operation") or {}
+            exp = libelle_option("experience", op.get("controle_experience", {}).get("experience", "debutante"))
+            st.markdown(f"- **{op.get('libelle', d['theme'])}** — exclue pour l'expérience « {exp} ».")
+            continue
         theme = THEMES.get(d["theme"], d["theme"])
         texte = f"- **{libelle_theme_reponse(d['reponse'])} : {theme}** — {statut}."
         decl = d.get("declencheur") or {}
@@ -919,6 +973,8 @@ def section_sources(rapport: dict, persona: str) -> None:
              if e.get("valeur") == "indetermine"]
     if indet:
         st.markdown(f"- Thème(s) inconnu(s) pour {rapport['ordre']['ticker']} : {', '.join(indet)}.")
+    for limite in (rapport["simulation"].get("operation") or {}).get("limites", []):
+        st.markdown(f"- {limite}")
     st.markdown("- Cinq ans d'historique ne contiennent pas toutes les crises possibles.")
     st.markdown("- L'outil vérifie la compatibilité avec votre politique. Il ne juge pas la qualité du "
                 "placement et ne remplace pas un conseiller.")
@@ -940,6 +996,7 @@ def afficher_rapport(persona: str, rapport: dict, fiche_actuelle: dict) -> None:
     ouvert = exp == "avancee"
 
     bloc_verdict(sim, rapport, valeur)
+    bloc_operation(sim)
     bloc_changements(rapport, st.session_state.get(f"precedent_{persona}"))
     section_possible(rapport["taille"], valeur)
     st.caption(rapport["ordre"].get("hypothese_execution", "Le rapport suppose que l'ordre est exécuté."))
@@ -956,7 +1013,8 @@ def afficher_rapport(persona: str, rapport: dict, fiche_actuelle: dict) -> None:
     if rapport.get("agent") is None:
         with st.spinner(ATTENTE_AGENT):
             o = rapport["ordre"]
-            rapport["agent"] = appeler_agent(rapport["fiche"], o["ticker"], o["sens"], o["pourcentage"])
+            rapport["agent"] = appeler_agent(rapport["fiche"], o["ticker"], o["sens"], o["pourcentage"],
+                                             operation_moteur(o.get("operation")))
     with st.expander("Explication de l'agent", expanded=ouvert):
         section_agent(rapport)
     with st.expander(TITRE_ETAPES, expanded=False):
@@ -1011,7 +1069,9 @@ def onglet_ordre(persona: str, fiche: dict) -> None:
 
     detenu = pf.get(ticker, 0.0) * valeur / 100
     deja = f"Vous détenez {dollars(detenu)} de {ticker}." if detenu > 0 else f"Vous ne détenez pas de {ticker}."
-    if sens == "achat":
+    if OPERATIONS[operation].get("aide"):
+        st.caption(OPERATIONS[operation]["aide"] + f" {deja}")
+    elif sens == "achat":
         st.caption(f"Un achat est payé avec vos liquidités : {dollars(pf.get('ZST.TO', 0.0) * valeur / 100)} "
                    f"disponibles. {deja}")
     else:
@@ -1030,7 +1090,10 @@ def onglet_ordre(persona: str, fiche: dict) -> None:
         st.session_state[f"rapport_{persona}"] = inspecter_moteur(persona, fiche, ticker, sens, pourcentage, details)
         st.session_state.pop(f"message_{persona}", None)
 
-    if passer:
+    if passer and operation_moteur(operation) != "comptant":
+        st.session_state[f"message_{persona}"] = (
+            "info", f"{OPERATIONS[operation]['nom']} : analysée seulement, non ajoutée au portefeuille de la session.")
+    elif passer:
         r = api.simuler_ordre(fiche, ticker, sens, pourcentage)
         if "erreur" in r:
             st.session_state[f"message_{persona}"] = ("erreur", r["erreur"])
@@ -1049,7 +1112,7 @@ def onglet_ordre(persona: str, fiche: dict) -> None:
 
     message = st.session_state.get(f"message_{persona}")
     if message:
-        (st.success if message[0] == "ok" else st.error)(message[1])
+        {"ok": st.success, "info": st.info}.get(message[0], st.error)(message[1])
 
     rapport = st.session_state.get(f"rapport_{persona}")
     if rapport is not None:

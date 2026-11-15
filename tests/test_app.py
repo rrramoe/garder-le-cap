@@ -120,3 +120,27 @@ def test_portefeuille_en_dollars_avec_anneaux(sans_agent):
     at = _demarrer()
     assert "800 000 $" in _textes(at)
     assert not at.exception, at.exception
+
+
+def test_vente_a_decouvert_debutante_puis_avancee(sans_agent):
+    at = _demarrer()
+    at.sidebar.radio(key="persona").set_value("robert").run()
+    at.selectbox(key="q_robert_experience").set_value("debutante").run()
+    at.radio(key="o_robert_operation").set_value("decouvert").run()
+    at.number_input(key="o_robert_montant").set_value(40_000.0).run()
+    at.button(key="inspecter").click().run()
+    assert not at.exception, at.exception
+    texte = _textes(at)
+    assert "Incompatible" in _verdict(at) and "vente à découvert est exclue" in _verdict(at)
+    assert "Votre expérience (Débutante) exclut la vente à découvert." in texte
+    assert "Levier : 1,10." in texte
+    assert "Aucune taille n'est proposée" in texte
+    assert "plafond" in texte  # limite de la vente à découvert, dans les sources
+    at.selectbox(key="q_robert_experience").set_value("avancee").run()
+    at.button(key="inspecter").click().run()
+    assert not at.exception, at.exception
+    assert "Incompatible" not in _verdict(at)
+    assert "la vente à découvert ne change pas le score" in _textes(at)
+    at.button(key="passer").click().run()
+    assert "non ajoutée au portefeuille" in _textes(at)
+    assert "TSLA" not in at.session_state["pf_robert"]
