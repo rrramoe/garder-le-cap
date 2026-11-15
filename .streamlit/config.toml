@@ -1,6 +1,10 @@
 [theme]
-# Couleur principale neutre : le rouge reste réservé au verdict « incompatible ».
-primaryColor = "#37474f"
+# Palette de la présentation du Datathon : marine pour les boutons et le texte, gris chaud en fond secondaire.
+# Les couleurs des verdicts (vert, ambre, rouge foncé) restent distinctes du marine des boutons.
+primaryColor = "#152532"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F4F1EE"
+textColor = "#152532"
 
 [client]
 toolbarMode = "minimal"

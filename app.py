@@ -28,20 +28,60 @@ AVIS_SANS_AGENT = ("Explication de l'agent indisponible : le rapport ci-dessous 
                    "directement du moteur de calcul")
 LIMITE = 50
 
-COULEURS_VERDICT = {"compatible": "#2e7d32", "en_tension": "#b26a00", "incompatible": "#c62828"}
+# Palette : thème de la présentation du Datathon (marine, rouge, gris chauds, or, vert sauge).
+MARINE = "#152532"
+ROUGE_THEME = "#DE161D"
+GRIS_CHAUD = "#F4F1EE"
+GRIS_TEXTE = "#5F6368"
+# Une couleur par verdict, distincte du marine des boutons.
+COULEURS_VERDICT = {"compatible": "#1E7B4A", "en_tension": "#A35F00", "incompatible": "#B3121A"}
+FONDS_VERDICT = {"compatible": "#E6F2EB", "en_tension": "#FDF1DC", "incompatible": "#FBE6E7"}
+COULEURS_CLASSES = {"Actions": MARINE, "Revenu fixe": "#5B7A99", "Liquidités": "#A8C1B8",
+                    "Titres alternatifs": "#F6C45E"}
+COULEURS_POSITIONS = [MARINE, "#3C5A75", "#5B7A99", "#8BA6BF", "#A8C1B8", "#CFE0D8", "#F6C45E",
+                      "#E8A33D", "#B9A99A", "#D9D5D0", "#6E6E71", "#9A8C7E"]
+
+# Valeur fictive du portefeuille de chaque persona (hypothèse de l'interface, en dollars canadiens).
+VALEURS_PORTEFEUILLE = {"robert": 800_000, "mateo": 250_000, "amira": 50_000}
+RAISONS_VALEUR = {
+    "robert": "59 ans, proche de la retraite : épargne accumulée sur une carrière.",
+    "mateo": "41 ans, deux enfants : épargne en milieu de carrière.",
+    "amira": "26 ans, début de carrière : petite épargne qui grandit.",
+}
+
+# Opérations et types d'ordre. Ajouter une opération (vente à découvert, achat sur marge)
+# revient à ajouter une entrée ici : le formulaire n'a pas à changer.
+OPERATIONS = {
+    "achat": {"libelle": "Acheter", "nom": "Achat", "sens": "achat"},
+    "vente": {"libelle": "Vendre", "nom": "Vente", "sens": "vente"},
+}
+TYPES_ORDRE = {
+    "marche": {"libelle": "Au marché", "prix": None,
+               "aide": "Exécuté tout de suite, au prix du moment."},
+    "limite": {"libelle": "À cours limité", "prix": "Prix limite ($ CA)",
+               "aide": "Exécuté seulement à ce prix ou mieux."},
+    "stop": {"libelle": "Stop", "prix": "Prix de déclenchement ($ CA)",
+             "aide": "Devient un ordre au marché quand le prix atteint ce seuil."},
+}
+
 CLASSES = {"liquidites": "Liquidités", "revenu_fixe": "Revenu fixe", "actions": "Actions",
            "alternatifs": "Titres alternatifs"}
 DIMENSIONS = {"risque": "Risque", "diversification": "Diversification", "preferences": "Préférences"}
+AIDE_DIMENSIONS = {
+    "risque": "Les pertes possibles, d'après le passé.",
+    "diversification": "Ne pas mettre tous ses œufs dans le même panier.",
+    "preferences": "Les thèmes que vous voulez éviter ou rechercher.",
+}
 MESURES = {
-    "ampleur": "ampleur de la pire baisse",
-    "duree": "durée sous l'eau",
-    "classe_liquidites": "poids des liquidités",
-    "classe_revenu_fixe": "poids du revenu fixe",
-    "classe_actions": "poids des actions",
-    "classe_alternatifs": "poids des titres alternatifs",
-    "crypto": "poids des cryptoactifs",
+    "ampleur": "pire baisse",
+    "duree": "temps pour se remettre d'une baisse",
+    "classe_liquidites": "part des liquidités",
+    "classe_revenu_fixe": "part du revenu fixe",
+    "classe_actions": "part des actions",
+    "classe_alternatifs": "part des titres alternatifs",
+    "crypto": "part des cryptoactifs",
     "plus_grosse_action": "plus grosse action",
-    "plus_gros_fonds": "plus gros fonds négocié en bourse",
+    "plus_gros_fonds": "plus gros fonds",
     "plus_gros_secteur": "plus gros secteur",
 }
 SECTEURS = {
@@ -56,13 +96,13 @@ SECTEURS = {
     "Utilities": "Services publics",
 }
 DIRECTIONS_TEXTE = {
-    "reste_dans_la_politique": "Le portefeuille était dans la politique et y reste.",
-    "fait_sortir_de_la_politique": "Le portefeuille était dans la politique ; l'ordre l'en fait sortir.",
-    "hors_politique_rapproche": "Le portefeuille était déjà hors politique ; l'ordre l'en rapproche.",
-    "hors_politique_aggrave": "Le portefeuille était déjà hors politique ; l'ordre aggrave l'écart.",
+    "reste_dans_la_politique": "Votre portefeuille reste dans votre politique.",
+    "fait_sortir_de_la_politique": "Votre portefeuille sortirait de votre politique.",
+    "hors_politique_rapproche": "Votre portefeuille est déjà hors politique ; l'ordre l'en rapproche.",
+    "hors_politique_aggrave": "Votre portefeuille est déjà hors politique ; l'ordre aggrave l'écart.",
 }
-STATUTS_CONTRAINTE = {"violee": "violée", "respectee": "respectée", "signalee": "signalée",
-                      "ignoree": "ignorée", "non_applicable": "non applicable"}
+STATUTS_CONTRAINTE = {"violee": "non respectée", "respectee": "respectée", "signalee": "signalée",
+                      "ignoree": "ignorée", "non_applicable": "sans objet"}
 NIVEAUX = {"essentiel": "essentiel", "standard": "standard", "detaille": "détaillé"}
 SOURCES_LOCALES = {"questionnaire": "Votre réponse au questionnaire"}
 
@@ -87,14 +127,20 @@ def instruments() -> dict:
 
 
 @st.cache_data
-def fiche_instrument(ticker: str) -> dict:
-    return api.lire_fiche_instrument(ticker)
+def derniers_prix_cad() -> dict:
+    """Dernier prix connu de chaque titre, en dollars canadiens (lecture seule des données du moteur)."""
+    try:
+        from moteur import donnees
+        p = donnees.prix_cad()
+        return {t: float(v) for t, v in p.ffill().iloc[-1].items() if pd.notna(v)}
+    except Exception:
+        return {}
 
 
 # ---------------------------------------------------------------- formats
 
 def nombre(x: float, d: int = 1) -> str:
-    texte = f"{x:,.{d}f}".replace(",", " ").replace(".", ",")
+    texte = f"{x:,.{d}f}".replace(",", " ").replace(".", ",")
     return texte.replace("-", "−")
 
 
@@ -108,8 +154,12 @@ def pct_frac(x: float, d: int = 1) -> str:
     return pct(x * 100, d)
 
 
+def dollars(x: float, d: int = 0) -> str:
+    return f"{nombre(x, d)} $"
+
+
 def note_txt(x: float | None) -> str:
-    return "—" if x is None else nombre(x, 1)
+    return "—" if x is None else nombre(x, 0)
 
 
 def libelle_option(champ: str, cle: str) -> str:
@@ -137,43 +187,62 @@ def secteur_fr(s: str) -> str:
 
 
 def decrire_mesure(dimension: str, cle: str, m: dict) -> str:
-    """Une phrase avec les chiffres d'une mesure, tels que le moteur les donne."""
+    """Une phrase courte avec les chiffres d'une mesure, tels que le moteur les donne."""
     if cle == "ampleur" and dimension == "risque":
-        return (f"pire baisse de {pct_frac(m['pire_baisse'])} sur la période, contre "
-                f"{pct_frac(m['pire_baisse_reference'])} pour le portefeuille de référence du profil "
-                f"et {pct_frac(m['pire_baisse_limite'])} pour son portefeuille limite")
+        return (f"pire baisse passée {pct_frac(m['pire_baisse'])} ; "
+                f"limite du profil {pct_frac(m['pire_baisse_limite'])}")
     if cle == "duree" and dimension == "risque":
-        texte = (f"{nombre(m['temps_sous_l_eau_annees'])} ans sous l'eau "
-                 f"(du {m.get('debut', '?')} au {m.get('fin', '?')}) pour un horizon de "
-                 f"{nombre(m['horizon_annees'], 0)} ans")
+        texte = (f"{nombre(m['temps_sous_l_eau_annees'])} ans pour se remettre, "
+                 f"pour un horizon de {nombre(m['horizon_annees'], 0)} ans")
         if m.get("non_recupere"):
-            texte += " ; la baisse n'est pas récupérée à la fin des données"
+            texte += " ; pas encore remis"
         return texte
     if cle.startswith("classe_"):
-        return (f"{pct(m['poids'])} du portefeuille (fourchette {nombre(m['min'], 0)} à "
-                f"{pct(m['max'], 0)}, cible {pct(m['cible'], 0)})")
+        return (f"{pct(m['poids'])} ; permis : {nombre(m['min'], 0)} à "
+                f"{pct(m['max'], 0)}")
     if cle == "crypto" and dimension == "diversification":
-        return f"{pct(m['poids'])} du portefeuille (plafond du profil : {pct(m['plafond'], 0)})"
+        return f"{pct(m['poids'])} ; maximum {pct(m['plafond'], 0)}"
     if cle in ("plus_grosse_action", "plus_gros_fonds"):
         if not m.get("ticker"):
-            return "aucune position de ce type"
-        return f"{m['ticker']} pèse {pct(m['poids'])} (plafond : {pct(m['plafond'], 0)})"
+            return "aucune"
+        return f"{m['ticker']} : {pct(m['poids'])} ; maximum {pct(m['plafond'], 0)}"
     if cle == "plus_gros_secteur":
         if not m.get("secteur"):
-            return "aucune action individuelle"
-        return f"{secteur_fr(m['secteur'])} pèse {pct(m['poids'])} (plafond : {pct(m['plafond'], 0)})"
+            return "aucune action seule"
+        return f"{secteur_fr(m['secteur'])} : {pct(m['poids'])} ; maximum {pct(m['plafond'], 0)}"
     if dimension == "preferences":
         if "poids_expose" in m:
             texte = f"{pct(m['poids_expose'])} du portefeuille dans ce thème à éviter"
-            if m.get("instruments"):
-                texte += " (" + ", ".join(f"{t} {pct(w)}" for t, w in m["instruments"].items()) + ")"
             if m.get("etiquette_indeterminee"):
-                texte += ("; étiquette indéterminée pour "
-                          + ", ".join(m["etiquette_indeterminee"]))
+                texte += " (inconnu pour " + ", ".join(m["etiquette_indeterminee"]) + ")"
             return texte
         if "poids_vendu" in m:
             return f"{pct(m['poids_vendu'])} vendu dans ce thème recherché"
     return m.get("libelle", "")
+
+
+def pourquoi_simple(sim: dict) -> str:
+    """Une phrase claire qui dit pourquoi, à partir de la mesure qui donne le score."""
+    if sim["verdict"]["code"] == "incompatible":
+        violees = [THEMES.get(d["theme"], d["theme"]) for d in sim["contraintes_strictes"].get("detail", [])
+                   if d["statut"] == "violee"]
+        if violees:
+            return (f"Ce titre touche un thème que vous excluez : {', '.join(violees)}. "
+                    "C'est une règle stricte de votre fiche.")
+        return "Une règle stricte de votre fiche n'est pas respectée."
+    dim, mes = sim["dimension_min"], sim["mesure_min"]
+    m = sim["apres"]["notes"][dim]["mesures"].get(mes, {})
+    score = sim["score"]
+    if mes == "ampleur":
+        verbe = "dépasserait" if score < LIMITE else "resterait sous"
+        return (f"Dans le passé, la pire baisse du portefeuille aurait été de {pct_frac(m['pire_baisse'], 0)}. "
+                f"Elle {verbe} la limite de votre profil ({pct_frac(m['pire_baisse_limite'], 0)}).")
+    if mes == "duree":
+        return (f"Après une baisse, le portefeuille aurait mis {nombre(m['temps_sous_l_eau_annees'])} ans "
+                f"à se remettre, pour un horizon de {nombre(m['horizon_annees'], 0)} ans.")
+    if dim == "preferences":
+        return f"Point le plus faible : {libelle_mesure(dim, mes)} — {decrire_mesure(dim, mes, m)}."
+    return f"Point le plus faible : {libelle_mesure(dim, mes)} — {decrire_mesure(dim, mes, m)}."
 
 
 def mesures_a_plat(bloc: dict) -> dict:
@@ -186,10 +255,50 @@ def mesures_a_plat(bloc: dict) -> dict:
     return sortie
 
 
+# ---------------------------------------------------------------- éléments visuels
+
+def jauge(note: float | None, avant: float | None = None, hauteur: int = 10) -> str:
+    """Barre 0 à 100 avec un repère à 50 (la limite). Une marque grise montre la valeur d'avant."""
+    if note is None:
+        return ""
+    n = max(0.0, min(100.0, float(note)))
+    couleur = COULEURS_VERDICT["compatible"] if note >= LIMITE else COULEURS_VERDICT["en_tension"]
+    marque = ""
+    if avant is not None:
+        a = max(0.0, min(100.0, float(avant)))
+        marque = (f'<div title="avant" style="position:absolute;left:calc({a}% - 1px);top:-3px;width:2px;'
+                  f'height:{hauteur + 6}px;background:#8a8f94;"></div>')
+    return (f'<div style="position:relative;height:{hauteur}px;background:#E6E2DE;border-radius:{hauteur}px;'
+            f'margin:4px 0 2px 0;">'
+            f'<div style="width:{n}%;height:100%;background:{couleur};border-radius:{hauteur}px;"></div>'
+            f'<div title="limite 50" style="position:absolute;left:50%;top:-4px;width:2px;height:{hauteur + 8}px;'
+            f'background:{MARINE};"></div>{marque}</div>')
+
+
+def ligne_note(titre: str, note: float | None, avant: float | None = None, aide: str = "") -> None:
+    if note is None:
+        st.markdown(f"**{titre}** · sans objet")
+        return
+    valeur = f"{note_txt(avant)} → **{note_txt(note)}**" if avant is not None else f"**{note_txt(note)}**"
+    st.markdown(f"**{titre}** · {valeur} / 100", help=aide or None)
+    st.markdown(jauge(note, avant), unsafe_allow_html=True)
+
+
+def legende_jauge(avec_avant: bool = False) -> None:
+    texte = "Trait foncé : limite de 50. Sous 50, la politique n'est plus respectée."
+    if avec_avant:
+        texte += " Trait gris : avant l'ordre."
+    st.caption(texte)
+
+
 # ---------------------------------------------------------------- état de session
 
 def cle_q(persona: str, champ: str) -> str:
     return f"q_{persona}_{champ}"
+
+
+def valeur_pf(persona: str) -> float:
+    return float(VALEURS_PORTEFEUILLE[persona])
 
 
 def initialiser(persona: str) -> None:
@@ -200,15 +309,18 @@ def initialiser(persona: str) -> None:
     for theme in THEMES:
         st.session_state.setdefault(cle_q(persona, "theme_" + theme), q["themes"].get(theme, "neutre"))
     st.session_state.setdefault(f"pf_{persona}", {t: float(w) for t, w in p["portefeuille_pct"].items()})
+    st.session_state.setdefault(f"ordres_{persona}", [])
     ordre = p.get("ordre_demo", {})
     st.session_state.setdefault(f"o_{persona}_ticker", ordre.get("ticker", "XIU.TO"))
-    st.session_state.setdefault(f"o_{persona}_sens", ordre.get("sens", "achat"))
-    st.session_state.setdefault(f"o_{persona}_pct", float(ordre.get("pourcentage", 5)))
+    st.session_state.setdefault(f"o_{persona}_operation", ordre.get("sens", "achat"))
+    st.session_state.setdefault(f"o_{persona}_type", "marche")
+    st.session_state.setdefault(f"o_{persona}_montant",
+                                round(float(ordre.get("pourcentage", 5)) * valeur_pf(persona) / 100, 2))
 
 
 def reinitialiser(persona: str) -> None:
     for cle in list(st.session_state.keys()):
-        if cle.startswith((f"q_{persona}_", f"pf_{persona}", f"o_{persona}_",
+        if cle.startswith((f"q_{persona}_", f"pf_{persona}", f"o_{persona}_", f"ordres_{persona}",
                            f"rapport_{persona}", f"precedent_{persona}", f"message_{persona}")):
             del st.session_state[cle]
 
@@ -263,28 +375,27 @@ def resume_appel(outil: str, r: dict) -> str:
     if outil == "lire_fiche_client":
         d = r["deduit"]
         return (f"Profil {d['profil']['libelle']}, horizon {nombre(d['horizon_annees']['valeur'], 0)} ans, "
-                f"{len(d['contraintes_strictes']['valeur'])} contrainte(s) stricte(s), "
-                f"{len(d['preferences_souples']['valeur'])} préférence(s) souple(s).")
+                f"{len(d['contraintes_strictes']['valeur'])} règle(s) stricte(s), "
+                f"{len(d['preferences_souples']['valeur'])} préférence(s).")
     if outil == "lire_fiche_instrument":
         vraies = [THEMES.get(k, k) for k, e in r.get("etiquettes", {}).items() if e.get("valeur") is True]
-        return (f"{r['nom']}, classe {CLASSES.get(r['classe_politique'], r['classe_politique'])}, "
-                f"volatilité annualisée {pct_frac(r['statistiques_cad']['volatilite_annualisee'])} en CAD ; "
-                f"étiquettes vraies : {', '.join(vraies) if vraies else 'aucune'}.")
+        return (f"{r['nom']}, {CLASSES.get(r['classe_politique'], r['classe_politique']).lower()}, "
+                f"volatilité {pct_frac(r['statistiques_cad']['volatilite_annualisee'])} ; "
+                f"thèmes : {', '.join(vraies) if vraies else 'aucun'}.")
     if outil == "simuler_ordre":
-        return (f"Verdict « {r['verdict']['libelle'].lower()} », score {note_txt(r['avant']['score'])} → "
-                f"{note_txt(r['apres']['score'])}, donné par {DIMENSIONS[r['dimension_min']].lower()} "
-                f"({libelle_mesure(r['dimension_min'], r['mesure_min'])}).")
+        return (f"« {r['verdict']['libelle']} », score {note_txt(r['avant']['score'])} → "
+                f"{note_txt(r['apres']['score'])}, donné par {libelle_mesure(r['dimension_min'], r['mesure_min'])}.")
     if outil == "chercher_taille_compatible":
         if not r.get("lancee", True):
             return f"Recherche non lancée : {r.get('raison', '')}"
         if r.get("taille_compatible_pct") is None:
             return "Aucune taille compatible jusqu'au montant demandé."
-        return (f"Taille compatible : {pct(r['taille_compatible_pct'])} "
-                f"({len(r.get('courbe', []))} tailles testées par pas de {pct(r['pas_pct'])}).")
+        return f"Taille compatible : {pct(r['taille_compatible_pct'])}."
     return ""
 
 
-def inspecter_moteur(persona: str, fiche: dict, ticker: str, sens: str, pourcentage: float) -> dict:
+def inspecter_moteur(persona: str, fiche: dict, ticker: str, sens: str, pourcentage: float,
+                     details_ordre: dict | None = None) -> dict:
     """Le rapport structuré, appelé directement sur moteur.api, avec la trace des appels."""
     trace = []
     client_affiche = persona if not fiche_modifiee(persona, fiche) and \
@@ -308,7 +419,7 @@ def inspecter_moteur(persona: str, fiche: dict, ticker: str, sens: str, pourcent
         taille = appel("chercher_taille_compatible", api.chercher_taille_compatible, fiche, ticker, sens,
                        pourcentage, client=client_affiche, ticker=ticker, sens=sens, pourcentage=pourcentage)
     return {
-        "ordre": {"ticker": ticker, "sens": sens, "pourcentage": pourcentage},
+        "ordre": {"ticker": ticker, "sens": sens, "pourcentage": pourcentage, **(details_ordre or {})},
         "fiche": copy.deepcopy(fiche),
         "fiche_client": fiche_client,
         "fiche_instrument": fiche_instr,
@@ -339,63 +450,83 @@ def appeler_agent(fiche: dict, ticker: str, sens: str, pourcentage: float) -> di
 
 # ---------------------------------------------------------------- graphiques
 
-def graphique_classes(poids: dict, fourchettes: dict, titre: str) -> alt.Chart:
+def graphique_anneau(df: pd.DataFrame, categorie: str, couleurs: dict | list, titre: str) -> alt.Chart:
+    if isinstance(couleurs, dict):
+        domaine = [c for c in couleurs if c in set(df[categorie])]
+        echelle = alt.Scale(domain=domaine, range=[couleurs[c] for c in domaine])
+    else:
+        domaine = list(df[categorie])
+        echelle = alt.Scale(domain=domaine, range=(couleurs * 3)[:len(domaine)])
+    return alt.Chart(df).mark_arc(innerRadius=62, outerRadius=110, stroke="white", strokeWidth=1.5).encode(
+        theta=alt.Theta("pct:Q", stack=True),
+        color=alt.Color(f"{categorie}:N", scale=echelle, sort=domaine,
+                        legend=alt.Legend(title=None, orient="right", labelFontSize=12)),
+        order=alt.Order("pct:Q", sort="descending"),
+        tooltip=[alt.Tooltip(f"{categorie}:N", title=titre), alt.Tooltip("pct:Q", title="Part (%)", format=".1f"),
+                 alt.Tooltip("montant:N", title="Montant")],
+    ).properties(height=250, title=alt.TitleParams(titre, anchor="start", fontSize=14))
+
+
+def graphique_classes(poids: dict, fourchettes: dict) -> alt.Chart:
     lignes = []
     for cle, lib in CLASSES.items():
         f = fourchettes[cle]
-        lignes.append({"classe": lib, "poids": float(poids.get(cle, 0.0)), "min": f["min"],
-                       "max": f["max"], "cible": f["cible"],
-                       "dans": f["min"] <= float(poids.get(cle, 0.0)) <= f["max"]})
+        p = float(poids.get(cle, 0.0))
+        lignes.append({"classe": lib, "poids": p, "min": f["min"], "max": f["max"], "cible": f["cible"],
+                       "etat": "Dans la zone permise" if f["min"] <= p <= f["max"] else "Hors de la zone"})
     df = pd.DataFrame(lignes)
     ordre = list(CLASSES.values())
-    y = alt.Y("classe:N", sort=ordre, title=None)
-    bande = alt.Chart(df).mark_bar(color="#9e9e9e", opacity=0.25, size=26).encode(
-        y=y, x=alt.X("min:Q", title="Poids dans le portefeuille (%)", scale=alt.Scale(domain=[0, 100])),
+    y = alt.Y("classe:N", sort=ordre, title=None, axis=alt.Axis(labelFontSize=12))
+    bande = alt.Chart(df).mark_bar(color="#A8C1B8", opacity=0.45, size=26).encode(
+        y=y, x=alt.X("min:Q", title="Part du portefeuille (%)", scale=alt.Scale(domain=[0, 100])),
         x2="max:Q",
         tooltip=[alt.Tooltip("classe:N", title="Classe"), alt.Tooltip("min:Q", title="Minimum (%)"),
                  alt.Tooltip("max:Q", title="Maximum (%)")])
     barre = alt.Chart(df).mark_bar(size=10).encode(
         y=y, x="poids:Q",
-        color=alt.Color("dans:N", scale=alt.Scale(domain=[True, False], range=["#37474f", "#c62828"]),
-                        legend=None),
-        tooltip=[alt.Tooltip("classe:N", title="Classe"), alt.Tooltip("poids:Q", title="Poids (%)", format=".1f")])
-    cible = alt.Chart(df).mark_tick(color="#1565c0", thickness=2, size=30).encode(
-        y=y, x="cible:Q", tooltip=[alt.Tooltip("cible:Q", title="Cible (%)")])
-    return (bande + barre + cible).properties(title=titre, height=200)
+        color=alt.Color("etat:N", scale=alt.Scale(domain=["Dans la zone permise", "Hors de la zone"],
+                                                  range=[MARINE, COULEURS_VERDICT["en_tension"]]),
+                        legend=alt.Legend(title=None, orient="bottom")),
+        tooltip=[alt.Tooltip("classe:N", title="Classe"), alt.Tooltip("poids:Q", title="Part (%)", format=".1f")])
+    return (bande + barre).properties(height=190)
 
 
-def graphique_courbe(taille: dict) -> alt.Chart:
+def graphique_courbe(taille: dict, valeur: float) -> alt.Chart:
     df = pd.DataFrame(taille["courbe"])
     df["dimension"] = df["dimension_min"].map(lambda d: DIMENSIONS.get(d, d))
     df["mesure"] = [libelle_mesure(d, m) for d, m in zip(df["dimension_min"], df["mesure_min"])]
+    df["montant"] = [dollars(t * valeur / 100) for t in df["taille_pct"]]
     haut = max(100.0, float(df["score"].max()))
     base = alt.Chart(df).encode(
         x=alt.X("taille_pct:Q", title="Taille de l'ordre (% du portefeuille)",
                 scale=alt.Scale(domainMin=0), axis=alt.Axis(tickMinStep=1, format="d")),
-        y=alt.Y("score:Q", title="Score après l'ordre (0 à 100)", scale=alt.Scale(domain=[0, haut])),
-        tooltip=[alt.Tooltip("taille_pct:Q", title="Taille (%)", format=".1f"),
-                 alt.Tooltip("score:Q", title="Score", format=".1f"),
-                 alt.Tooltip("dimension:N", title="Donné par"), alt.Tooltip("mesure:N", title="Mesure")])
-    ligne = base.mark_line(color="#37474f") + base.mark_circle(size=28, color="#37474f")
-    limite = alt.Chart(pd.DataFrame({"y": [LIMITE]})).mark_rule(color="#c62828", strokeDash=[5, 4]).encode(y="y:Q")
+        y=alt.Y("score:Q", title="Score après l'ordre", scale=alt.Scale(domain=[0, haut])),
+        tooltip=[alt.Tooltip("montant:N", title="Montant"),
+                 alt.Tooltip("taille_pct:Q", title="Part (%)", format=".1f"),
+                 alt.Tooltip("score:Q", title="Score", format=".0f"),
+                 alt.Tooltip("mesure:N", title="Donné par")])
+    zone = alt.Chart(pd.DataFrame({"y": [0], "y2": [LIMITE]})).mark_rect(
+        color=COULEURS_VERDICT["en_tension"], opacity=0.07).encode(y="y:Q", y2="y2:Q")
+    ligne = base.mark_line(color=MARINE, strokeWidth=2) + base.mark_circle(size=30, color=MARINE)
+    limite = alt.Chart(pd.DataFrame({"y": [LIMITE]})).mark_rule(color=MARINE, strokeDash=[5, 4]).encode(y="y:Q")
     x_min, x_max = float(df["taille_pct"].min()), float(df["taille_pct"].max())
-    # Étiquettes posées dans le cadre, avec un halo blanc pour rester lisibles sur la courbe.
-    lim = pd.DataFrame({"y": [LIMITE], "x": [x_min], "lib": ["Limite de la politique (50)"]})
-    couches = [ligne, limite] + _etiquette(lim, "#c62828", align="left", dy=12)
+    lim = pd.DataFrame({"y": [LIMITE], "x": [x_min], "lib": ["Limite : 50"]})
+    couches = [zone, ligne, limite] + _etiquette(lim, MARINE, align="left", dy=12)
     if taille.get("taille_compatible_pct") is not None:
         x_tc = float(taille["taille_compatible_pct"])
         tc = pd.DataFrame({"x": [x_tc], "y": [haut * 0.94],
-                           "lib": [f"Taille compatible : {pct(x_tc)}"]})
-        couches.append(alt.Chart(tc).mark_rule(color="#2e7d32").encode(x="x:Q"))
+                           "lib": [f"Jusqu'ici : compatible ({dollars(x_tc * valeur / 100)})"]})
+        couches.append(alt.Chart(tc).mark_rule(color=COULEURS_VERDICT["compatible"], strokeWidth=2).encode(x="x:Q"))
         a_gauche = x_tc > (x_min + x_max) / 2
-        couches += _etiquette(tc, "#2e7d32", align="right" if a_gauche else "left", dx=-6 if a_gauche else 6)
-    return alt.layer(*couches).properties(height=280)
+        couches += _etiquette(tc, COULEURS_VERDICT["compatible"], align="right" if a_gauche else "left",
+                              dx=-6 if a_gauche else 6)
+    return alt.layer(*couches).properties(height=260)
 
 
 def _etiquette(df: pd.DataFrame, couleur: str, **pos) -> list:
     enc = {"x": "x:Q", "y": "y:Q", "text": "lib:N"}
-    halo = alt.Chart(df).mark_text(fontSize=11, stroke="white", strokeWidth=4, **pos).encode(**enc)
-    texte = alt.Chart(df).mark_text(fontSize=11, color=couleur, **pos).encode(**enc)
+    halo = alt.Chart(df).mark_text(fontSize=12, stroke="white", strokeWidth=4, **pos).encode(**enc)
+    texte = alt.Chart(df).mark_text(fontSize=12, color=couleur, **pos).encode(**enc)
     return [halo, texte]
 
 
@@ -408,7 +539,7 @@ def libelle_source(source_id: str, sources: dict) -> str:
     if not s:
         return source_id
     if s["nature"] == "publie":
-        return f"Publié par {s['source']} ({s['date']})"
+        return f"Publié par {s['source']}"
     return f"Hypothèse : {s['libelle']}"
 
 
@@ -417,12 +548,12 @@ def valeur_deduite(cle: str, e: dict) -> str:
     if cle == "profil":
         return e.get("libelle", v)
     if cle == "horizon_annees":
-        return f"{nombre(v, 0)} ans (borne basse)"
+        return f"{nombre(v, 0)} ans"
     if cle == "plafonds_concentration_pct":
         return (f"{pct(v['action_individuelle'], 0)} par action, {pct(v['secteur'], 0)} par secteur, "
-                f"{pct(v['fonds_negocie_en_bourse'], 0)} par fonds négocié en bourse")
+                f"{pct(v['fonds_negocie_en_bourse'], 0)} par fonds")
     if cle == "crypto_pct":
-        return f"cible {pct(v['cible_pct'], 1)}, plafond {pct(v['plafond_pct'], 1)}"
+        return f"cible {pct(v['cible_pct'], 1)}, maximum {pct(v['plafond_pct'], 1)}"
     if cle == "contraintes_strictes":
         if not v:
             return "aucune"
@@ -442,50 +573,54 @@ def valeur_deduite(cle: str, e: dict) -> str:
 
 LIBELLES_DEDUIT = {
     "profil": "Profil d'investisseur",
-    "fourchettes_pct": "Fourchettes par classe",
-    "horizon_annees": "Horizon retenu pour les calculs",
-    "plafonds_concentration_pct": "Plafonds de concentration",
+    "fourchettes_pct": "Zones permises par classe",
+    "horizon_annees": "Horizon utilisé",
+    "plafonds_concentration_pct": "Maximum par titre",
     "crypto_pct": "Cryptoactifs",
-    "contraintes_strictes": "Contraintes strictes",
-    "preferences_souples": "Préférences souples",
-    "niveau_detail": "Niveau de détail du rapport",
-    "coherence_objectif": "Cohérence de l'objectif",
+    "contraintes_strictes": "Règles strictes",
+    "preferences_souples": "Préférences",
+    "niveau_detail": "Détail du rapport",
+    "coherence_objectif": "Objectif et profil",
 }
 
 
 def onglet_fiche(persona: str, fiche_client: dict) -> None:
-    st.subheader("Questionnaire")
-    st.caption("Neuf réponses à choix. Toute modification s'applique aussitôt aux autres onglets.")
-    c1, c2 = st.columns(2)
-    for i, champ in enumerate(("objectif", "horizon", "fluctuations", "experience")):
-        options = list(QUESTIONNAIRE[champ]["options"])
-        (c1 if i % 2 == 0 else c2).selectbox(
-            QUESTIONNAIRE[champ]["libelle"], options, key=cle_q(persona, champ),
-            format_func=lambda o, c=champ: libelle_option(c, o))
-    st.markdown("**Thèmes**")
-    echelle = list(QUESTIONNAIRE["echelle_themes"]["options"])
-    for t, lib in THEMES.items():
-        st.radio(lib, echelle, key=cle_q(persona, "theme_" + t), horizontal=True,
-                 format_func=libelle_theme_reponse)
+    gauche, droite = st.columns([1.15, 1], gap="large")
+    with gauche:
+        st.subheader("Vos réponses")
+        st.caption("Changez une réponse : tout le reste se met à jour.")
+        c1, c2 = st.columns(2)
+        for i, champ in enumerate(("objectif", "horizon", "fluctuations", "experience")):
+            options = list(QUESTIONNAIRE[champ]["options"])
+            (c1 if i % 2 == 0 else c2).selectbox(
+                QUESTIONNAIRE[champ]["libelle"], options, key=cle_q(persona, champ),
+                format_func=lambda o, c=champ: libelle_option(c, o))
+        st.markdown("**Thèmes**")
+        st.caption("« Exclure » et « Obligatoire » sont des règles strictes. Les autres choix sont des préférences.")
+        echelle = list(QUESTIONNAIRE["echelle_themes"]["options"])
+        for t, lib in THEMES.items():
+            st.radio(lib, echelle, key=cle_q(persona, "theme_" + t), horizontal=True,
+                     format_func=libelle_theme_reponse)
 
-    st.subheader("Ce qui en est déduit")
-    if "erreur" in fiche_client:
-        st.error(fiche_client["erreur"])
-        return
-    sources = {s["id"]: s for s in fiche_client.get("sources", [])}
-    for cle, e in fiche_client["deduit"].items():
-        lib = LIBELLES_DEDUIT.get(cle, cle)
-        origine = libelle_source(e.get("source", ""), sources)
-        if e.get("hypothese"):
-            origine += " — " + libelle_source(e["hypothese"], sources)
-        if cle == "fourchettes_pct":
-            st.markdown(f"**{lib}**")
-            df = pd.DataFrame([{"Classe": CLASSES[c], "Minimum (%)": f["min"], "Cible (%)": f["cible"],
-                                "Maximum (%)": f["max"]} for c, f in e["valeur"].items()])
-            st.dataframe(df, hide_index=True, width="stretch")
-        else:
-            st.markdown(f"**{lib}** : {valeur_deduite(cle, e)}")
-        st.caption(f"{e.get('origine', '')} {origine}.")
+    with droite:
+        st.subheader("Ce que l'outil en déduit")
+        if "erreur" in fiche_client:
+            st.error(fiche_client["erreur"])
+            return
+        sources = {s["id"]: s for s in fiche_client.get("sources", [])}
+        for cle, e in fiche_client["deduit"].items():
+            lib = LIBELLES_DEDUIT.get(cle, cle)
+            origine = libelle_source(e.get("source", ""), sources)
+            if e.get("hypothese"):
+                origine += " · " + libelle_source(e["hypothese"], sources)
+            if cle == "fourchettes_pct":
+                st.markdown(f"**{lib}**")
+                df = pd.DataFrame([{"Classe": CLASSES[c], "Minimum (%)": f["min"], "Cible (%)": f["cible"],
+                                    "Maximum (%)": f["max"]} for c, f in e["valeur"].items()])
+                st.dataframe(df, hide_index=True, width="stretch")
+            else:
+                st.markdown(f"**{lib}** : {valeur_deduite(cle, e)}")
+            st.caption(origine)
 
 
 # ---------------------------------------------------------------- rendu : portefeuille
@@ -494,73 +629,127 @@ def onglet_portefeuille(persona: str, fiche: dict, fiche_client: dict) -> None:
     if "erreur" in fiche_client:
         st.error(fiche_client["erreur"])
         return
-    profil = fiche_client["deduit"]["profil"]["libelle"]
+    valeur = valeur_pf(persona)
     pf = fiche_client["portefeuille_pct"]
-    if pf != {t: float(w) for t, w in PERSONAS[persona]["portefeuille_pct"].items()}:
-        st.info("Ce portefeuille tient compte des ordres simulés passés pendant cette session.")
-
-    st.subheader("Positions")
     univers = instruments()
-    lignes = [{"Symbole": t, "Nom": univers.get(t, {}).get("nom", ""),
-               "Classe": CLASSES.get(univers.get(t, {}).get("classe_politique", ""), ""),
-               "Poids (%)": round(w, 2)} for t, w in sorted(pf.items(), key=lambda x: -x[1])]
-    st.dataframe(pd.DataFrame(lignes), hide_index=True, width="stretch")
+    profil = fiche_client["deduit"]["profil"]["libelle"]
 
-    st.subheader("Répartition par classe")
-    st.altair_chart(graphique_classes(fiche_client["poids_par_classe_pct"],
-                                      fiche_client["deduit"]["fourchettes_pct"]["valeur"],
-                                      f"Poids actuels face aux fourchettes du profil {profil}"),
-                    width="stretch")
-    st.caption("Bande grise : fourchette du profil. Trait bleu : cible. Barre : poids actuel "
-               "(en rouge s'il sort de la fourchette).")
+    st.markdown(f"Valeur du portefeuille : **{dollars(valeur)}** (montant fictif) · profil **{profil}**")
+    ordres = st.session_state.get(f"ordres_{persona}", [])
+    if ordres:
+        st.caption(f"Tient compte de {len(ordres)} ordre(s) simulé(s) dans cette session.")
 
-    st.subheader("État des lieux, sans ordre")
+    # État des lieux en premier : le chiffre, la jauge, une phrase.
     e = api.etat_des_lieux(fiche)
     if "erreur" in e:
         st.error(e["erreur"])
-        return
-    statut = "dans la politique" if e["dans_la_politique"] else "hors de la politique"
-    st.markdown(f"Score du portefeuille actuel : **{note_txt(e['score'])} / 100**, soit **{statut}** "
-                f"(limite : {LIMITE}). Il est donné par la note de "
-                f"{DIMENSIONS[e['dimension_min']].lower()}, mesure « {libelle_mesure(e['dimension_min'], e['mesure_min'])} ».")
-    for dim, n in e["notes"].items():
-        if n.get("sans_objet"):
-            st.markdown(f"- **{DIMENSIONS[dim]}** : sans objet (aucun thème à éviter ou à rechercher)")
-            continue
-        m = n["mesures"].get(n["mesure_min"], {})
-        st.markdown(f"- **{DIMENSIONS[dim]}** : {note_txt(n['note'])} — "
-                    f"{libelle_mesure(dim, n['mesure_min'])} : {decrire_mesure(dim, n['mesure_min'], m)}")
-    p = e.get("periode", {})
-    st.caption(f"Calculé sur l'historique du {p.get('debut', '?')} au {p.get('fin', '?')}, en "
-               f"{p.get('devise', 'CAD')}.")
+    else:
+        st.subheader("État des lieux")
+        dans = e["dans_la_politique"]
+        couleur = COULEURS_VERDICT["compatible"] if dans else COULEURS_VERDICT["en_tension"]
+        statut = "Dans votre politique" if dans else "Hors de votre politique"
+        st.markdown(f'<div style="font-size:1.15rem;"><b>Score : {note_txt(e["score"])} / 100</b> · '
+                    f'<span style="color:{couleur};font-weight:600;">{statut}</span></div>',
+                    unsafe_allow_html=True)
+        st.markdown(jauge(e["score"], hauteur=12), unsafe_allow_html=True)
+        cols = st.columns(3)
+        for col, dim in zip(cols, ("risque", "diversification", "preferences")):
+            n = e["notes"][dim]
+            with col:
+                if n.get("sans_objet"):
+                    ligne_note(DIMENSIONS[dim], None)
+                    st.caption("Aucun thème à éviter ou à rechercher.")
+                    continue
+                ligne_note(DIMENSIONS[dim], n["note"], aide=AIDE_DIMENSIONS[dim])
+                m = n["mesures"].get(n["mesure_min"], {})
+                st.caption(f"Point faible : {libelle_mesure(dim, n['mesure_min'])} — "
+                           f"{decrire_mesure(dim, n['mesure_min'], m)}.")
+        legende_jauge()
+
+    st.subheader("Répartition")
+    lignes = []
+    for t, w in sorted(pf.items(), key=lambda x: -x[1]):
+        lignes.append({"position": t, "nom": univers.get(t, {}).get("nom", ""),
+                       "classe": CLASSES.get(univers.get(t, {}).get("classe_politique", ""), ""),
+                       "pct": round(w, 2), "montant": dollars(w * valeur / 100)})
+    df_pos = pd.DataFrame(lignes)
+    df_cls = (df_pos.groupby("classe", as_index=False)["pct"].sum())
+    df_cls["montant"] = [dollars(p * valeur / 100) for p in df_cls["pct"]]
+    c1, c2 = st.columns(2)
+    c1.altair_chart(graphique_anneau(df_pos, "position", COULEURS_POSITIONS, "Par titre"), width="stretch")
+    c2.altair_chart(graphique_anneau(df_cls, "classe", COULEURS_CLASSES, "Par classe d'actif"), width="stretch")
+
+    st.markdown(f"**Chaque classe face à la zone permise par le profil {profil}**")
+    st.altair_chart(graphique_classes(fiche_client["poids_par_classe_pct"],
+                                      fiche_client["deduit"]["fourchettes_pct"]["valeur"]), width="stretch")
+    st.caption("Bande verte : zone permise. Barre : part actuelle.")
+
+    st.markdown("**Positions**")
+    tableau = pd.DataFrame([{"Titre": l["position"], "Nom": l["nom"], "Classe": l["classe"],
+                             "Montant ($ CA)": round(l["pct"] * valeur / 100), "Part (%)": l["pct"]}
+                            for l in lignes])
+    st.dataframe(tableau, hide_index=True, width="stretch",
+                 column_config={"Montant ($ CA)": st.column_config.NumberColumn(format="%d $"),
+                                "Part (%)": st.column_config.NumberColumn(format="%.1f %%")})
+    if ordres:
+        st.markdown("**Ordres simulés de la session**")
+        st.dataframe(pd.DataFrame(ordres), hide_index=True, width="stretch")
 
 
 # ---------------------------------------------------------------- rendu : rapport
 
-def bloc_verdict(sim: dict, taille: dict | None, niveau: str) -> None:
+def bloc_verdict(sim: dict, rapport: dict, valeur: float) -> None:
     v = sim["verdict"]
-    couleur = COULEURS_VERDICT.get(v["code"], "#37474f")
-    o = sim["ordre"]
-    sens = "Achat" if o["sens"] == "achat" else "Vente"
-    dim, mes = sim["dimension_min"], sim["mesure_min"]
-    m = sim["apres"]["notes"][dim]["mesures"].get(mes, {})
-    if v["code"] == "incompatible":
-        phrase = ("Une contrainte stricte de la fiche est violée : rien ne la compense, quel que soit le score. "
-                  f"Les notes, elles, donnent {note_txt(sim['score'])} / 100.")
-    else:
-        phrase = (f"Le score est donné par la note de {DIMENSIONS[dim].lower()}, mesure "
-                  f"« {libelle_mesure(dim, mes)} » : {decrire_mesure(dim, mes, m)}.")
+    code = v["code"]
+    couleur, fond = COULEURS_VERDICT.get(code, MARINE), FONDS_VERDICT.get(code, GRIS_CHAUD)
+    o = rapport["ordre"]
+    nom_op = OPERATIONS.get(o.get("operation", o["sens"]), {}).get("nom", o["sens"].capitalize())
+    montant = o.get("montant", o["pourcentage"] * valeur / 100)
+    d = sim["direction"]
     st.markdown(
-        f"""<div style="border-left: 6px solid {couleur}; padding: 0.6rem 1rem; margin: 0.5rem 0 1rem 0;">
-<div style="font-size: 0.9rem; opacity: 0.8;">{sens} de {pct(o['pourcentage'])} du portefeuille en {nom_instrument(o['ticker'])}</div>
-<div style="font-size: 1.6rem; font-weight: 600; color: {couleur};">{v['libelle']}</div>
-<div style="font-size: 1.05rem;">Score après l'ordre : <b>{note_txt(sim['score'])} / 100</b> (limite de la politique : {LIMITE})</div>
+        f"""<div style="background:{fond};border-left:6px solid {couleur};border-radius:6px;padding:0.9rem 1.2rem;margin:0.4rem 0 0.8rem 0;">
+<div style="font-size:0.95rem;color:{MARINE};">{nom_op} de <b>{dollars(montant)}</b> de {nom_instrument(o['ticker'])} · {pct(o['pourcentage'])} du portefeuille</div>
+<div style="font-size:1.9rem;font-weight:700;color:{couleur};line-height:1.3;">{v['libelle']}</div>
+<div style="font-size:1.02rem;color:{MARINE};">{pourquoi_simple(sim)}</div>
 </div>""", unsafe_allow_html=True)
-    st.markdown(phrase)
-    c = sim.get("contribution_risque_apres")
-    if c and c.get("part_du_risque_pct") is not None:
-        st.markdown(f"Après l'ordre, {c['ticker']} pèse {pct(c['poids_pct'])} du portefeuille "
-                    f"et {pct(c['part_du_risque_pct'])} de son risque.")
+    c1, c2 = st.columns([1, 1.2])
+    with c1:
+        ligne_note("Score après l'ordre", sim["score"], sim["avant"]["score"],
+                   aide="De 0 à 100. À partir de 50, l'ordre respecte votre politique.")
+        legende_jauge(avec_avant=True)
+    with c2:
+        st.markdown(f"**{d['libelle']}.** {DIRECTIONS_TEXTE.get(d['cas'], '')}")
+        c = sim.get("contribution_risque_apres")
+        if c and c.get("part_du_risque_pct") is not None:
+            st.markdown(f"{c['ticker']} ferait {pct(c['poids_pct'], 0)} du portefeuille, "
+                        f"mais **{pct(c['part_du_risque_pct'], 0)} de son risque**.")
+    if code == "incompatible":
+        st.caption(f"Les notes seules donneraient {note_txt(sim['score'])} / 100, mais une règle stricte "
+                   "passe avant le score.")
+
+
+def section_possible(taille: dict | None, valeur: float) -> None:
+    st.markdown("#### Ce qui est possible")
+    if not taille or "erreur" in taille:
+        st.markdown("La recherche d'une taille n'a pas pu être faite"
+                    + (f" : {taille['erreur']}" if taille and "erreur" in taille else "."))
+        return
+    if not taille.get("lancee", True):
+        st.markdown("Aucune taille n'est proposée. Changer le montant ne règle pas une règle stricte.")
+        return
+    issue = taille.get("issue")
+    tc = taille.get("taille_compatible_pct")
+    if issue == "compatible_tel_quel":
+        st.markdown(f"L'ordre est compatible tel quel ({dollars(taille['taille_demandee_pct'] * valeur / 100)}).")
+    elif issue == "compatible_avec_ajustement" and tc is not None:
+        st.markdown(f"Jusqu'à **{dollars(tc * valeur / 100)}** ({pct(tc)} du portefeuille), "
+                    "l'ordre serait compatible.")
+    else:
+        st.markdown(f"Aucun montant jusqu'à {dollars(taille['taille_demandee_pct'] * valeur / 100)} "
+                    f"({pct(taille['taille_demandee_pct'])}) ne garde le score à {LIMITE} ou plus.")
+    if taille.get("courbe"):
+        st.altair_chart(graphique_courbe(taille, valeur), width="stretch")
+        st.caption("Score selon le montant. La zone ombrée est sous la limite de 50.")
 
 
 def bloc_changements(rapport: dict, precedent: dict | None) -> None:
@@ -570,29 +759,26 @@ def bloc_changements(rapport: dict, precedent: dict | None) -> None:
     s0, s1 = precedent["simulation"], rapport["simulation"]
     if "erreur" in s0 or "erreur" in s1:
         return
-    changements_fiche = ecarts_questionnaire(precedent["fiche"]["questionnaire"], rapport["fiche"]["questionnaire"])
+    changements = ecarts_questionnaire(precedent["fiche"]["questionnaire"], rapport["fiche"]["questionnaire"])
     o0, o1 = precedent["ordre"], rapport["ordre"]
-    if o0 != o1:
-        changements_fiche.insert(0, f"Ordre : {o0['sens']} {pct(o0['pourcentage'])} {o0['ticker']} → "
-                                    f"{o1['sens']} {pct(o1['pourcentage'])} {o1['ticker']}")
+    if (o0["ticker"], o0["sens"], o0["pourcentage"]) != (o1["ticker"], o1["sens"], o1["pourcentage"]):
+        changements.insert(0, f"Ordre : {o0['sens']} {pct(o0['pourcentage'])} {o0['ticker']} → "
+                              f"{o1['sens']} {pct(o1['pourcentage'])} {o1['ticker']}")
     if precedent["fiche"]["portefeuille_pct"] != rapport["fiche"]["portefeuille_pct"]:
-        changements_fiche.append("Portefeuille modifié par un ordre simulé")
-    if not changements_fiche:
+        changements.append("Portefeuille modifié par un ordre simulé")
+    if not changements:
         return
     a0, a1 = mesures_a_plat(s0["apres"]), mesures_a_plat(s1["apres"])
     lignes = []
     for cle in a1:
         if cle in a0 and abs(a1[cle] - a0[cle]) >= 0.05:
-            lignes.append({"Dimension": DIMENSIONS[cle[0]], "Mesure": libelle_mesure(*cle),
-                           "Avant": round(a0[cle], 1), "Maintenant": round(a1[cle], 1),
-                           "Écart": round(a1[cle] - a0[cle], 1)})
+            lignes.append({"Note": DIMENSIONS[cle[0]], "Mesure": libelle_mesure(*cle),
+                           "Avant": round(a0[cle]), "Maintenant": round(a1[cle])})
     with st.container(border=True):
         st.markdown("**Depuis l'inspection précédente**")
-        st.markdown("Changé : " + " ; ".join(changements_fiche) + ".")
-        st.markdown(f"Verdict : {s0['verdict']['libelle']} → **{s1['verdict']['libelle']}**. "
-                    f"Score : {note_txt(s0['score'])} → **{note_txt(s1['score'])}**, donné par "
-                    f"« {libelle_mesure(s1['dimension_min'], s1['mesure_min'])} » "
-                    f"(avant : « {libelle_mesure(s0['dimension_min'], s0['mesure_min'])} »).")
+        st.markdown("Changé : " + " ; ".join(changements) + ".")
+        st.markdown(f"{s0['verdict']['libelle']} → **{s1['verdict']['libelle']}** · score "
+                    f"{note_txt(s0['score'])} → **{note_txt(s1['score'])}**")
         if lignes:
             st.dataframe(pd.DataFrame(lignes), hide_index=True, width="stretch")
         else:
@@ -600,15 +786,14 @@ def bloc_changements(rapport: dict, precedent: dict | None) -> None:
 
 
 def section_contraintes(sim: dict) -> None:
-    st.markdown("#### 2. Contraintes strictes")
     cs = sim["contraintes_strictes"]
     if not cs.get("detail"):
-        st.markdown("Aucune contrainte stricte dans la fiche (aucun thème « exclure » ou « obligatoire »).")
+        st.markdown("Aucune règle stricte dans votre fiche.")
         return
     for d in cs["detail"]:
         statut = STATUTS_CONTRAINTE.get(d["statut"], d["statut"])
         theme = THEMES.get(d["theme"], d["theme"])
-        texte = f"- **{libelle_theme_reponse(d['reponse'])} : {theme}** — {statut}. {d.get('raison', '')}"
+        texte = f"- **{libelle_theme_reponse(d['reponse'])} : {theme}** — {statut}."
         decl = d.get("declencheur") or {}
         if isinstance(decl, dict) and decl.get("preuve"):
             texte += f" Preuve : {decl['preuve']}"
@@ -616,81 +801,45 @@ def section_contraintes(sim: dict) -> None:
 
 
 def section_notes(sim: dict, niveau: str) -> None:
-    st.markdown("#### 3. Les trois notes, avant → après")
-    lignes = []
-    for dim in ("risque", "diversification", "preferences"):
+    st.caption("Chaque note va de 0 à 100. Le score est la plus faible des trois.")
+    cols = st.columns(3)
+    for col, dim in zip(cols, ("risque", "diversification", "preferences")):
         n0, n1 = sim["avant"]["notes"][dim], sim["apres"]["notes"][dim]
-        sans_objet = n1.get("sans_objet")
-        lignes.append({
-            "Note": DIMENSIONS[dim],
-            "Avant": None if sans_objet else round(n0["note"], 1),
-            "Après": None if sans_objet else round(n1["note"], 1),
-            "Mesure la plus faible après l'ordre": "sans objet" if sans_objet else libelle_mesure(dim, n1["mesure_min"]),
-        })
-    lignes.append({"Note": "Score (la plus faible)", "Avant": round(sim["avant"]["score"], 1),
-                   "Après": round(sim["apres"]["score"], 1),
-                   "Mesure la plus faible après l'ordre": libelle_mesure(sim["dimension_min"], sim["mesure_min"])})
-    st.dataframe(pd.DataFrame(lignes), hide_index=True, width="stretch")
-    st.caption("Chaque note va de 0 à 100 : 100 = sur la cible, 50 = limite de la politique. "
-               "Une note est la plus faible de ses mesures ; le score est la plus faible des trois notes.")
+        with col:
+            if n1.get("sans_objet"):
+                ligne_note(DIMENSIONS[dim], None)
+                continue
+            ligne_note(DIMENSIONS[dim], n1["note"], n0["note"], aide=AIDE_DIMENSIONS[dim])
+            st.caption(f"Point faible : {libelle_mesure(dim, n1['mesure_min'])}.")
+    legende_jauge(avec_avant=True)
     if niveau == "essentiel":
         return
+    lignes = []
     for dim in ("risque", "diversification", "preferences"):
         n0, n1 = sim["avant"]["notes"][dim], sim["apres"]["notes"][dim]
         if n1.get("sans_objet"):
             continue
-        with st.expander(f"{DIMENSIONS[dim]} : le détail des mesures", expanded=(niveau == "detaille")):
-            for cle, m1 in n1["mesures"].items():
-                if not isinstance(m1, dict) or "note" not in m1:
-                    continue
-                m0 = n0["mesures"].get(cle, {})
-                avant = note_txt(m0.get("note")) if m0 else "—"
-                st.markdown(f"- **{libelle_mesure(dim, cle)}** : {avant} → **{note_txt(m1['note'])}** — "
-                            f"{decrire_mesure(dim, cle, m1)}")
-            if dim == "risque" and niveau == "detaille":
-                st.markdown(f"- Volatilité annualisée du portefeuille : "
-                            f"{pct_frac(n0['volatilite_annualisee'])} → {pct_frac(n1['volatilite_annualisee'])} "
-                            "(affichée, non notée)")
-            for s in n1.get("signalements", []):
-                st.markdown(f"- Signalement : {s.get('message', '')}")
-
-
-def section_direction(sim: dict) -> None:
-    st.markdown("#### 4. Direction")
-    d = sim["direction"]
-    st.markdown(f"**{d['libelle']}.** {DIRECTIONS_TEXTE.get(d['cas'], '')} Score : "
-                f"{note_txt(d['score_avant'])} → {note_txt(d['score_apres'])} (limite {LIMITE}).")
-    if d.get("remarque"):
-        st.caption(d["remarque"])
-
-
-def section_possible(sim: dict, taille: dict | None) -> None:
-    st.markdown("#### 5. Ce qui est possible")
-    if not taille or "erreur" in taille:
-        st.markdown("La recherche de taille n'a pas pu être faite"
-                    + (f" : {taille['erreur']}" if taille and "erreur" in taille else "."))
-        return
-    if not taille.get("lancee", True):
-        st.markdown(f"Aucune taille n'est proposée. {taille.get('raison', '')}")
-        return
-    issue = taille.get("issue")
-    tc = taille.get("taille_compatible_pct")
-    if issue == "compatible_tel_quel":
-        st.markdown(f"L'ordre est compatible tel quel, à {pct(taille['taille_demandee_pct'])}.")
-    elif issue == "compatible_avec_ajustement" and tc is not None:
-        st.markdown(f"À **{pct(tc)}** du portefeuille au lieu de {pct(taille['taille_demandee_pct'])}, "
-                    f"le score reste à {LIMITE} ou plus : l'ordre serait compatible à cette taille.")
-    else:
-        st.markdown(f"Aucune taille, par pas de {pct(taille['pas_pct'])} jusqu'à "
-                    f"{pct(taille['taille_demandee_pct'])}, ne garde le score à {LIMITE} ou plus.")
-    if taille.get("courbe"):
-        st.altair_chart(graphique_courbe(taille), width="stretch")
-        st.caption("Score du portefeuille après l'ordre selon sa taille. Sous la ligne rouge, l'ordre "
-                   "dépasse une limite de la politique. Survolez un point pour voir la mesure qui le donne.")
+        for cle, m1 in n1["mesures"].items():
+            if not isinstance(m1, dict) or "note" not in m1:
+                continue
+            m0 = n0["mesures"].get(cle, {})
+            lignes.append({"Note": DIMENSIONS[dim], "Mesure": libelle_mesure(dim, cle),
+                           "Avant": round(m0["note"]) if m0 and "note" in m0 else None,
+                           "Après": round(m1["note"]), "Chiffres": decrire_mesure(dim, cle, m1)})
+    st.markdown("**Toutes les mesures**")
+    st.dataframe(pd.DataFrame(lignes), hide_index=True, width="stretch",
+                 column_config={"Après": st.column_config.ProgressColumn(min_value=0, max_value=100, format="%d")})
+    if niveau == "detaille":
+        n0, n1 = sim["avant"]["notes"]["risque"], sim["apres"]["notes"]["risque"]
+        st.caption(f"Volatilité du portefeuille (variation habituelle sur un an) : "
+                   f"{pct_frac(n0['volatilite_annualisee'])} → {pct_frac(n1['volatilite_annualisee'])}. "
+                   "Affichée, non notée.")
+    for dim in ("risque", "diversification", "preferences"):
+        for s in sim["apres"]["notes"][dim].get("signalements", []):
+            st.markdown(f"- Signalement : {s.get('message', '')}")
 
 
 def section_agent(rapport: dict) -> None:
-    st.markdown("#### 6. Explication de l'agent")
     agent = rapport.get("agent") or {}
     if agent.get("erreur") or not agent.get("explication"):
         st.info(AVIS_SANS_AGENT + ".")
@@ -704,12 +853,11 @@ def section_agent(rapport: dict) -> None:
         details.append(f"Modèle : {agent['modele']}")
     if agent.get("duree_s") is not None:
         details.append(f"durée : {nombre(agent['duree_s'])} s")
-    st.caption("Texte rédigé par l'agent à partir des résultats des outils ; aucun chiffre ne vient du "
+    st.caption("Texte rédigé par l'agent à partir des résultats des outils. Aucun chiffre ne vient du "
                "modèle de langage. " + " ; ".join(details))
 
 
 def section_etapes(rapport: dict, niveau: str) -> None:
-    st.markdown("#### 7. Étapes de l'inspection")
     agent = rapport.get("agent") or {}
     if agent.get("trace") and not agent.get("erreur"):
         trace = agent["trace"]
@@ -721,12 +869,10 @@ def section_etapes(rapport: dict, niveau: str) -> None:
         args = ", ".join(f"{k}={v!r}" for k, v in (t.get("arguments") or {}).items())
         st.markdown(f"{t.get('etape', i)}. **`{t.get('outil', '?')}`**({args}) — {t.get('resultat_resume', '')}")
         if niveau == "detaille" and t.get("resultat") is not None:
-            with st.expander(f"Résultat complet de l'étape {t.get('etape', i)}"):
-                st.json(t["resultat"], expanded=False)
+            st.json(t["resultat"], expanded=False)
 
 
-def section_sources(rapport: dict) -> None:
-    st.markdown("#### 8. Sources, hypothèses et limites")
+def section_sources(rapport: dict, persona: str) -> None:
     sources = {}
     for r in (rapport["fiche_client"], rapport["fiche_instrument"], rapport["simulation"], rapport["taille"] or {}):
         for s in r.get("sources", []) if isinstance(r, dict) else []:
@@ -739,81 +885,127 @@ def section_sources(rapport: dict) -> None:
     st.markdown("**Hypothèses du projet**")
     for s in hypotheses:
         st.markdown(f"- {s['libelle']} — {s['source']}")
+    st.markdown(f"- Valeur du portefeuille de {PERSONAS[persona]['nom']} : {dollars(valeur_pf(persona))}, "
+                f"montant fictif choisi par l'interface. {RAISONS_VALEUR[persona]}")
+    st.markdown("- L'inspection suppose que l'ordre est exécuté, quel que soit son type.")
     p = rapport["simulation"].get("periode", {})
     st.markdown("**Scénarios**")
     st.markdown(f"- Les notes de risque rejouent l'historique du {p.get('debut', '?')} au {p.get('fin', '?')}, "
                 f"en {p.get('devise', 'CAD')}, comme si le portefeuille avait existé tel quel. "
-                "C'est un scénario passé, pas une prévision.")
+                "C'est le passé, pas une prévision.")
     st.markdown("**Limites**")
     indet = [THEMES.get(k, k) for k, e in rapport["fiche_instrument"].get("etiquettes", {}).items()
              if e.get("valeur") == "indetermine"]
     if indet:
-        st.markdown(f"- Étiquette(s) indéterminée(s) pour {rapport['ordre']['ticker']} : {', '.join(indet)}.")
+        st.markdown(f"- Thème(s) inconnu(s) pour {rapport['ordre']['ticker']} : {', '.join(indet)}.")
     st.markdown("- Cinq ans d'historique ne contiennent pas toutes les crises possibles.")
-    st.markdown("- L'outil vérifie la compatibilité d'un ordre avec la politique de la fiche ; il ne juge "
-                "pas la qualité du placement et ne remplace pas un conseiller.")
+    st.markdown("- L'outil vérifie la compatibilité avec votre politique. Il ne juge pas la qualité du "
+                "placement et ne remplace pas un conseiller.")
 
 
 def afficher_rapport(persona: str, rapport: dict, fiche_actuelle: dict) -> None:
     sim = rapport["simulation"]
+    valeur = valeur_pf(persona)
     st.divider()
     st.subheader("Rapport d'inspection")
     if rapport["fiche"] != fiche_actuelle:
-        st.warning("La fiche a changé depuis cette inspection. Cliquez sur « Inspecter » pour mettre le "
-                   "rapport à jour et voir ce qui a bougé.")
+        st.warning("Votre fiche a changé. Cliquez sur « Inspecter » pour mettre le rapport à jour.")
     if "erreur" in sim:
         st.error(sim["erreur"])
         return
     fc = rapport["fiche_client"]
     niveau = fc.get("deduit", {}).get("niveau_detail", {}).get("valeur", "standard")
     exp = fc.get("questionnaire", {}).get("experience", "intermediaire")
-    st.caption(f"Niveau de détail : {NIVEAUX.get(niveau, niveau)} (expérience « {libelle_option('experience', exp)} »).")
+    ouvert = exp == "avancee"
 
-    st.markdown("#### 1. Verdict et score")
-    bloc_verdict(sim, rapport["taille"], niveau)
+    bloc_verdict(sim, rapport, valeur)
     bloc_changements(rapport, st.session_state.get(f"precedent_{persona}"))
-    section_contraintes(sim)
-    section_notes(sim, niveau)
-    section_direction(sim)
-    section_possible(sim, rapport["taille"])
+    section_possible(rapport["taille"], valeur)
+    st.caption(rapport["ordre"].get("hypothese_execution", "L'inspection suppose que l'ordre est exécuté."))
+
+    st.markdown("#### En détail")
+    if not ouvert:
+        st.caption(f"Détails repliés pour l'expérience « {libelle_option('experience', exp)} ». "
+                   "Ouvrez une section pour la lire.")
+    with st.expander("Règles strictes", expanded=ouvert or sim["verdict"]["code"] == "incompatible"):
+        section_contraintes(sim)
+    with st.expander("Les trois notes, avant → après", expanded=ouvert):
+        section_notes(sim, niveau)
 
     if rapport.get("agent") is None:
-        with st.spinner("L'agent rédige l'explication à partir des résultats des outils…"):
+        with st.spinner("L'agent rédige l'explication…"):
             o = rapport["ordre"]
             rapport["agent"] = appeler_agent(rapport["fiche"], o["ticker"], o["sens"], o["pourcentage"])
-    section_agent(rapport)
-    section_etapes(rapport, niveau)
-    section_sources(rapport)
-    st.caption("Vous décidez. L'inspection ne bloque rien : le bouton « Passer l'ordre (simulé) » reste disponible.")
+    with st.expander("Explication de l'agent", expanded=ouvert):
+        section_agent(rapport)
+    with st.expander("Étapes de l'inspection", expanded=False):
+        section_etapes(rapport, niveau)
+    with st.expander("Sources, hypothèses et limites", expanded=False):
+        section_sources(rapport, persona)
+    st.caption("Vous décidez. L'inspection ne bloque rien.")
 
 
 # ---------------------------------------------------------------- rendu : ordre
 
+def phrase_execution(type_ordre: str, prix: float | None) -> str:
+    if type_ordre == "marche" or prix is None:
+        return "L'inspection suppose que l'ordre est exécuté au prix du moment."
+    return f"L'inspection suppose que l'ordre est exécuté à {dollars(prix, 2)}."
+
+
 def onglet_ordre(persona: str, fiche: dict) -> None:
     univers = instruments()
+    prix = derniers_prix_cad()
+    valeur = valeur_pf(persona)
     pf = st.session_state[f"pf_{persona}"]
-    c1, c2, c3 = st.columns([3, 1.3, 1.3])
-    c1.selectbox("Instrument", list(univers), key=f"o_{persona}_ticker",
+
+    c1, c2 = st.columns([2, 1.4])
+    c1.selectbox("Titre", list(univers), key=f"o_{persona}_ticker",
                  format_func=lambda t: f"{t} — {univers[t]['nom']}")
-    c2.radio("Sens", ["achat", "vente"], key=f"o_{persona}_sens", horizontal=True,
-             format_func=lambda s: "Achat" if s == "achat" else "Vente")
-    c3.number_input("Montant (% du portefeuille)", min_value=0.5, max_value=100.0, step=0.5,
-                    key=f"o_{persona}_pct", format="%.1f")
+    c2.radio("Opération", list(OPERATIONS), key=f"o_{persona}_operation", horizontal=True,
+             format_func=lambda k: OPERATIONS[k]["libelle"])
     ticker = st.session_state[f"o_{persona}_ticker"]
-    sens = st.session_state[f"o_{persona}_sens"]
-    pourcentage = float(st.session_state[f"o_{persona}_pct"])
-    st.caption(f"Un achat est payé par l'encaisse (ZST.TO : {pct(pf.get('ZST.TO', 0.0))} du portefeuille) ; "
-               f"une vente y est versée. Position actuelle en {ticker} : {pct(pf.get(ticker, 0.0))}.")
+    operation = st.session_state[f"o_{persona}_operation"]
+    sens = OPERATIONS[operation]["sens"]
+
+    c3, c4, c5 = st.columns([1.4, 1.2, 1.2])
+    c3.number_input("Montant ($ CA)", min_value=100.0, max_value=float(valeur), step=500.0,
+                    key=f"o_{persona}_montant", format="%.0f")
+    montant = float(st.session_state[f"o_{persona}_montant"])
+    pourcentage = round(montant / valeur * 100, 4)
+    c3.markdown(f"= **{pct(pourcentage)}** de votre portefeuille ({dollars(valeur)})")
+    c4.selectbox("Type d'ordre", list(TYPES_ORDRE), key=f"o_{persona}_type",
+                 format_func=lambda k: TYPES_ORDRE[k]["libelle"])
+    type_ordre = st.session_state[f"o_{persona}_type"]
+    prix_ordre = None
+    dernier = prix.get(ticker)
+    if TYPES_ORDRE[type_ordre]["prix"]:
+        cle_prix = f"o_{persona}_prix_{ticker}_{type_ordre}"
+        st.session_state.setdefault(cle_prix, round(dernier, 2) if dernier else 1.0)
+        c5.number_input(TYPES_ORDRE[type_ordre]["prix"], min_value=0.01, step=1.0, key=cle_prix, format="%.2f")
+        prix_ordre = float(st.session_state[cle_prix])
+    elif dernier:
+        c5.markdown(f"Dernier prix connu  \n**{dollars(dernier, 2)}**")
+    c4.caption(TYPES_ORDRE[type_ordre]["aide"])
+
+    if sens == "achat":
+        st.caption(f"Un achat est payé avec vos liquidités : {dollars(pf.get('ZST.TO', 0.0) * valeur / 100)} "
+                   f"disponibles. Vous détenez déjà {dollars(pf.get(ticker, 0.0) * valeur / 100)} de {ticker}.")
+    else:
+        st.caption(f"Une vente est versée dans vos liquidités. Vous détenez "
+                   f"{dollars(pf.get(ticker, 0.0) * valeur / 100)} de {ticker}.")
 
     b1, b2, _ = st.columns([1, 1.4, 2])
     inspecter = b1.button("Inspecter", type="primary", key="inspecter", width="stretch")
     passer = b2.button("Passer l'ordre (simulé)", key="passer", width="stretch")
 
+    details = {"operation": operation, "montant": montant, "type": type_ordre, "prix": prix_ordre,
+               "hypothese_execution": phrase_execution(type_ordre, prix_ordre)}
     if inspecter:
         ancien = st.session_state.get(f"rapport_{persona}")
         if ancien is not None:
             st.session_state[f"precedent_{persona}"] = ancien
-        st.session_state[f"rapport_{persona}"] = inspecter_moteur(persona, fiche, ticker, sens, pourcentage)
+        st.session_state[f"rapport_{persona}"] = inspecter_moteur(persona, fiche, ticker, sens, pourcentage, details)
         st.session_state.pop(f"message_{persona}", None)
 
     if passer:
@@ -822,11 +1014,15 @@ def onglet_ordre(persona: str, fiche: dict) -> None:
             st.session_state[f"message_{persona}"] = ("erreur", r["erreur"])
         else:
             st.session_state[f"pf_{persona}"] = {t: float(w) for t, w in r["portefeuille_apres_pct"].items()}
-            libelle = "Achat" if sens == "achat" else "Vente"
+            st.session_state[f"ordres_{persona}"] = st.session_state.get(f"ordres_{persona}", []) + [{
+                "Opération": OPERATIONS[operation]["nom"], "Titre": ticker, "Montant ($ CA)": round(montant),
+                "Part (%)": round(pourcentage, 1), "Type": TYPES_ORDRE[type_ordre]["libelle"],
+                "Prix ($ CA)": round(prix_ordre, 2) if prix_ordre else None,
+                "Verdict": r["verdict"]["libelle"]}]
             st.session_state[f"message_{persona}"] = (
-                "ok", f"{libelle} de {pct(pourcentage)} en {ticker} appliqué au portefeuille de cette session "
-                      f"(verdict au moment de l'ordre : {r['verdict']['libelle'].lower()}). "
-                      "Aucune transaction réelle n'a eu lieu.")
+                "ok", f"{OPERATIONS[operation]['nom']} de {dollars(montant)} de {ticker} "
+                      f"({TYPES_ORDRE[type_ordre]['libelle'].lower()}) ajouté au portefeuille de cette session. "
+                      f"Verdict : {r['verdict']['libelle'].lower()}. Aucune transaction réelle n'a eu lieu.")
             st.rerun()
 
     message = st.session_state.get(f"message_{persona}")
@@ -837,15 +1033,23 @@ def onglet_ordre(persona: str, fiche: dict) -> None:
     if rapport is not None:
         afficher_rapport(persona, rapport, fiche)
     else:
-        st.markdown("Cliquez sur **Inspecter** pour vérifier si cet ordre est compatible avec la politique "
-                    "de la fiche, avant de le passer.")
+        st.markdown("Cliquez sur **Inspecter** pour savoir si cet ordre respecte votre politique, avant de le passer.")
 
 
 # ---------------------------------------------------------------- page
 
+STYLE = f"""<style>
+.bandeau-simulation {{background:{MARINE};color:#FFFFFF;border-left:5px solid {ROUGE_THEME};
+  padding:0.55rem 1rem;border-radius:4px;font-size:0.92rem;margin-bottom:0.6rem;}}
+div[data-testid="stExpander"] summary p {{font-weight:600;color:{MARINE};}}
+h1, h2, h3, h4 {{color:{MARINE};}}
+</style>"""
+
+
 def main() -> None:
     st.set_page_config(page_title="Garder le cap", layout="wide")
-    st.warning(BANDEAU)
+    st.markdown(STYLE, unsafe_allow_html=True)
+    st.markdown(f'<div class="bandeau-simulation">{BANDEAU}</div>', unsafe_allow_html=True)
 
     # Streamlit oublie l'état d'un widget non affiché : on garde celui des autres personas.
     for cle in list(st.session_state.keys()):
@@ -854,7 +1058,7 @@ def main() -> None:
 
     with st.sidebar:
         st.title("Garder le cap")
-        st.caption("Inspection d'ordres avant transaction")
+        st.caption("Vérifier un ordre avant de le passer")
         persona = st.radio("Client", ORDRE_PERSONAS, key="persona",
                            format_func=lambda p: PERSONAS[p]["nom"])
     initialiser(persona)
@@ -864,18 +1068,24 @@ def main() -> None:
     with st.sidebar:
         if "erreur" not in fiche_client:
             d = fiche_client["deduit"]
-            st.markdown(f"Profil **{d['profil']['libelle']}** · horizon "
-                        f"{nombre(d['horizon_annees']['valeur'], 0)} ans")
+            st.markdown(f"Profil **{d['profil']['libelle']}**  \nHorizon "
+                        f"{nombre(d['horizon_annees']['valeur'], 0)} ans  \n"
+                        f"Portefeuille {dollars(valeur_pf(persona))}")
         ecarts = fiche_modifiee(persona, fiche)
         if ecarts:
             st.markdown("Fiche modifiée : " + " ; ".join(ecarts))
         st.button("Revenir à la fiche d'origine", on_click=reinitialiser, args=(persona,),
                   key=f"reinit_{persona}")
         st.divider()
-        st.caption("L'outil parle de compatibilité avec la politique du client, jamais de la qualité "
-                   "d'un placement. Il n'interdit rien et ne recommande rien.")
+        st.markdown("**Les trois verdicts**")
+        for code, lib, sens in (("compatible", "Compatible", "respecte votre politique."),
+                                ("en_tension", "En tension", "sort d'une limite de votre politique."),
+                                ("incompatible", "Incompatible", "touche une règle stricte.")):
+            st.markdown(f'<span style="color:{COULEURS_VERDICT[code]};font-weight:700;">{lib}</span> : '
+                        f"l'ordre {sens}", unsafe_allow_html=True)
+        st.caption("L'outil n'interdit rien et ne recommande rien.")
 
-    st.title(f"{PERSONAS[persona]['nom']}")
+    st.title(PERSONAS[persona]["nom"])
     onglets = st.tabs(["Fiche", "Portefeuille", "Ordre"])
     with onglets[0]:
         onglet_fiche(persona, fiche_client)
