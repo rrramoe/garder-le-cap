@@ -759,3 +759,10 @@ def test_faits_de_l_instrument_compacts():
         assert set(f["faits_marche"]) == {"pire_annee", "baisses_de_plus_de_20_pct", "beta", "rendement_dividende",
                                           "correlation_avec_taux_10_ans"}
     assert len(json.dumps(f, ensure_ascii=False)) < 2500
+
+
+def test_resume_d_une_famille_inconnue():
+    r = api.simuler_ordre("robert", "TSLA", "achat", 15)
+    r = {**r, "dimension_min": "nouvelle_famille", "mesure_min": "nouvelle_mesure"}
+    texte = inspection.resumer("simuler_ordre", r)
+    assert "nouvelle famille / nouvelle mesure" in texte and "_" not in texte.split("note la plus basse")[1].split(";")[0]

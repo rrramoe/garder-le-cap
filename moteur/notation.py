@@ -495,7 +495,10 @@ def cause(fiche: dict, ordres: list, cs: dict, apres: dict, port_apres: dict) ->
                 "libelle": "Une contrainte stricte est violée : le verdict vient d'elle seule."}
     dim, mes = apres["dimension_min"], apres["mesure_min"]
     m = apres["notes"][dim]["mesures"].get(mes, {}) if mes else {}
-    c = {"dimension": dim, "mesure": mes, "note": apres["score"], "sous_le_seuil": apres["score"] < SEUIL_COMPATIBLE}
+    c = {"dimension": dim, "mesure": mes, "note": apres["score"], "sous_le_seuil": apres["score"] < SEUIL_COMPATIBLE,
+         # La mesure telle que le moteur la décrit (entrées, cible, limite, source…), quelle que soit sa famille.
+         "detail_mesure": {k: v for k, v in m.items() if not isinstance(v, (list, dict)) or k in
+                           ("entrees", "cible", "limite", "source", "sources")}}
     if dim == "risque":
         c["type"] = "risque"
         if mes == "ampleur":
@@ -524,10 +527,13 @@ def cause(fiche: dict, ordres: list, cs: dict, apres: dict, port_apres: dict) ->
         else:
             c["instrument"] = m.get("ticker")
             c["porte_par_l_ordre"] = m.get("ticker") in tickers
-    else:
+    elif dim == "preferences":
         c.update(type="preference", theme=mes, reponse=m.get("reponse"), poids_expose=m.get("poids_expose"),
                  instruments=m.get("instruments") or {})
         c["porte_par_l_ordre"] = any(t in (m.get("instruments") or {}) for t in tickers) or bool(m.get("operation"))
+    else:
+        # Une famille que ce code ne connaît pas : la mesure se lit dans `detail_mesure`.
+        c["type"] = dim
     c["autres_mesures_sous_le_seuil"] = [
         {"dimension": d, "mesure": k, "note": v["note"]}
         for d, n in apres["notes"].items() for k, v in n["mesures"].items()

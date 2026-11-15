@@ -97,3 +97,8 @@ def test_cause_sans_nouvelle_note():
     assert r["cause"]["note"] == r["score"]
     for m in r["cause"]["autres_mesures_sous_le_seuil"]:
         assert r["apres"]["notes"][m["dimension"]]["mesures"][m["mesure"]]["note"] == m["note"] < 50
+
+
+def test_cause_porte_le_detail_de_la_mesure():
+    c = api.simuler_ordre("robert", "RY.TO", "achat", 15)["cause"]
+    assert c["detail_mesure"]["poids"] == 21.0 and c["detail_mesure"]["plafond"] == 15

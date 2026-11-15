@@ -20,14 +20,14 @@ Déduis-en la **finalité supposée** de l'achat (par exemple « ajouter de la c
 
 # 2. Relier la cause aux pistes
 
-Lis `cause` dans le résultat de l'ordre : la mesure qui décide et ce qui la fait. Puis raisonne sur les quatre familles, et sur leurs **combinaisons** :
+Lis `cause` dans le résultat de l'ordre : la famille et la mesure qui décident, quelles qu'elles soient, avec ce que le moteur donne d'elles (ses entrées, sa cible, sa limite, sa source) et ce qui la fait. Raisonne à partir de ce que la mesure compte : qu'est-ce qui, dans le portefeuille après l'ordre, la ferait revenir vers sa cible ? Puis choisis parmi les quatre familles de pistes, et leurs **combinaisons** :
 - **un montant plus petit** (`chercher_taille_compatible`) : répond quand la limite est franchie par la taille de l'achat ;
 - **un autre instrument** qui apporte une exposition semblable (`lister_instruments`, puis `simuler_ordre`) : répond quand la cause tient à l'instrument lui-même (sa volatilité, un poids déjà élevé, un thème évité) ;
 - **un achat partagé** entre l'instrument et un fonds diversifié de la même classe (`simuler_scenario`) : répond quand l'instrument pèse trop seul ou fait trop monter le risque ;
 - **un achat payé par la vente d'une autre position** au lieu de l'encaisse (`simuler_scenario`) : répond quand la cause est le poids d'une classe, un thème déjà présent ailleurs, ou une encaisse qui descend trop. Vends une position que la politique allégerait de toute façon, jamais une position que le client recherche, et jamais plus que l'achat n'en demande ;
 - **une combinaison** (`simuler_scenario`) : par exemple un montant plus petit de l'instrument plus un complément qui apporte une exposition semblable avec moins de risque, ou une partie de l'achat payée par une vente. C'est souvent ce qui garde le plus de la finalité supposée.
 
-Une famille qui ne touche pas la mesure en cause ne vaut pas un essai. Deux causes différentes appellent en général des pistes différentes.
+Une famille qui ne touche pas la mesure en cause ne vaut pas un essai. Par exemple : une mesure qui compte l'encaisse gardée appelle plutôt un achat payé par une vente, ou un montant plus petit, qu'un autre instrument ; une mesure de revenu appelle un instrument ou un complément qui verse un dividende ; une mesure de risque (fluctuations, pire année, pire baisse) appelle un montant plus petit ou un complément moins volatil ; une mesure de poids d'une classe appelle une vente dans la même classe ou un autre instrument d'une autre classe. Ce ne sont que des exemples de raisonnement : pars toujours de la mesure que le moteur nomme. Deux causes différentes appellent en général des pistes différentes.
 
 # 3. Tester et s'adapter
 

@@ -148,16 +148,25 @@ def _pct(fraction) -> str:
 ETIQUETTES = {"speculatif": "spéculatif", "etablie": "établie", "crypto": "cryptoactif", "techno": "technologie",
               "ecarte_esg": "écarté ESG"}
 NIVEAUX = {"essentiel": "essentiel", "standard": "standard", "detaille": "détaillé"}
-DIMENSIONS = {"risque": "risque", "diversification": "diversification", "preferences": "préférences"}
+DIMENSIONS = {"risque": "risque", "diversification": "diversification", "preferences": "préférences",
+              "objectif": "objectif", "liquidite": "liquidité", "liquidites": "liquidité"}
 MESURES = {"ampleur": "ampleur de la pire baisse", "duree": "durée sous l'eau", "classe_liquidites": "poids des liquidités",
            "classe_revenu_fixe": "poids du revenu fixe", "classe_actions": "poids des actions",
            "classe_alternatifs": "poids des titres alternatifs", "crypto": "poids des cryptoactifs",
            "plus_grosse_action": "plus grosse action", "plus_gros_fonds": "plus gros fonds",
-           "plus_gros_secteur": "plus gros secteur"}
+           "plus_gros_secteur": "plus gros secteur", "fluctuations": "fluctuations", "pire_annee": "pire année"}
 ISSUES = {"compatible_tel_quel": "compatible tel quel", "compatible_avec_ajustement": "compatible avec ajustement",
           "aucune_taille": "aucune taille"}
 CLASSES = {"liquidites": "liquidités", "revenu_fixe": "revenu fixe", "actions": "actions",
            "alternatifs": "titres alternatifs", "toutes": "toutes"}
+
+
+def libelle_famille(r: dict, d) -> str:
+    """Nom lisible d'une famille de notes : le libellé que le moteur donne, sinon le tableau, sinon l'identifiant."""
+    note = ((r.get("apres") or r).get("notes") or {}).get(d) if isinstance(r, dict) else None
+    if isinstance(note, dict) and isinstance(note.get("libelle_court"), str):
+        return note["libelle_court"]
+    return DIMENSIONS.get(d, str(d).replace("_", " "))
 
 
 def _mesure(m) -> str:
@@ -199,7 +208,7 @@ def resumer(outil: str, r) -> str:
             texte = f"Scénario : {decrire_ordres(r.get('ordres') or [])}. " if outil == "simuler_scenario" else ""
             texte += (f"Verdict : {v.get('libelle')} ; score {_nombre(r.get('score'))} "
                      f"(avant {_nombre(r.get('avant', {}).get('score'))}) ; note la plus basse : "
-                     f"{DIMENSIONS.get(r.get('dimension_min'), r.get('dimension_min'))} / {_mesure(r.get('mesure_min'))} ; "
+                     f"{libelle_famille(r, r.get('dimension_min'))} / {_mesure(r.get('mesure_min'))} ; "
                      f"{r.get('direction', {}).get('libelle')}.")
             so = r.get("solidite") or {}
             if so.get("libelle"):
