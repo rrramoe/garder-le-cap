@@ -98,3 +98,31 @@ def creer_outils(client) -> list:
         return api.lister_instruments(classe)
 
     return [lire_fiche_client, lire_fiche_instrument, simuler_ordre, chercher_taille_compatible, lister_instruments]
+
+
+NOM_OUTIL_APPORT = "decrire_apport"
+
+
+def creer_outil_decrire_apport(client):
+    """Outil descriptif pour l'agent explorateur, lié au client de l'analyse (comme les autres outils)."""
+    id_lie = identifiant_client(client)
+
+    @tool(name=NOM_OUTIL_APPORT)
+    def decrire_apport(client_id: str, ticker: str, pourcentage: float | None = None) -> dict:
+        """Décrit ce qu'un instrument apporterait au portefeuille du client, avec des faits seulement
+        (aucune note, aucun verdict) : corrélation avec le portefeuille actuel, les trois positions les plus
+        proches, l'exposition actuelle à sa classe, à son secteur et à ses étiquettes (avec la limite de la
+        politique quand il y en a une), la part du portefeuille et du risque après un achat de `pourcentage` %,
+        et les instruments de la même classe classés du plus proche au plus éloigné (volatilité, pire baisse,
+        étiquettes), pour choisir un complément ou un substitut sur preuves.
+
+        Args:
+            client_id: Identifiant du client de l'analyse.
+            ticker: Symbole de l'instrument, par exemple TSLA.
+            pourcentage: Facultatif. Achat envisagé en % du portefeuille (15 = 15 %).
+        """
+        if str(client_id).strip().lower() != id_lie:
+            return {"erreur": f"Cette analyse porte sur le client « {id_lie} » : utilisez client_id=\"{id_lie}\"."}
+        return api.decrire_apport(client, ticker, pourcentage)
+
+    return decrire_apport

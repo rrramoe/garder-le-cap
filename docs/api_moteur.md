@@ -90,6 +90,22 @@ Plus grande taille, par pas de 0,5 % jusqu'au montant demandé, avec un score de
 | `courbe` | Liste de `{taille_pct, score, dimension_min, mesure_min}` |
 | `contraintes_strictes` | Comme dans `simuler_ordre` |
 
+## `decrire_apport(client, ticker, pourcentage=None)`
+
+Ce que l'instrument apporterait au portefeuille du client : **des faits seulement**, sans note ni verdict, pour comprendre un ordre et choisir un complément ou un substitut sur preuves. Mêmes conventions que les autres mesures : rendements quotidiens en CAD (jours sans cotation comptés à 0), même calendrier et même période, portefeuille à poids constants rééquilibré chaque jour. Outil de l'agent : `decrire_apport`, créé par `agent.outils.creer_outil_decrire_apport(client)` (hors de la liste de `creer_outils`).
+
+| Champ | Contenu |
+|---|---|
+| `ticker`, `nom`, `classe_politique`, `secteur`, `etiquettes_vraies` | L'instrument |
+| `correlation_portefeuille` | `{valeur, deja_detenu_pct, libelle, periode}` : corrélation des rendements quotidiens de l'instrument avec ceux du portefeuille actuel |
+| `positions_proches` | Les trois positions actuelles les plus corrélées à l'instrument : `{ticker, nom, poids_pct, correlation}` |
+| `exposition_actuelle` | `classe` : `{classe, poids_pct, min_pct, cible_pct, max_pct}` ; `secteur` (action individuelle) : `{secteur, poids_pct, positions, plafond_pct, plafond_action_individuelle_pct}`, sinon `null` ; `fonds` (fonds négocié en bourse) : `{poids_actuel_pct, plafond_pct}` ; `etiquettes` : pour chaque étiquette vraie de l'instrument, `{poids_pct, positions, reponse_client, plafond_pct}` (`plafond_pct` pour la crypto seulement) ; `periode` |
+| `apres_ordre` | Si `pourcentage` est donné : achat au comptant, `{pourcentage_ordre, poids_pct, part_du_risque_pct, poids_avant_pct, part_du_risque_avant_pct}` (même calcul que `contribution_risque_apres`) ; `{pourcentage_ordre, erreur}` si l'achat est impossible (encaisse insuffisante) ; `null` sans `pourcentage` |
+| `candidats` | Les instruments de la même classe, du plus corrélé au moins corrélé à l'instrument : `{symbole, nom, secteur, correlation_avec_instrument, correlation_avec_portefeuille, volatilite_annualisee, pire_baisse, etiquettes, deja_detenu_pct}` |
+| `periode`, `frequence` | Période des données (CAD) ; `quotidienne` |
+
+Instrument inconnu, client inconnu, montant invalide ou historique de prix manquant : `{"erreur": "..."}`.
+
 ## Achat sur marge, vente à découvert et expérience
 
 | `operation` | Sens | Effet sur le portefeuille |

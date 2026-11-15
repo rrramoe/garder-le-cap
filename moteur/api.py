@@ -15,6 +15,7 @@ import math
 import numpy as np
 
 from . import client as _client
+from . import apport as _apport
 from . import donnees, instruments, notation, references, solidite as _solidite
 
 SOURCES_FICHE_CLIENT = ("fbngp_profils_2024", "fbngp_politique_2022", "fidelity_crypto_2026", "hypothese_personas",
@@ -161,3 +162,28 @@ def solidite(client, ticker: str, sens: str, pourcentage: float) -> dict:
 def origine_references() -> dict:
     """D'où les fichiers de référence ont été lus (Amazon S3 ou dossier local), pour la partie 8 du rapport."""
     return {**references.origine(), "sources": _sources("hypothese_classes")}
+
+
+@_api
+def decrire_apport(client, ticker: str, pourcentage: float | None = None) -> dict:
+    """Ce que l'instrument apporterait au portefeuille : des faits, sans note ni verdict.
+
+    Corrélation avec le portefeuille, trois positions les plus proches, exposition actuelle à sa classe,
+    son secteur et ses étiquettes (avec la limite de la politique quand il y en a une), part du portefeuille
+    et du risque après un achat de `pourcentage` %, et les instruments de la même classe classés par proximité.
+    """
+    fiche = _client.construire_fiche(client)
+    if pourcentage is not None:
+        try:
+            pourcentage = float(pourcentage)
+        except (TypeError, ValueError):
+            return {"erreur": f"Montant invalide : « {pourcentage} ». Indiquez un pourcentage du portefeuille."}
+    r = _apport.decrire(fiche, str(ticker).strip().upper(), pourcentage)
+    periode = _periode_donnees()
+    for bloc in ("correlation_portefeuille", "exposition_actuelle"):
+        r[bloc]["periode"] = periode
+    return {"client": fiche["id"], **r, "periode": periode, "frequence": "quotidienne",
+            "sources": _sources("donnees_marche", "hypothese_conventions_calcul", "hypothese_classes",
+                                "hypothese_etiquettes", "fbngp_profils_2024", "fbngp_politique_2022",
+                                "hypothese_plafonds_tous_profils", "fidelity_crypto_2026",
+                                "hypothese_crypto_correspondance", "hypothese_mecanique_ordre")}
