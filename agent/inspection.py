@@ -58,15 +58,16 @@ def options_garde_fou() -> dict:
             "guardrail_latest_message": True}
 
 
-def creer_modele(model_id: str, effort: str | None = None):
+def creer_modele(model_id: str, effort: str | None = None, garde_fou: bool = True):
     from botocore.config import Config
     from strands.models import BedrockModel
 
     effort = EFFORT if effort is None else effort
     extra = {"additional_request_fields": {"output_config": {"effort": effort}}} if effort and effort != "high" else {}
+    if garde_fou:
+        extra.update(options_garde_fou())
     return BedrockModel(model_id=model_id, region_name=REGION, max_tokens=JETONS_SORTIE, **extra,
-                        boto_client_config=Config(retries=TENTATIVES_SDK, read_timeout=120, connect_timeout=10),
-                        **options_garde_fou())
+                        boto_client_config=Config(retries=TENTATIVES_SDK, read_timeout=120, connect_timeout=10))
 
 
 def creer_agent(client, modele=None, suivi=None, envoyer=None):

@@ -214,6 +214,24 @@ def _ancrage_garde_fou(explication: str, trace: list, requete: str, client=None)
     return resultat
 
 
+# --- Sortie de l'explorateur -------------------------------------------------------------------
+
+def sortie_acceptee(texte: str, client=None) -> bool | None:
+    """Le garde-fou laisse-t-il passer ce texte en sortie (ApplyGuardrail, source OUTPUT) ? None s'il n'est pas
+    configuré ou ne répond pas. Sert aux phrases de l'explorateur montrées dans le rapport."""
+    config = configuration_garde_fou()
+    if config is None or not (texte or "").strip():
+        return None
+    try:
+        client = client or _client("bedrock-runtime")
+        reponse = client.apply_guardrail(guardrailIdentifier=config["id"], guardrailVersion=config["version"],
+                                         source="OUTPUT", outputScope="FULL",
+                                         content=[{"text": {"text": texte[:LIMITE_REPONSE]}}])
+    except Exception:
+        return None
+    return reponse.get("action") != "GUARDRAIL_INTERVENED"
+
+
 # --- Essai du garde-fou -------------------------------------------------------------------------
 
 SUJETS_FR = {

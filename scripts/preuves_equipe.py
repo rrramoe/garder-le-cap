@@ -45,7 +45,7 @@ CAS["lea_shop"] = ({"id": "lea", "nom": "Léa", "questionnaire": {
     "themes": {"ecarte_esg": "eviter", "crypto": "exclure"}},
     "portefeuille_pct": {"ZST.TO": 12, "XBB.TO": 25, "AGG": 10, "XIU.TO": 15, "SPY": 15, "ENB.TO": 8, "JPM": 5,
                          "GLD": 10}}, "SHOP.TO", "achat", 8)
-CONTRADICTION = ("contre votre objectif", "peu cohérent", "pas cohérent avec", "contredit", "contradiction", "va à l'encontre", "en opposition",
+CONTRADICTION = ("contre votre objectif", "contre son objectif", "va contre", "peu cohérent", "pas cohérent avec", "contredit", "contradiction", "va à l'encontre", "en opposition",
                  "s'oppose", "pas cohérent", "incohéren", "contraire")
 
 

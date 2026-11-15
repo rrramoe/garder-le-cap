@@ -102,17 +102,20 @@ def entete(client, ordre: dict, mission: str, simulation: dict) -> str:
     resultat["points_attention"] = [p.get("texte") for p in simulation.get("points_attention") or []]
     faits = {
         "client_id": identifiant_client(client),
-        "ordre": {k: ordre[k] for k in ("ticker", "sens", "pourcentage")} | ({"operation": op} if op != "comptant" else {}),
+        "ordre_simule": {k: ordre[k] for k in ("ticker", "sens", "pourcentage")} | ({"operation": op} if op != "comptant" else {}),
         "resultat_de_l_ordre": resultat,
         "client": faits_client(fiche),
         "operations_avancees_permises": avancees,
         "instrument": faits_instrument(api.lire_fiche_instrument(ordre["ticker"])),
         "apport": compacter_apport(api.decrire_apport(client, ordre["ticker"], ordre["pourcentage"])),
     }
-    return ("Faits établis par le code (ne les relis pas et ne les recalcule pas) :\n"
+    # Le cadre « simulation » est écrit en clair : sans lui, le garde-fou Bedrock peut lire un ordre nu comme une
+    # demande de transaction réelle et retenir le message.
+    return ("Simulation éducative, aucun ordre réel n'est passé. Analyse d'un ordre simulé : faits établis par le "
+            "code (ne les relis pas et ne les recalcule pas).\n"
             + json.dumps(faits, ensure_ascii=False, separators=(",", ":")) +
-            "\n\nMission du chef de dossier :\n" + (mission or "(aucune précision)") +
-            "\n\nTeste les pistes, puis rends ton compte rendu en quatre lignes.")
+            "\n\nMission du chef de dossier (simulation) :\n" + (mission or "(aucune précision)") +
+            "\n\nTeste les pistes simulées, puis rends ton compte rendu en quatre lignes.")
 
 
 def lire_compte_rendu(texte: str | None) -> dict:
@@ -191,7 +194,10 @@ def explorer(client, ordre: dict, mission: str, simulation: dict, modele=None, s
         m = modele
         if m is None or isinstance(m, str):
             identifiants.charger_identifiants()
-            m = creer_modele(nom_modele(m))
+            # L'entrée de l'explorateur n'est faite que de faits écrits par le code et de la mission du chef de
+            # dossier : le garde-fou Bedrock, qui y voyait parfois une demande de transaction, s'applique à ses
+            # phrases montrées dans le rapport (voir plus bas), pas à cette entrée.
+            m = creer_modele(nom_modele(m), garde_fou=False)
         avancees = operations_avancees_permises(api.lire_fiche_client(client))
         agent = Agent(model=m, tools=creer_outils_explorateur(client, registre=registre,
                                                               operations_avancees=avancees),
@@ -229,6 +235,12 @@ def explorer(client, ordre: dict, mission: str, simulation: dict, modele=None, s
         return repli(client, ordre, simulation, f"compte rendu illisible ({type(e).__name__})")
     if not pistes and not cr["bilan"]:
         return repli(client, ordre, simulation, "aucune piste testée")
+    if modele is None or isinstance(modele, str):   # vrai Bedrock : ses phrases passent par le garde-fou en sortie
+        from . import garde_fou as _garde_fou
+        phrases = "\n".join(x for x in [cr["intention"], cr["cause"], cr["bilan"]] + [p.get("raison") for p in pistes] if x)
+        if _garde_fou.sortie_acceptee(phrases) is False:
+            cr = {**cr, "intention": None, "cause": None, "bilan": None}
+            pistes = [dict(p, raison=None) for p in pistes]
     return {"statut": "termine", "intention": cr["intention"], "cause_lue": cr["cause"], "bilan": cr["bilan"],
             "cause": simulation.get("cause"), "pistes": pistes, "nombre_essais": len(testees), "trace": trace,
             "compte_rendu": texte,
