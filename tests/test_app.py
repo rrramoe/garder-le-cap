@@ -159,7 +159,9 @@ def agent_simule(monkeypatch):
 
     def inspecter(fiche, ticker, sens, pourcentage, **options):
         return {"explication": "**Verdict** : en tension, score 39,6.", "trace": TRACE_SIMULEE,
-                "modele": "modele-simule", "duree_s": 1.0, "erreur": None, "substitut": None,
+                "modele": "modele-simule", "duree_s": 1.0, "erreur": None,
+                "substitut": {"ticker": "SPY", "verdict": {"code": "compatible", "libelle": "Compatible"},
+                              "score": 50.0, "pourcentage": pourcentage, "nature": "possibilite_testee"},
                 "garde_fou": {"actif": True, "version": "2", "intervenu": False},
                 "ancrage": {"statut": "non_appuyee", "chiffres_non_sources": ["56,3"],
                             "ancrage": {"score": 0.8, "seuil": 0.7}, "message": "..."}}
@@ -199,3 +201,17 @@ def test_essai_du_garde_fou_sans_reponse(agent_simule):
     at.text_input(key="essai_robert").set_value("Que signifie la note d'ampleur ?")
     at.button(key="soumettre_robert").click().run()
     assert "Demande acceptée par le garde-fou." in _textes(at)
+
+
+def test_substitut_dans_ce_qui_est_possible(agent_simule):
+    at = _demarrer()
+    texte = _inspecter(at, "robert")
+    assert "L'agent a aussi testé un autre titre : le même montant (" in texte
+    assert "$) en SPY (SPDR S&P 500 ETF Trust) serait" in texte
+    assert "compatible</b> (score 50" in texte
+    assert "Une possibilité testée, pas une recommandation." in texte
+
+
+def test_pas_de_substitut_sans_agent(sans_agent):
+    at = _demarrer()
+    assert "L'agent a aussi testé" not in _inspecter(at, "robert")

@@ -817,6 +817,20 @@ def section_solidite(solidite: dict | None) -> None:
     st.caption(f"{solidite['explication']} Le score affiché plus haut reste celui de toute la période.")
 
 
+def section_substitut(rapport: dict, valeur: float) -> None:
+    """Le titre que l'agent a testé à la place de celui de l'ordre : une possibilité, pas une recommandation."""
+    s = (rapport.get("agent") or {}).get("substitut")
+    if not s or not s.get("verdict"):
+        return
+    code = s["verdict"].get("code")
+    couleur = COULEURS_VERDICT.get(code, MARINE)
+    pourcentage = s.get("pourcentage") or rapport["ordre"]["pourcentage"]
+    st.markdown(f"L'agent a aussi testé un autre titre : le même montant ({dollars(pourcentage * valeur / 100)}) "
+                f"en {nom_instrument(s['ticker'])} serait <b style=\"color:{couleur}\">{s['verdict']['libelle'].lower()}</b> "
+                f"(score {note_txt(s.get('score'))}).", unsafe_allow_html=True)
+    st.caption("Une possibilité testée, pas une recommandation.")
+
+
 def section_possible(taille: dict | None, valeur: float) -> None:
     st.markdown("#### Ce qui est possible")
     if not taille or "erreur" in taille:
@@ -1056,6 +1070,7 @@ def afficher_rapport(persona: str, rapport: dict, fiche_actuelle: dict) -> None:
     bloc_operation(sim)
     bloc_changements(rapport, st.session_state.get(f"precedent_{persona}"))
     section_possible(rapport["taille"], valeur)
+    zone_substitut = st.container()  # remplie après la réponse de l'agent, qui choisit le substitut
     st.caption(rapport["ordre"].get("hypothese_execution", "Le rapport suppose que l'ordre est exécuté."))
 
     st.markdown("#### En détail")
@@ -1075,6 +1090,8 @@ def afficher_rapport(persona: str, rapport: dict, fiche_actuelle: dict) -> None:
             o = rapport["ordre"]
             rapport["agent"] = appeler_agent(rapport["fiche"], o["ticker"], o["sens"], o["pourcentage"],
                                              operation_moteur(o.get("operation")))
+    with zone_substitut:
+        section_substitut(rapport, valeur)
     with st.expander("Explication de l'agent", expanded=ouvert):
         section_agent(rapport)
     with st.expander(TITRE_ETAPES, expanded=False):
