@@ -1,0 +1,27 @@
+{
+  "source": "vanguard_esgv_2026",
+  "methode": "Indices FTSE Global Choice (fonds ESGV et VSGX de Vanguard). Exclusions publiées : divertissement pour adultes, alcool, tabac, cannabis, jeu, armement, nucléaire, charbon, pétrole et gaz, plus un filtre de conduite.",
+  "statuts": {
+    "XOM": {"statut": "ecarte", "preuve": "Fiche du fonds ESGV du 30 sept. 2026, tableau des exclusions : énergie non renouvelable."},
+    "NVDA": {"statut": "retenu", "preuve": "Dix premières positions d'ESGV, fiche du 30 sept. 2026."},
+    "AAPL": {"statut": "retenu", "preuve": "Dix premières positions d'ESGV, fiche du 30 sept. 2026."},
+    "MSFT": {"statut": "retenu", "preuve": "Dix premières positions d'ESGV, fiche du 30 sept. 2026."},
+    "GOOGL": {"statut": "retenu", "preuve": "Dix premières positions d'ESGV, fiche du 30 sept. 2026."},
+    "AMZN": {"statut": "retenu", "preuve": "Dix premières positions d'ESGV, fiche du 30 sept. 2026."},
+    "TSLA": {"statut": "retenu", "preuve": "Dix premières positions d'ESGV, fiche du 30 sept. 2026."},
+    "RY.TO": {"statut": "retenu", "preuve": "Principales positions du fonds VSGX de Vanguard (2026)."},
+    "ENB.TO": {"statut": "ecarte_deduit", "preuve": "Déduction : secteur Énergie et règle publiée « charbon, pétrole ou gaz »."},
+    "CNQ.TO": {"statut": "ecarte_deduit", "preuve": "Déduction : secteur Énergie et règle publiée « charbon, pétrole ou gaz »."},
+    "JPM": {"statut": "indetermine", "preuve": "Non vérifié."},
+    "JNJ": {"statut": "indetermine", "preuve": "Non vérifié."},
+    "PG": {"statut": "indetermine", "preuve": "Non vérifié."},
+    "TD.TO": {"statut": "indetermine", "preuve": "Non vérifié."},
+    "MFC.TO": {"statut": "indetermine", "preuve": "Non vérifié."},
+    "CNR.TO": {"statut": "indetermine", "preuve": "Non vérifié."},
+    "FTS.TO": {"statut": "indetermine", "preuve": "Non vérifié."},
+    "ATD.TO": {"statut": "indetermine", "preuve": "Non vérifié."},
+    "SHOP.TO": {"statut": "indetermine", "preuve": "Non vérifié."},
+    "CSU.TO": {"statut": "indetermine", "preuve": "Non vérifié."}
+  },
+  "par_defaut_hors_actions": "sans_objet"
+}

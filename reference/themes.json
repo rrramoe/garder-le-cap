@@ -1,0 +1,11 @@
+{
+  "note": "Liste de données : ajouter un thème ici suffit, le moteur lit l'étiquette du même nom dans la fiche de l'instrument.",
+  "themes": [
+    {"id": "ecarte_esg", "libelle": "Entreprises écartées par un filtre ESG", "etiquette": "ecarte_esg"},
+    {"id": "speculatif", "libelle": "Placements spéculatifs", "etiquette": "speculatif"},
+    {"id": "crypto", "libelle": "Cryptoactifs", "etiquette": "crypto"},
+    {"id": "techno", "libelle": "Technologies et IA", "etiquette": "techno"},
+    {"id": "etablie", "libelle": "Entreprises établies", "etiquette": "etablie"}
+  ],
+  "repere_preferences_souples_pct": 15
+}

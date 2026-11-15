@@ -1,0 +1,13 @@
+{
+  "source": "hypothese_classes",
+  "classes": {
+    "liquidites": {"libelle": "Liquidités", "instruments": ["ZST.TO"]},
+    "revenu_fixe": {"libelle": "Revenu fixe", "instruments": ["XBB.TO", "AGG", "TLT"]},
+    "actions": {"libelle": "Actions", "instruments": [
+      "RY.TO", "TD.TO", "MFC.TO", "ENB.TO", "CNQ.TO", "CNR.TO", "FTS.TO", "ATD.TO", "SHOP.TO", "CSU.TO",
+      "AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "TSLA", "JPM", "JNJ", "PG", "XOM",
+      "XIU.TO", "SPY", "QQQ", "ESGV"]},
+    "alternatifs": {"libelle": "Titres alternatifs", "instruments": ["GLD", "BTC-USD", "ETH-USD"]}
+  },
+  "encaisse": "ZST.TO"
+}

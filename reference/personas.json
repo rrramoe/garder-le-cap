@@ -1,0 +1,41 @@
+{
+  "source": "hypothese_personas",
+  "personas": {
+    "amira": {
+      "nom": "Amira",
+      "questionnaire": {
+        "objectif": "croissance_long_terme",
+        "horizon": "15_plus",
+        "fluctuations": "elevees",
+        "experience": "intermediaire",
+        "themes": {"ecarte_esg": "neutre", "speculatif": "neutre", "crypto": "rechercher", "techno": "rechercher", "etablie": "neutre"}
+      },
+      "portefeuille_pct": {"ZST.TO": 8, "XBB.TO": 7, "XIU.TO": 14, "SPY": 22, "QQQ": 14, "NVDA": 10, "MSFT": 6, "SHOP.TO": 4, "CSU.TO": 3, "BTC-USD": 5, "ETH-USD": 3, "GLD": 4},
+      "ordre_demo": {"ticker": "NVDA", "sens": "achat", "pourcentage": 7}
+    },
+    "mateo": {
+      "nom": "Mateo",
+      "questionnaire": {
+        "objectif": "croissance_equilibree",
+        "horizon": "8_12",
+        "fluctuations": "moderees",
+        "experience": "intermediaire",
+        "themes": {"ecarte_esg": "exclure", "speculatif": "eviter", "crypto": "eviter", "techno": "neutre", "etablie": "neutre"}
+      },
+      "portefeuille_pct": {"ZST.TO": 10, "XBB.TO": 28, "AGG": 8, "ESGV": 20, "RY.TO": 6, "CNR.TO": 5, "MFC.TO": 4, "MSFT": 5, "AAPL": 4, "GLD": 10},
+      "ordre_demo": {"ticker": "XOM", "sens": "achat", "pourcentage": 8}
+    },
+    "robert": {
+      "nom": "Robert",
+      "questionnaire": {
+        "objectif": "preserver_capital",
+        "horizon": "3_5",
+        "fluctuations": "faibles_moderees",
+        "experience": "avancee",
+        "themes": {"ecarte_esg": "neutre", "speculatif": "eviter", "crypto": "eviter", "techno": "neutre", "etablie": "rechercher"}
+      },
+      "portefeuille_pct": {"ZST.TO": 15, "XBB.TO": 35, "AGG": 15, "XIU.TO": 8, "RY.TO": 6, "FTS.TO": 4, "ENB.TO": 3, "JNJ": 5, "PG": 4, "GLD": 5},
+      "ordre_demo": {"ticker": "TSLA", "sens": "achat", "pourcentage": 15}
+    }
+  }
+}

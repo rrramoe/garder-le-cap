@@ -1,0 +1,104 @@
+{
+  "donnees_marche": {
+    "libelle": "Prix, taux de change, secteurs",
+    "source": "Jeu de données des organisateurs du Datathon PolyFinances 2026 (Yahoo Finance via yfinance ; Banque du Canada, série FXUSDCAD)",
+    "date": "2026-11-13",
+    "nature": "publie"
+  },
+  "fbngp_profils_2024": {
+    "libelle": "Profils d'investisseur, fourchettes et cibles par classe",
+    "source": "Financière Banque Nationale – Gestion de patrimoine, documents « Profil d'investisseur » (fbngp.ca)",
+    "date": "2024-09",
+    "nature": "publie"
+  },
+  "fbngp_politique_2022": {
+    "libelle": "Plafonds de concentration 15 % par action, 40 % par secteur, 40 % par fonds",
+    "source": "FBN Gestion de patrimoine, politique de placement d'un portefeuille privé (équipe Gélinas-Bossé, nbfwm.ca)",
+    "date": "2022-03",
+    "nature": "publie"
+  },
+  "fidelity_crypto_2026": {
+    "libelle": "Cibles de cryptoactifs par profil et règle du double",
+    "source": "Fidelity Canada, gamme de FNB tout-en-un (fidelity.ca)",
+    "date": "2026",
+    "nature": "publie"
+  },
+  "vanguard_esgv_2026": {
+    "libelle": "Exclusions ESG et statut des titres américains",
+    "source": "Vanguard, fiche du fonds ESGV",
+    "date": "2026-09-30",
+    "nature": "publie"
+  },
+  "vanguard_vsgx_2026": {
+    "libelle": "Statut ESG des titres hors États-Unis",
+    "source": "Vanguard, fonds VSGX",
+    "date": "2026",
+    "nature": "publie"
+  },
+  "yfinance_first_trade_date": {
+    "libelle": "Date de première cotation (étiquette « établie »)",
+    "source": "Yahoo Finance via yfinance, champ firstTradeDate",
+    "date": "voir fiches_instruments.json",
+    "nature": "publie"
+  },
+  "hypothese_personas": {
+    "libelle": "Association de chaque persona à un profil, réponses aux thèmes, portefeuilles de départ fictifs",
+    "source": "Hypothèse du projet, à partir du vocabulaire de l'énoncé",
+    "date": "2026-11-15",
+    "nature": "hypothese"
+  },
+  "hypothese_classes": {
+    "libelle": "Or et crypto parmi les titres alternatifs ; ZST.TO comme liquidités",
+    "source": "Hypothèse du projet",
+    "date": "2026-11-15",
+    "nature": "hypothese"
+  },
+  "hypothese_crypto_correspondance": {
+    "libelle": "Correspondance entre les catégories de Fidelity et les profils de la banque ; convention du bitcoin appliquée à toute la crypto",
+    "source": "Hypothèse du projet",
+    "date": "2026-11-15",
+    "nature": "hypothese"
+  },
+  "hypothese_plafonds_tous_profils": {
+    "libelle": "Plafonds d'une seule équipe appliqués à tous les profils",
+    "source": "Hypothèse du projet",
+    "date": "2026-11-15",
+    "nature": "hypothese"
+  },
+  "hypothese_etiquettes": {
+    "libelle": "Définitions de « spéculatif » (volatilité > 2 x celle de SPY, en CAD) et « établie » (première cotation il y a 20 ans ou plus et non spéculatif)",
+    "source": "Hypothèse du projet",
+    "date": "2026-11-15",
+    "nature": "hypothese"
+  },
+  "hypothese_etalons": {
+    "libelle": "Portefeuilles étalons : ZST.TO, XBB.TO, 40 % XIU.TO + 60 % SPY, GLD",
+    "source": "Hypothèse du projet",
+    "date": "2026-11-15",
+    "nature": "hypothese"
+  },
+  "hypothese_echelle": {
+    "libelle": "Échelle 100 / 50 / 0, règle de la note la plus faible, repère de 15 % pour les préférences souples",
+    "source": "Hypothèse du projet",
+    "date": "2026-11-15",
+    "nature": "hypothese"
+  },
+  "hypothese_esg_deduit": {
+    "libelle": "Statut ESG de ENB.TO et CNQ.TO déduit du secteur Énergie",
+    "source": "Hypothèse du projet (déduction)",
+    "date": "2026-11-15",
+    "nature": "hypothese"
+  },
+  "hypothese_mecanique_ordre": {
+    "libelle": "Un achat est payé par l'encaisse (ZST.TO) et une vente y est versée ; pas d'achat sur marge : un achat plus gros que l'encaisse est refusé",
+    "source": "Hypothèse du projet",
+    "date": "2026-11-15",
+    "nature": "hypothese"
+  },
+  "hypothese_conventions_calcul": {
+    "libelle": "Rendements sur adj_close, tout en CAD, calendrier XIU.TO ou SPY avec report en avant, poids constants rééquilibrés chaque jour",
+    "source": "Hypothèse du projet (simplification)",
+    "date": "2026-11-15",
+    "nature": "hypothese"
+  }
+}

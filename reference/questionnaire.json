@@ -1,0 +1,99 @@
+{
+  "objectif": {
+    "libelle": "Objectif",
+    "options": {
+      "preserver_capital": "Préserver mon capital",
+      "revenu_regulier": "Revenu régulier",
+      "croissance_equilibree": "Croissance équilibrée",
+      "croissance_long_terme": "Croissance à long terme"
+    }
+  },
+  "horizon": {
+    "libelle": "Horizon de placement",
+    "options": {
+      "moins_3": {
+        "libelle": "Moins de 3 ans",
+        "borne_basse_annees": 0
+      },
+      "3_5": {
+        "libelle": "3 à 5 ans",
+        "borne_basse_annees": 3
+      },
+      "5_8": {
+        "libelle": "5 à 8 ans",
+        "borne_basse_annees": 5
+      },
+      "8_12": {
+        "libelle": "8 à 12 ans",
+        "borne_basse_annees": 8
+      },
+      "12_15": {
+        "libelle": "12 à 15 ans",
+        "borne_basse_annees": 12
+      },
+      "15_plus": {
+        "libelle": "15 ans et plus",
+        "borne_basse_annees": 15
+      }
+    },
+    "note": "La borne basse sert aux calculs. Pour « moins de 3 ans », la borne basse est 0 : la note de durée vaut alors 0 dès qu'il y a un temps sous l'eau (limite de la formule 100 - 50 x T / H)."
+  },
+  "fluctuations": {
+    "libelle": "Fluctuations acceptées",
+    "options": {
+      "faibles": {
+        "libelle": "Faibles",
+        "profil": "revenu"
+      },
+      "faibles_moderees": {
+        "libelle": "Faibles à modérées",
+        "profil": "conservateur"
+      },
+      "moderees": {
+        "libelle": "Modérées",
+        "profil": "equilibre"
+      },
+      "moderees_elevees": {
+        "libelle": "Modérées à élevées",
+        "profil": "croissance"
+      },
+      "elevees": {
+        "libelle": "Élevées",
+        "profil": "croissance_maximale"
+      }
+    }
+  },
+  "experience": {
+    "libelle": "Expérience",
+    "options": {
+      "debutante": "Débutante",
+      "intermediaire": "Intermédiaire",
+      "avancee": "Avancée"
+    }
+  },
+  "echelle_themes": {
+    "libelle": "Échelle des thèmes",
+    "options": {
+      "exclure": {
+        "libelle": "Exclure",
+        "nature": "contrainte_stricte"
+      },
+      "eviter": {
+        "libelle": "Éviter",
+        "nature": "preference_souple"
+      },
+      "neutre": {
+        "libelle": "Neutre",
+        "nature": "aucune"
+      },
+      "rechercher": {
+        "libelle": "Rechercher",
+        "nature": "preference_souple"
+      },
+      "obligatoire": {
+        "libelle": "Obligatoire",
+        "nature": "contrainte_stricte"
+      }
+    }
+  }
+}

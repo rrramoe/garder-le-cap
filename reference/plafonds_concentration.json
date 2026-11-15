@@ -1,0 +1,9 @@
+{
+  "source": "fbngp_politique_2022",
+  "plafonds_pct": {
+    "action_individuelle": 15,
+    "secteur": 40,
+    "fonds_negocie_en_bourse": 40
+  },
+  "note": "Identiques pour tous les profils. Le secteur est mesuré sur les actions individuelles."
+}

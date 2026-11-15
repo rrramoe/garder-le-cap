@@ -1,0 +1,11 @@
+{
+  "source": "hypothese_etalons",
+  "etalons_par_classe": {
+    "liquidites": {"ZST.TO": 1.0},
+    "revenu_fixe": {"XBB.TO": 1.0},
+    "actions": {"XIU.TO": 0.4, "SPY": 0.6},
+    "alternatifs": {"GLD": 1.0}
+  },
+  "reference": "Poids cibles du profil.",
+  "limite": "Actions au maximum de la fourchette du profil, le reste en revenu fixe."
+}

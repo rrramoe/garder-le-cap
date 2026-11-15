@@ -1,0 +1,11 @@
+{
+  "source": "fidelity_crypto_2026",
+  "regle": "Plafond égal au double de la cible (règle de rééquilibrage de Fidelity Canada).",
+  "par_profil": {
+    "revenu": {"cible_pct": 0.5, "plafond_pct": 1},
+    "conservateur": {"cible_pct": 1, "plafond_pct": 2},
+    "equilibre": {"cible_pct": 2, "plafond_pct": 4},
+    "croissance": {"cible_pct": 3, "plafond_pct": 6},
+    "croissance_maximale": {"cible_pct": 3, "plafond_pct": 6}
+  }
+}

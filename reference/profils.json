@@ -1,0 +1,51 @@
+{
+  "source": "fbngp_profils_2024",
+  "classes": ["liquidites", "revenu_fixe", "actions", "alternatifs"],
+  "profils": {
+    "revenu": {
+      "libelle": "Revenu",
+      "fourchettes": {
+        "liquidites": {"min": 0, "cible": 5, "max": 20},
+        "revenu_fixe": {"min": 60, "cible": 70, "max": 100},
+        "actions": {"min": 0, "cible": 20, "max": 30},
+        "alternatifs": {"min": 0, "cible": 5, "max": 20}
+      }
+    },
+    "conservateur": {
+      "libelle": "Conservateur",
+      "fourchettes": {
+        "liquidites": {"min": 0, "cible": 5, "max": 20},
+        "revenu_fixe": {"min": 45, "cible": 55, "max": 80},
+        "actions": {"min": 20, "cible": 35, "max": 45},
+        "alternatifs": {"min": 0, "cible": 5, "max": 20}
+      }
+    },
+    "equilibre": {
+      "libelle": "Équilibré",
+      "fourchettes": {
+        "liquidites": {"min": 0, "cible": 5, "max": 20},
+        "revenu_fixe": {"min": 30, "cible": 40, "max": 65},
+        "actions": {"min": 30, "cible": 45, "max": 65},
+        "alternatifs": {"min": 0, "cible": 10, "max": 25}
+      }
+    },
+    "croissance": {
+      "libelle": "Croissance",
+      "fourchettes": {
+        "liquidites": {"min": 0, "cible": 5, "max": 25},
+        "revenu_fixe": {"min": 20, "cible": 30, "max": 45},
+        "actions": {"min": 40, "cible": 55, "max": 75},
+        "alternatifs": {"min": 0, "cible": 10, "max": 25}
+      }
+    },
+    "croissance_maximale": {
+      "libelle": "Croissance maximale",
+      "fourchettes": {
+        "liquidites": {"min": 0, "cible": 5, "max": 30},
+        "revenu_fixe": {"min": 0, "cible": 15, "max": 30},
+        "actions": {"min": 55, "cible": 65, "max": 100},
+        "alternatifs": {"min": 0, "cible": 15, "max": 30}
+      }
+    }
+  }
+}
