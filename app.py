@@ -10,7 +10,10 @@ l'explication et la trace de ses appels.
 from __future__ import annotations
 
 import copy
+import inspect
+import queue
 import re
+import threading
 import time
 from pathlib import Path
 
@@ -33,6 +36,21 @@ TITRE_RAPPORT = "Analyse de l'ordre"
 TITRE_ETAPES = "Étapes de l'analyse"
 DEPUIS_PRECEDENT = "Depuis l'analyse précédente"
 ATTENTE_AGENT = "L'agent rédige l'explication…"
+EN_DIRECT_AGENT = "L'agent analyse votre ordre…"
+DELAI_MAX_AGENT_S = 240  # au-delà, le rapport du moteur reste seul affiché
+
+# Analyse en direct : phrases montrées pendant le travail de l'agent (si l'agent n'en fournit pas).
+LIBELLES_OUTILS = {
+    "lire_fiche_client": "Je lis votre fiche.",
+    "lire_fiche_instrument": "Je lis la fiche du titre.",
+    "simuler_ordre": "Je simule l'ordre.",
+    "chercher_taille_compatible": "Je cherche le montant compatible.",
+}
+LIBELLES_PHASES = {
+    "redaction": "Je rédige l'explication.",
+    "verification": "Je vérifie mon texte.",
+    "correction": "Je corrige mon texte.",
+}
 
 # Ce que l'outil est : il renseigne, il ne conseille pas.
 SOUS_TITRE = "Le service de gestion des risques de l'investisseur particulier (prototype)"
@@ -465,14 +483,26 @@ def inspecter_moteur(persona: str, fiche: dict, ticker: str, sens: str, pourcent
     }
 
 
-def appeler_agent(fiche: dict, ticker: str, sens: str, pourcentage: float, operation: str = "comptant") -> dict:
+def accepte_sur_etape(fonction) -> bool:
+    """Vrai si l'agent sait annoncer ses étapes (paramètre `sur_etape`)."""
+    try:
+        return "sur_etape" in inspect.signature(fonction).parameters
+    except (TypeError, ValueError):
+        return False
+
+
+def appeler_agent(fiche: dict, ticker: str, sens: str, pourcentage: float, operation: str = "comptant",
+                  sur_etape=None) -> dict:
     """Appelle l'agent s'il existe ; renvoie toujours un dict {explication, trace, erreur, ...}."""
     try:
         from agent.inspection import inspecter  # import paresseux : le module peut être absent
     except Exception:
         return {"explication": None, "trace": [], "erreur": "module de l'agent absent"}
+    options = {"operation": operation}
+    if sur_etape is not None and accepte_sur_etape(inspecter):
+        options["sur_etape"] = sur_etape
     try:
-        r = inspecter(copy.deepcopy(fiche), ticker, sens, pourcentage, operation=operation)
+        r = inspecter(copy.deepcopy(fiche), ticker, sens, pourcentage, **options)
     except Exception as exc:  # l'agent ne doit jamais faire tomber le rapport
         return {"explication": None, "trace": [], "erreur": f"l'agent a échoué ({type(exc).__name__})"}
     if not isinstance(r, dict):
@@ -1085,20 +1115,118 @@ def afficher_rapport(persona: str, rapport: dict, fiche_actuelle: dict) -> None:
         with st.expander("Solidité du résultat", expanded=False):
             section_solidite(sim.get("solidite"))
 
+    # L'explication s'affiche au-dessus des étapes, mais n'existe qu'une fois l'analyse finie.
+    zone_explication, zone_etapes = st.container(), st.container()
+    etapes_affichees = False
     if rapport.get("agent") is None:
-        with st.spinner(ATTENTE_AGENT):
-            o = rapport["ordre"]
-            rapport["agent"] = appeler_agent(rapport["fiche"], o["ticker"], o["sens"], o["pourcentage"],
-                                             operation_moteur(o.get("operation")))
+        with zone_etapes:
+            etapes_affichees = analyser_en_direct(rapport, niveau)
+        if not etapes_affichees:  # agent sans annonce d'étapes : l'attente reste un simple indicateur
+            with zone_etapes, st.spinner(ATTENTE_AGENT):
+                o = rapport["ordre"]
+                rapport["agent"] = appeler_agent(rapport["fiche"], o["ticker"], o["sens"], o["pourcentage"],
+                                                 operation_moteur(o.get("operation")))
     with zone_substitut:
         section_substitut(rapport, valeur)
-    with st.expander("Explication de l'agent", expanded=ouvert):
+    with zone_explication, st.expander("Explication de l'agent", expanded=ouvert):
         section_agent(rapport)
-    with st.expander(TITRE_ETAPES, expanded=False):
-        section_etapes(rapport, niveau)
+    if not etapes_affichees:
+        with zone_etapes, st.expander(TITRE_ETAPES, expanded=False):
+            section_etapes(rapport, niveau)
     with st.expander("Sources, hypothèses et limites", expanded=False):
         section_sources(rapport, persona)
     st.caption("Vous décidez. Le rapport renseigne ; il ne bloque rien et ne conseille rien.")
+
+
+# ---------------------------------------------------------------- analyse en direct
+
+def rendu_en_direct(etapes: list[dict], phases: list[str], phase_en_cours: str | None) -> str:
+    """Liste des étapes : « … » pendant l'étape, « ✓ » et son résultat en une ligne quand elle finit."""
+    lignes = []
+    for e in etapes:
+        agent = f" :gray[({e['agent']})]" if e.get("agent") else ""
+        if e["fini"]:
+            resume = f"  \n  :gray[{e['resume']}]" if e.get("resume") else ""
+            lignes.append(f"- ✓ {e['libelle']}{agent}{resume}")
+        else:
+            lignes.append(f"- … **{e['libelle']}**{agent}")
+    for ph in phases:
+        texte = LIBELLES_PHASES.get(ph, "")
+        lignes.append(f"- … **{texte}**" if ph == phase_en_cours else f"- ✓ {texte}")
+    return "\n".join(lignes) if lignes else "- … **Je commence l'analyse.**"
+
+
+def analyser_en_direct(rapport: dict, niveau: str) -> bool:
+    """Fait travailler l'agent en montrant chaque étape au moment où elle se passe.
+
+    L'agent tourne dans un fil à part ; son crochet `sur_etape` ne fait que déposer les
+    événements dans une file. Seul le fil du script touche à l'affichage. Renvoie False si
+    l'agent ne sait pas annoncer ses étapes : l'appelant garde alors le simple indicateur d'attente.
+    """
+    try:
+        from agent.inspection import inspecter
+    except Exception:
+        return False
+    if not accepte_sur_etape(inspecter):
+        return False
+
+    file: queue.Queue = queue.Queue()
+    sortie: dict = {}
+    o = rapport["ordre"]
+
+    def travail():
+        sortie["r"] = appeler_agent(rapport["fiche"], o["ticker"], o["sens"], o["pourcentage"],
+                                    operation_moteur(o.get("operation")), sur_etape=file.put)
+
+    fil = threading.Thread(target=travail, name="analyse-agent", daemon=True)
+    debut = time.monotonic()
+    fil.start()
+    etapes: list[dict] = []
+    par_numero: dict = {}
+    phases: list[str] = []
+    phase_en_cours = None
+    with st.status(EN_DIRECT_AGENT, expanded=True) as statut:
+        zone = st.empty()
+        zone.markdown(rendu_en_direct(etapes, phases, phase_en_cours))
+        while fil.is_alive() or not file.empty():
+            if time.monotonic() - debut > DELAI_MAX_AGENT_S:
+                break
+            try:
+                ev = file.get(timeout=0.15)
+            except queue.Empty:
+                continue
+            if not isinstance(ev, dict):
+                continue
+            moment = ev.get("moment")
+            if moment == "debut_outil":
+                phase_en_cours = None
+                e = {"libelle": ev.get("libelle") or LIBELLES_OUTILS.get(ev.get("outil"), f"J'appelle {ev.get('outil')}."),
+                     "agent": ev.get("agent"), "fini": False, "resume": ""}
+                etapes.append(e)
+                par_numero[ev.get("etape", len(etapes))] = e
+            elif moment == "fin_outil":
+                e = par_numero.get(ev.get("etape")) or next((x for x in reversed(etapes) if not x["fini"]), None)
+                if e is not None:
+                    e["fini"], e["resume"] = True, str(ev.get("resultat_resume") or "")
+            elif moment in LIBELLES_PHASES:
+                phases.append(moment)
+                phase_en_cours = moment
+            elif moment == "fin":
+                phase_en_cours = None
+            else:
+                continue
+            zone.markdown(rendu_en_direct(etapes, phases, phase_en_cours))
+        r = sortie.get("r")
+        if r is None:
+            r = {"explication": None, "trace": [], "erreur": "l'agent a dépassé le temps prévu"}
+        rapport["agent"] = r
+        # La liste en direct se replie en « Étapes de l'analyse », avec le détail complet.
+        zone.empty()
+        section_etapes(rapport, niveau)
+        duree = time.monotonic() - debut
+        statut.update(label=f"{TITRE_ETAPES} · {len(etapes)} étape(s) en {nombre(duree, 0)} s",
+                      state="complete", expanded=False)
+    return True
 
 
 # ---------------------------------------------------------------- rendu : ordre

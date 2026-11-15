@@ -1,6 +1,7 @@
 """Tests de l'interface avec AppTest : démarrage et les trois ordres de la démo, sans l'agent."""
 
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -215,3 +216,89 @@ def test_substitut_dans_ce_qui_est_possible(agent_simule):
 def test_pas_de_substitut_sans_agent(sans_agent):
     at = _demarrer()
     assert "L'agent a aussi testé" not in _inspecter(at, "robert")
+# ---------------------------------------------------------------- analyse en direct
+
+def _module_agent_factice(avec_crochet: bool):
+    """Faux agent qui suit le contrat de agent/inspection.py et annonce ses étapes."""
+    import types
+
+    def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptant", sur_etape=None):
+        trace = []
+        appels = [("lire_fiche_client", "Je lis votre fiche.", "Profil lu."),
+                  ("simuler_ordre", "Je simule l'ordre.", "Verdict simulé."),
+                  ("chercher_taille_compatible", "Je cherche le montant compatible.", "Taille trouvée.")]
+        for n, (outil, libelle, resume) in enumerate(appels, start=1):
+            if sur_etape:
+                sur_etape({"moment": "debut_outil", "etape": n, "outil": outil, "arguments": {"ticker": ticker},
+                           "libelle": libelle, "agent": "analyste"})
+                time.sleep(0.05)
+                sur_etape({"moment": "fin_outil", "etape": n, "outil": outil, "resultat_resume": resume})
+            trace.append({"etape": n, "outil": outil, "arguments": {"ticker": ticker},
+                          "resultat_resume": resume, "resultat": {}})
+        for moment in ("redaction", "verification", "fin"):
+            if sur_etape:
+                sur_etape({"moment": moment})
+        return {"explication": "Texte factice de l'agent.", "trace": trace, "modele": "factice",
+                "duree_s": 0.2, "erreur": None}
+
+    if not avec_crochet:
+        def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptant", _f=inspecter):  # noqa: F811
+            return _f(client, ticker, sens, pourcentage, modele, operation)
+
+    module = types.ModuleType("agent.inspection")
+    module.inspecter = inspecter
+    return module
+
+
+@pytest.fixture
+def agent_en_direct(monkeypatch):
+    import types
+    monkeypatch.setitem(sys.modules, "agent", types.ModuleType("agent"))
+    monkeypatch.setitem(sys.modules, "agent.inspection", _module_agent_factice(True))
+
+
+@pytest.fixture
+def agent_sans_crochet(monkeypatch):
+    import types
+    monkeypatch.setitem(sys.modules, "agent", types.ModuleType("agent"))
+    monkeypatch.setitem(sys.modules, "agent.inspection", _module_agent_factice(False))
+
+
+def test_analyse_en_direct_replie_en_etapes(agent_en_direct):
+    at = _demarrer()
+    texte = _inspecter(at, "robert")
+    assert "En tension" in _verdict(at)  # le rapport du moteur reste en tête
+    assert "Texte factice de l'agent." in texte
+    etiquettes = [e.label for e in at.status]
+    assert any(l.startswith("Étapes de l'analyse · 3 étape(s)") for l in etiquettes), etiquettes
+    assert at.status[0].state == "complete"
+    assert "Taille trouvée." in texte  # résumé de l'étape, dans la liste repliée
+
+
+def test_agent_sans_crochet_garde_l_attente_simple(agent_sans_crochet):
+    at = _demarrer()
+    texte = _inspecter(at, "mateo")
+    assert "Incompatible" in _verdict(at)
+    assert "Texte factice de l'agent." in texte
+    assert "Étapes de l'analyse" in [e.label for e in at.expander]
+
+
+def test_rendu_en_direct_marque_les_etapes():
+    sys.path.insert(0, str(Path(APP).parent))
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("app_pour_rendu", APP)
+    # Lire la fonction sans lancer la page : on l'extrait du source.
+    import ast
+    source = Path(APP).read_text(encoding="utf-8")
+    arbre = ast.parse(source)
+    noeuds = [n for n in arbre.body if isinstance(n, ast.FunctionDef) and n.name == "rendu_en_direct"
+              or isinstance(n, ast.Assign) and any(getattr(t, "id", "") == "LIBELLES_PHASES" for t in n.targets)]
+    espace: dict = {}
+    exec(compile(ast.Module(body=noeuds, type_ignores=[]), APP, "exec"), espace)
+    rendu = espace["rendu_en_direct"](
+        [{"libelle": "Je lis votre fiche.", "fini": True, "resume": "Profil lu.", "agent": None},
+         {"libelle": "Je simule l'ordre.", "fini": False, "resume": "", "agent": None}],
+        ["verification"], "verification")
+    assert "- ✓ Je lis votre fiche." in rendu and "Profil lu." in rendu
+    assert "- … **Je simule l'ordre.**" in rendu
+    assert "- … **Je vérifie mon texte.**" in rendu
