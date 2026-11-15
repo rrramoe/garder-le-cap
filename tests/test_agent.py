@@ -18,7 +18,7 @@ pytestmark = pytest.mark.skipif(
     reason="data/prices_daily.csv absent : régénérez-le avec data/build_dataset.py",
 )
 
-CHAMPS = {"explication", "trace", "modele", "duree_s", "erreur"}
+CHAMPS = {"explication", "trace", "modele", "duree_s", "erreur", "garde_fou", "ancrage"}
 CHAMPS_ETAPE = {"etape", "outil", "arguments", "resultat_resume", "resultat"}
 MOTS_INTERDITS = ("bonne idée", "mauvaise idée", "je recommande", "je conseille")
 

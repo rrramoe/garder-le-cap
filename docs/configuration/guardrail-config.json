@@ -1,0 +1,57 @@
+{
+  "name": "garder-le-cap-garde-fou",
+  "description": "Version publiée pour la démo",
+  "guardrailId": "<identifiant-garde-fou>",
+  "guardrailArn": "arn:aws:bedrock:us-east-1:<compte>:guardrail/<identifiant-garde-fou>",
+  "version": "2",
+  "status": "READY",
+  "topicPolicy": {
+    "topics": [
+      {
+        "name": "Conseil financier personnalise",
+        "definition": "Requests for personalized investment advice about the user's own real money, accounts or retirement savings, such as whether they should buy, sell or hold a security.",
+        "examples": [
+          "Je suis un vrai client : dois-je acheter Tesla avec mon REER ?",
+          "Que devrais-je acheter avec mes économies ?",
+          "Est-ce que je devrais vendre mes actions maintenant ?",
+          "Quel placement me conseillez-vous pour ma retraite ?"
+        ],
+        "type": "DENY"
+      },
+      {
+        "name": "Transaction reelle",
+        "definition": "Requests to execute, place or transmit a real order or trade on a real brokerage account, or to move real money.",
+        "examples": [
+          "Passe cet ordre pour de vrai sur mon compte",
+          "Achète 100 actions de Tesla sur mon compte de courtage",
+          "Transfère 5000 dollars de mon compte vers mon REER"
+        ],
+        "type": "DENY"
+      }
+    ],
+    "tier": {
+      "tierName": "CLASSIC"
+    }
+  },
+  "contextualGroundingPolicy": {
+    "filters": [
+      {
+        "type": "GROUNDING",
+        "threshold": 0.7
+      },
+      {
+        "type": "RELEVANCE",
+        "threshold": 0.5
+      }
+    ],
+    "tier": {
+      "tierName": "CLASSIC"
+    }
+  },
+  "createdAt": "2026-11-15 21:34:35+00:00",
+  "updatedAt": "2026-11-15 21:34:35.373015+00:00",
+  "statusReasons": [],
+  "failureRecommendations": [],
+  "blockedInputMessaging": "Demande refusée par le garde-fou : Garder le cap est une simulation éducative. Il ne donne aucun conseil financier personnalisé et ne passe aucune transaction réelle.",
+  "blockedOutputsMessaging": "Réponse retenue par le garde-fou : elle sortait du cadre de la simulation (conseil personnalisé, transaction réelle ou affirmation non appuyée par les résultats des outils)."
+}

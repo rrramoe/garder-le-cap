@@ -2,8 +2,9 @@
 
     inspecter(client, ticker, sens, pourcentage, modele=None) -> dict
 
-renvoie toujours `explication`, `trace`, `modele`, `duree_s` et `erreur`, sans jamais lever
-d'exception. Démo sans interface : `python -m agent.inspection robert TSLA achat 15`.
+renvoie toujours `explication`, `trace`, `modele`, `duree_s`, `erreur`, `garde_fou` (état du garde-fou
+Bedrock pendant l'inspection) et `ancrage` (vérification de l'explication par les résultats des outils),
+sans jamais lever d'exception. Démo sans interface : `python -m agent.inspection robert TSLA achat 15`.
 """
 from __future__ import annotations
 
@@ -13,6 +14,7 @@ import sys
 import time
 from pathlib import Path
 
+from . import garde_fou as _garde_fou
 from . import identifiants
 from .outils import creer_outils, identifiant_client
 
@@ -31,12 +33,26 @@ def nom_modele(modele=None) -> str:
     return (config or {}).get("model_id") or type(modele).__name__
 
 
+def options_garde_fou() -> dict:
+    """Options Strands qui font porter le garde-fou Bedrock par chaque appel au modèle, s'il est configuré.
+
+    Seul le dernier message texte de l'utilisateur (la consigne) est évalué en entrée ; chaque réponse du
+    modèle est évaluée en sortie.
+    """
+    config = _garde_fou.configuration_garde_fou()
+    if config is None:
+        return {}
+    return {"guardrail_id": config["id"], "guardrail_version": config["version"], "guardrail_trace": "enabled",
+            "guardrail_latest_message": True}
+
+
 def creer_modele(model_id: str):
     from botocore.config import Config
     from strands.models import BedrockModel
 
     return BedrockModel(model_id=model_id, region_name=REGION, max_tokens=JETONS_SORTIE,
-                        boto_client_config=Config(retries=TENTATIVES_SDK, read_timeout=120, connect_timeout=10))
+                        boto_client_config=Config(retries=TENTATIVES_SDK, read_timeout=120, connect_timeout=10),
+                        **options_garde_fou())
 
 
 def creer_agent(client, modele=None):
@@ -197,6 +213,10 @@ def inspecter(client, ticker, sens, pourcentage, modele=None) -> dict:
     """Fait inspecter l'ordre par l'agent. Ne lève jamais d'exception."""
     debut = time.monotonic()
     agent, explication, erreur, trace = None, None, None, []
+    config = _garde_fou.configuration_garde_fou()
+    simule = not (modele is None or isinstance(modele, str))
+    etat_garde_fou = {"actif": bool(config) and not simule, "version": config["version"] if config else None,
+                      "intervenu": False}
     try:
         modele_nom = nom_modele(modele)
     except Exception:
@@ -207,7 +227,11 @@ def inspecter(client, ticker, sens, pourcentage, modele=None) -> dict:
                                   str(sens).strip().lower(), pourcentage),
                          limits={"turns": LIMITE_TOURS})
         explication = texte_final(getattr(resultat, "message", None))
-        if explication is None:
+        if getattr(resultat, "stop_reason", "") == "guardrail_intervened":
+            etat_garde_fou["intervenu"] = True
+            explication = None
+            erreur = "Le garde-fou Bedrock a retenu l'explication : le rapport est affiché sans elle."
+        elif explication is None:
             erreur = ("L'agent n'a pas rédigé d'explication dans la limite de tours."
                       if getattr(resultat, "stop_reason", "") == "limit_turns"
                       else "L'agent n'a pas rédigé d'explication.")
@@ -217,8 +241,18 @@ def inspecter(client, ticker, sens, pourcentage, modele=None) -> dict:
         trace = extraire_trace(agent.messages) if agent is not None else []
     except Exception:
         trace = []
+    try:
+        ancrage = _garde_fou.verifier_ancrage(explication, trace, consigne(
+            identifiant_client(client), str(ticker).strip().upper(), str(sens).strip().lower(), pourcentage),
+            utiliser_garde_fou=not simule)
+    except Exception:
+        ancrage = {"statut": "indisponible", "message": "Vérification de l'ancrage impossible."}
+    if not etat_garde_fou["actif"]:
+        etat_garde_fou["avis"] = ("Garde-fou Bedrock non configuré : les appels au modèle ne sont pas filtrés."
+                                  if config is None else "Modèle simulé : garde-fou non appliqué.")
     return {"explication": explication, "trace": trace, "modele": modele_nom,
-            "duree_s": round(time.monotonic() - debut, 2), "erreur": erreur}
+            "duree_s": round(time.monotonic() - debut, 2), "erreur": erreur,
+            "garde_fou": etat_garde_fou, "ancrage": ancrage}
 
 
 def _afficher(r: dict) -> None:
@@ -228,7 +262,8 @@ def _afficher(r: dict) -> None:
     for e in r["trace"]:
         print(f"{e['etape']}. {e['outil']}({json.dumps(e['arguments'], ensure_ascii=False)})")
         print(f"   → {e['resultat_resume']}")
-    print(f"\nModèle : {r['modele']} · durée : {r['duree_s']} s")
+    print(f"\nAncrage : {r['ancrage'].get('message')}")
+    print(f"Modèle : {r['modele']} · durée : {r['duree_s']} s")
     if r["erreur"]:
         print(f"Erreur : {r['erreur']}")
 
