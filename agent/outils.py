@@ -57,21 +57,24 @@ def creer_outils(client) -> list:
         return api.lire_fiche_instrument(ticker)
 
     @tool(name="simuler_ordre")
-    def simuler_ordre(client_id: str, ticker: str, sens: str, pourcentage: float) -> dict:
+    def simuler_ordre(client_id: str, ticker: str, sens: str, pourcentage: float, operation: str = "comptant") -> dict:
         """Simule l'ordre sur le portefeuille du client : contraintes strictes, notes avant et après,
-        score, verdict (compatible, en_tension, incompatible) et direction.
+        score, verdict (compatible, en_tension, incompatible), direction, et pour la marge ou le découvert
+        le levier et le contrôle d'expérience (`operation`).
 
         Args:
             client_id: Identifiant du client de l'inspection.
             ticker: Symbole de l'instrument.
             sens: « achat » ou « vente ».
             pourcentage: Montant de l'ordre en % du portefeuille (15 = 15 %).
+            operation: « comptant » (par défaut), « marge » (achat sur marge) ou « decouvert » (vente à découvert).
         """
         c, erreur = client_pour(client_id)
-        return erreur or api.simuler_ordre(c, ticker, sens, pourcentage)
+        return erreur or api.simuler_ordre(c, ticker, sens, pourcentage, operation)
 
     @tool(name="chercher_taille_compatible")
-    def chercher_taille_compatible(client_id: str, ticker: str, sens: str, pourcentage: float) -> dict:
+    def chercher_taille_compatible(client_id: str, ticker: str, sens: str, pourcentage: float,
+                                   operation: str = "comptant") -> dict:
         """Cherche la plus grande taille d'ordre (pas de 0,5 %, jusqu'au montant demandé) dont le score
         atteint 50, avec la courbe du score selon la taille. Ne se lance pas si une contrainte stricte est violée.
 
@@ -80,9 +83,10 @@ def creer_outils(client) -> list:
             ticker: Symbole de l'instrument.
             sens: « achat » ou « vente ».
             pourcentage: Montant demandé en % du portefeuille.
+            operation: « comptant » (par défaut), « marge » ou « decouvert », comme pour simuler_ordre.
         """
         c, erreur = client_pour(client_id)
-        return erreur or api.chercher_taille_compatible(c, ticker, sens, pourcentage)
+        return erreur or api.chercher_taille_compatible(c, ticker, sens, pourcentage, operation)
 
     @tool(name="lister_instruments")
     def lister_instruments(classe: str = "toutes") -> dict:

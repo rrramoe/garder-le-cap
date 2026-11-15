@@ -1,6 +1,6 @@
 """Point d'entrée de l'agent d'inspection (Strands Agents sur Amazon Bedrock).
 
-    inspecter(client, ticker, sens, pourcentage, modele=None) -> dict
+    inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptant") -> dict
 
 renvoie toujours `explication`, `trace`, `modele`, `duree_s`, `erreur`, `garde_fou` (état du garde-fou
 Bedrock pendant l'inspection) et `ancrage` (vérification de l'explication par les résultats des outils),
@@ -67,9 +67,15 @@ def creer_agent(client, modele=None):
                  retry_strategy=ModelRetryStrategy(max_attempts=3, initial_delay=2, max_delay=16))
 
 
-def consigne(client_id: str, ticker: str, sens: str, pourcentage) -> str:
-    return (f"Inspection demandée.\nClient : client_id=\"{client_id}\".\n"
-            f"Ordre simulé : {sens} de {pourcentage} % du portefeuille en {ticker}.\n"
+LIBELLES_OPERATIONS = {"marge": "achat sur marge", "decouvert": "vente à découvert"}
+
+
+def consigne(client_id: str, ticker: str, sens: str, pourcentage, operation: str = "comptant") -> str:
+    ordre = f"Ordre simulé : {sens} de {pourcentage} % du portefeuille en {ticker}.\n"
+    if operation != "comptant":
+        ordre = (f"Ordre simulé : {LIBELLES_OPERATIONS.get(operation, operation)} ({sens}) de {pourcentage} % du "
+                 f"portefeuille en {ticker}, operation=\"{operation}\".\n")
+    return (f"Inspection demandée.\nClient : client_id=\"{client_id}\".\n" + ordre +
             "Monte le dossier avec les outils, puis rédige le rapport.")
 
 
@@ -152,6 +158,10 @@ def resumer(outil: str, r) -> str:
             cs = r.get("contraintes_strictes", {})
             if cs.get("violee"):
                 texte += f" Contrainte stricte violée : {', '.join(cs.get('themes_violes') or [])}."
+            op = r.get("operation") or {}
+            if op.get("code") not in (None, "comptant"):
+                texte += (f" {op.get('libelle')} : levier {_nombre(op.get('levier_apres'), 2)}, contrôle d'expérience "
+                          f"« {(op.get('controle_experience') or {}).get('niveau')} ».")
             return texte
         if outil == "chercher_taille_compatible":
             if not r.get("lancee", True):
@@ -212,7 +222,7 @@ def message_erreur(e: Exception) -> str:
 
 # --- Point d'entrée -----------------------------------------------------------------------------
 
-def inspecter(client, ticker, sens, pourcentage, modele=None) -> dict:
+def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptant") -> dict:
     """Fait inspecter l'ordre par l'agent. Ne lève jamais d'exception."""
     debut = time.monotonic()
     agent, explication, erreur, trace = None, None, None, []
@@ -227,7 +237,7 @@ def inspecter(client, ticker, sens, pourcentage, modele=None) -> dict:
     try:
         agent = creer_agent(client, modele)
         resultat = agent(consigne(identifiant_client(client), str(ticker).strip().upper(),
-                                  str(sens).strip().lower(), pourcentage),
+                                  str(sens).strip().lower(), pourcentage, str(operation or "comptant").strip().lower()),
                          limits={"turns": LIMITE_TOURS})
         explication = texte_final(getattr(resultat, "message", None))
         if getattr(resultat, "stop_reason", "") == "guardrail_intervened":
@@ -273,16 +283,17 @@ def _afficher(r: dict) -> None:
 
 def main(argv=None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
-    if len(argv) != 4:
-        print("Usage : python -m agent.inspection <client> <ticker> <achat|vente> <pourcentage>")
+    if len(argv) not in (4, 5):
+        print("Usage : python -m agent.inspection <client> <ticker> <achat|vente> <pourcentage> [comptant|marge|decouvert]")
         return 2
-    client, ticker, sens, pourcentage = argv
+    client, ticker, sens, pourcentage = argv[:4]
+    operation = argv[4] if len(argv) == 5 else "comptant"
     try:
         pourcentage = float(pourcentage.replace(",", "."))
     except ValueError:
         print(f"Pourcentage invalide : « {pourcentage} ».")
         return 2
-    r = inspecter(client, ticker, sens, pourcentage)
+    r = inspecter(client, ticker, sens, pourcentage, operation=operation)
     _afficher(r)
     return 1 if r["erreur"] else 0
 
