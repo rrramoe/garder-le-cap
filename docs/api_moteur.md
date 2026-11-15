@@ -61,7 +61,26 @@ Notes du portefeuille actuel, sans ordre : `score`, `dimension_min`, `mesure_min
 | `contribution_risque_apres` | `{ticker, poids_pct, part_du_risque_pct}` : affiché, non noté |
 | `operation` | `{code, libelle, levier_avant, levier_apres, exposition_brute_apres_pct, exposition_empruntee_apres_pct, hypotheses, limites, controle_experience}` (voir plus bas) |
 | `solidite` | Voir `solidite` ci-dessous : le score après l'ordre sur 2022 seule et sur la période sans 2022 |
+| `cause` | Ce qui décide du verdict, lu dans les notes déjà calculées (voir `cause` ci-dessous) |
 | `periode` | Période des données, devise CAD |
+
+### `cause`
+
+Ce qui décide du verdict, sans aucune note nouvelle : `dimension`, `mesure`, `note` (le score), `sous_le_seuil`, `porte_par_l_ordre` (un instrument de l'ordre est-il en cause ?), `autres_mesures_sous_le_seuil` (`{dimension, mesure, note}`), et selon `type` :
+
+| `type` | Ce qui fait la mesure |
+|---|---|
+| `contrainte_stricte` | `themes_violes` : le verdict vient d'elles seules |
+| `risque` | `valeur` et `limite` (pire baisse et sa limite, plus `reference` ; ou durée sous l'eau et horizon), `part_du_risque_pct` des instruments de l'ordre |
+| `classe` | `classe`, `poids`, `min`, `cible`, `max`, `cote` (`au_dessus` ou `en_dessous`), `classes_des_ordres` |
+| `plafond` | `poids`, `plafond`, et `instrument` (plus grosse action, plus gros fonds) ou `secteur` ; rien de plus pour `crypto` |
+| `preference` | `theme`, `reponse`, `poids_expose`, `instruments` exposés |
+
+## `simuler_scenario(client, ordres)`
+
+Plusieurs ordres (1 à 4) appliqués ensemble : `ordres` est une liste de `{ticker, sens, pourcentage}` (+ `operation`). Les ventes passent d'abord et sont versées à l'encaisse ; les achats sont payés par l'encaisse. Un achat plus gros que l'encaisse plus les ventes renvoie l'erreur habituelle ; le total des ventes ne peut pas dépasser celui des achats (une vente sert seulement à payer un achat) ; un même instrument ne figure qu'une fois.
+
+Même résultat que `simuler_ordre`, plus `ordres` ; `ordre` est le premier ordre. Les contraintes strictes sont vérifiées pour chaque ordre (`detail` porte le `ticker`). Les formules sont celles de `simuler_ordre` ; la note de préférences dépend de l'ordre (thème recherché vendu, opération) : elle est calculée avec chaque ordre et la plus basse évaluation est gardée. Un scénario d'un seul ordre donne exactement `simuler_ordre`.
 
 ## `solidite(client, ticker, sens, pourcentage)`
 

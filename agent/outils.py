@@ -1,4 +1,4 @@
-"""Les cinq outils de l'agent : des enveloppes Strands autour de `moteur.api`.
+"""Les six outils de l'agent : des enveloppes Strands autour de `moteur.api`.
 
 Les outils sont créés pour une inspection et liés à son client. Le modèle passe un
 `client_id` ; si c'est celui de l'inspection, l'outil utilise la fiche reçue, y compris
@@ -11,7 +11,7 @@ from strands import tool
 from moteur import api
 
 NOMS_OUTILS = ("lire_fiche_client", "lire_fiche_instrument", "simuler_ordre", "chercher_taille_compatible",
-               "lister_instruments")
+               "lister_instruments", "simuler_scenario")
 
 
 def identifiant_client(client) -> str:
@@ -97,7 +97,23 @@ def creer_outils(client) -> list:
         """
         return api.lister_instruments(classe)
 
-    return [lire_fiche_client, lire_fiche_instrument, simuler_ordre, chercher_taille_compatible, lister_instruments]
+    @tool(name="simuler_scenario")
+    def simuler_scenario(client_id: str, ordres: list[dict]) -> dict:
+        """Simule plusieurs ordres appliqués ensemble (1 à 4), par exemple un achat partagé entre l'instrument et
+        un fonds diversifié, ou un achat payé par la vente d'une autre position. Les ventes sont versées à
+        l'encaisse et paient les achats ; leur total ne peut pas dépasser celui des achats. Même résultat que
+        simuler_ordre (verdict, score, direction, cause), plus la liste `ordres`.
+
+        Args:
+            client_id: Identifiant du client de l'analyse.
+            ordres: Liste de 1 à 4 ordres {"ticker": ..., "sens": "achat" ou "vente", "pourcentage": ...}
+                (et "operation" si besoin), en % du portefeuille.
+        """
+        c, erreur = client_pour(client_id)
+        return erreur or api.simuler_scenario(c, ordres)
+
+    return [lire_fiche_client, lire_fiche_instrument, simuler_ordre, chercher_taille_compatible, lister_instruments,
+            simuler_scenario]
 
 
 NOM_OUTIL_APPORT = "decrire_apport"

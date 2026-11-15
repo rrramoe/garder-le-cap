@@ -439,6 +439,7 @@ def simuler(fiche: dict, ticker: str, sens: str, pourcentage: float, operation: 
         "direction": dirn,
         "contribution_risque_apres": contribution_risque(port_apres, ticker),
         "operation": bloc_operation(port_avant, port_apres, operation, fiche, apres),
+        "cause": cause(fiche, [ordre], cs, apres, port_apres),
     }
 
 
@@ -472,3 +473,129 @@ def taille_compatible(fiche: dict, ticker: str, sens: str, pourcentage: float, o
         issue = "compatible_avec_ajustement"
     return {"lancee": True, "taille_compatible_pct": taille, "taille_demandee_pct": float(pourcentage), "issue": issue,
             "pas_pct": PAS_TAILLE, "courbe": courbe, "contraintes_strictes": cs}
+
+
+# ---------------------------------------------------------------- cause du verdict
+
+PLAFONDS = ("plus_grosse_action", "plus_gros_fonds", "plus_gros_secteur", "crypto")
+
+
+def cause(fiche: dict, ordres: list, cs: dict, apres: dict, port_apres: dict) -> dict:
+    """Ce qui décide du verdict, lu dans les notes déjà calculées : aucune note nouvelle.
+
+    `type` : `contrainte_stricte`, `risque`, `classe`, `plafond` ou `preference`, avec ce qui fait la mesure
+    (l'instrument et son poids pour un plafond, la classe et sa fourchette, le thème et son exposition, la mesure
+    de risque et sa limite). `porte_par_l_ordre` dit si un instrument de l'ordre est en cause.
+    """
+    tickers = [o["ticker"] for o in ordres]
+    if cs["violee"]:
+        return {"type": "contrainte_stricte", "themes_violes": cs["themes_violes"], "sous_le_seuil": True,
+                "libelle": "Une contrainte stricte est violée : le verdict vient d'elle seule."}
+    dim, mes = apres["dimension_min"], apres["mesure_min"]
+    m = apres["notes"][dim]["mesures"].get(mes, {}) if mes else {}
+    c = {"dimension": dim, "mesure": mes, "note": apres["score"], "sous_le_seuil": apres["score"] < SEUIL_COMPATIBLE}
+    if dim == "risque":
+        c["type"] = "risque"
+        if mes == "ampleur":
+            c.update(valeur=m.get("pire_baisse"), limite=m.get("pire_baisse_limite"),
+                     reference=m.get("pire_baisse_reference"))
+        else:
+            c.update(valeur=m.get("temps_sous_l_eau_annees"), limite=m.get("horizon_annees"),
+                     non_recupere=m.get("non_recupere"))
+        c["part_du_risque_pct"] = {t: contribution_risque(port_apres, t)["part_du_risque_pct"] for t in tickers
+                                   if t in port_apres}
+        c["porte_par_l_ordre"] = any(o["sens"] == "achat" for o in ordres)
+    elif mes and mes.startswith("classe_"):
+        classe = mes[len("classe_"):]
+        c.update(type="classe", classe=classe, poids=m.get("poids"), min=m.get("min"), cible=m.get("cible"),
+                 max=m.get("max"), cote="au_dessus" if m.get("poids", 0) > m.get("cible", 0) else "en_dessous",
+                 classes_des_ordres={t: instruments.fiche(t)["classe_politique"] for t in tickers})
+        c["porte_par_l_ordre"] = classe in c["classes_des_ordres"].values()
+    elif mes in PLAFONDS:
+        c.update(type="plafond", poids=m.get("poids"), plafond=m.get("plafond"))
+        if mes == "plus_gros_secteur":
+            c["secteur"] = m.get("secteur")
+            c["porte_par_l_ordre"] = any(instruments.fiche(t)["secteur"] == m.get("secteur")
+                                         and instruments.est_action_individuelle(t) for t in tickers)
+        elif mes == "crypto":
+            c["porte_par_l_ordre"] = any(instruments.fiche(t)["classe_actif"] == "crypto" for t in tickers)
+        else:
+            c["instrument"] = m.get("ticker")
+            c["porte_par_l_ordre"] = m.get("ticker") in tickers
+    else:
+        c.update(type="preference", theme=mes, reponse=m.get("reponse"), poids_expose=m.get("poids_expose"),
+                 instruments=m.get("instruments") or {})
+        c["porte_par_l_ordre"] = any(t in (m.get("instruments") or {}) for t in tickers) or bool(m.get("operation"))
+    c["autres_mesures_sous_le_seuil"] = [
+        {"dimension": d, "mesure": k, "note": v["note"]}
+        for d, n in apres["notes"].items() for k, v in n["mesures"].items()
+        if v["note"] < SEUIL_COMPATIBLE and (d, k) != (dim, mes)]
+    return c
+
+
+# ---------------------------------------------------------------- scénario de plusieurs ordres
+
+MAX_ORDRES_SCENARIO = 4
+
+
+def _jambes(ordres) -> list:
+    if not isinstance(ordres, (list, tuple)) or not 1 <= len(ordres) <= MAX_ORDRES_SCENARIO:
+        raise ErreurOrdre(f"Un scénario compte de 1 à {MAX_ORDRES_SCENARIO} ordres.")
+    jambes = []
+    for o in ordres:
+        if not isinstance(o, dict):
+            raise ErreurOrdre("Chaque ordre du scénario est un objet {ticker, sens, pourcentage}.")
+        try:
+            pct = float(o.get("pourcentage"))
+        except (TypeError, ValueError):
+            raise ErreurOrdre(f"Montant invalide : « {o.get('pourcentage')} ». Indiquez un pourcentage du portefeuille.")
+        jambes.append({"ticker": str(o.get("ticker", "")).strip().upper(), "sens": str(o.get("sens", "")).strip().lower(),
+                       "pourcentage": pct, "operation": str(o.get("operation") or "comptant").strip().lower()})
+    tickers = [j["ticker"] for j in jambes]
+    if len(set(tickers)) != len(tickers):
+        raise ErreurOrdre("Un même instrument apparaît deux fois dans le scénario : regroupez ces ordres.")
+    achats = sum(j["pourcentage"] for j in jambes if j["sens"] == "achat")
+    ventes = sum(j["pourcentage"] for j in jambes if j["sens"] == "vente")
+    if achats > EPS and ventes > achats + EPS:
+        raise ErreurOrdre(f"Dans un scénario, les ventes servent à payer les achats : leur total ({ventes:g} %) ne peut "
+                          f"pas dépasser celui des achats ({achats:g} %).")
+    return jambes
+
+
+def simuler_scenario(fiche: dict, ordres: list) -> dict:
+    """Plusieurs ordres appliqués ensemble (ventes d'abord, versées à l'encaisse ; achats payés par l'encaisse).
+
+    Même forme que `simuler`, plus `ordres`. Notes, verdict et direction viennent des formules de `simuler` ;
+    chaque ordre passe sa propre opération et son propre thème à la note de préférences, et la plus basse est gardée.
+    """
+    jambes = _jambes(ordres)
+    port_avant = fiche["portefeuille_pct"]
+    port_apres = port_avant
+    for j in sorted(jambes, key=lambda j: j["sens"] != "vente"):
+        port_apres = appliquer_ordre(port_apres, j["ticker"], j["sens"], j["pourcentage"], j["operation"])
+    details = []
+    for j in jambes:
+        for d in contraintes_strictes(fiche, j["ticker"], j["sens"], j["operation"])["detail"]:
+            details.append({**d, "ticker": j["ticker"]})
+    violes = list(dict.fromkeys(d["theme"] for d in details if d["statut"] == "violee"))
+    cs = {"violee": bool(violes), "themes_violes": violes, "detail": details}
+    avant = evaluer(port_avant, fiche)
+    apres = min((evaluer(port_apres, fiche, j) for j in jambes), key=lambda ev: ev["score"])
+    dirn = direction(avant["score"], apres["score"])
+    if cs["violee"]:
+        dirn["remarque"] = "Direction lue sur les notes seulement : une contrainte stricte est violée, l'ordre est incompatible."
+    operation = next((j["operation"] for j in jambes if j["operation"] != "comptant"), "comptant")
+    return {
+        "ordre": jambes[0],
+        "ordres": jambes,
+        "portefeuille_avant_pct": port_avant,
+        "portefeuille_apres_pct": port_apres,
+        "contraintes_strictes": cs,
+        "avant": avant,
+        "apres": apres,
+        "verdict": verdict(cs, apres["score"]),
+        "direction": dirn,
+        "contribution_risque_apres": contribution_risque(port_apres, jambes[0]["ticker"]),
+        "operation": bloc_operation(port_avant, port_apres, operation, fiche, apres),
+        "cause": cause(fiche, jambes, cs, apres, port_apres),
+    }

@@ -177,9 +177,10 @@ def resumer(outil: str, r) -> str:
                      f"{_pct(s.get('volatilite_annualisee'))}, pire baisse {_pct(s.get('pire_baisse'))} ; "
                      f"étiquettes : {', '.join(vraies) or 'aucune'}")
             return texte + (f" ; indéterminées : {', '.join(indet)}." if indet else ".")
-        if outil == "simuler_ordre":
+        if outil in ("simuler_ordre", "simuler_scenario"):
             v = r.get("verdict", {})
-            texte = (f"Verdict : {v.get('libelle')} ; score {_nombre(r.get('score'))} "
+            texte = f"Scénario : {decrire_ordres(r.get('ordres') or [])}. " if outil == "simuler_scenario" else ""
+            texte += (f"Verdict : {v.get('libelle')} ; score {_nombre(r.get('score'))} "
                      f"(avant {_nombre(r.get('avant', {}).get('score'))}) ; note la plus basse : "
                      f"{DIMENSIONS.get(r.get('dimension_min'), r.get('dimension_min'))} / {_mesure(r.get('mesure_min'))} ; "
                      f"{r.get('direction', {}).get('libelle')}.")
@@ -216,6 +217,19 @@ def resume_etape(outil: str, arguments: dict, resultat, ticker_ordre: str | None
         if ticker and ticker != str(ticker_ordre).strip().upper():
             resume = f"Substitut testé ({ticker}) : {resume}"
     return resume
+
+
+def _taille(x) -> str:
+    """Un pourcentage d'ordre sans décimale inutile : 15 → « 15 », 7.5 → « 7,5 »."""
+    try:
+        return f"{float(x):g}".replace(".", ",")
+    except (TypeError, ValueError):
+        return str(x)
+
+
+def decrire_ordres(ordres: list) -> str:
+    """« achat de 7,5 % de TSLA, achat de 7,5 % de XIU.TO »."""
+    return ", ".join(f"{o.get('sens')} de {_taille(o.get('pourcentage'))} % de {o.get('ticker')}" for o in ordres or [])
 
 
 def extraire_trace(messages) -> list:
@@ -258,6 +272,93 @@ def extraire_substitut(trace: list, ticker_ordre: str) -> dict | None:
                     "nature": "possibilite_testee",
                     "avertissement": "Possibilité testée par l'agent, pas une recommandation."}
     return None
+
+
+# --- Pistes testées ------------------------------------------------------------------------------
+
+FAMILLES = {"montant_reduit": "Montant plus petit", "autre_instrument": "Autre instrument",
+            "achat_partage": "Achat partagé avec un fonds diversifié",
+            "vente_pour_financer": "Achat payé par une vente"}
+
+
+def _ordre(ticker, sens, pourcentage, operation=None) -> dict:
+    o = {"ticker": str(ticker).strip().upper(), "sens": str(sens).strip().lower(), "pourcentage": float(pourcentage)}
+    if operation and operation != "comptant":
+        o["operation"] = operation
+    return o
+
+
+def _piste(famille, description, ordres, r, etape) -> dict:
+    v = r.get("verdict") or {}
+    d = r.get("direction") or {}
+    return {"famille": famille, "libelle_famille": FAMILLES[famille], "description": description, "ordres": ordres,
+            "verdict": {"code": v.get("code"), "libelle": v.get("libelle")}, "score": r.get("score"),
+            "direction": {"cas": d.get("cas"), "libelle": d.get("libelle")} if d else None, "etape": etape}
+
+
+def _piste_simulation(r: dict, ordre_demande: dict, etape) -> dict | None:
+    """Une simulation (simuler_ordre ou simuler_scenario) lue comme une piste, ou None si c'est l'ordre lui-même."""
+    from moteur.notation import EPS
+
+    jambes = r.get("ordres") or [r.get("ordre") or {}]
+    t0, s0, p0 = ordre_demande["ticker"], ordre_demande["sens"], ordre_demande["pourcentage"]
+    lisibles = [_ordre(j.get("ticker"), j.get("sens"), j.get("pourcentage"), j.get("operation")) for j in jambes]
+    ventes = [j for j in lisibles if j["sens"] == "vente"]
+    achats = [j for j in lisibles if j["sens"] == "achat"]
+    if len(lisibles) == 1:
+        j = lisibles[0]
+        if j["ticker"] == t0 and j["sens"] == s0:
+            if abs(j["pourcentage"] - p0) < EPS:
+                return None
+            return _piste("montant_reduit", f"{s0.capitalize()} de {_taille(j['pourcentage'])} % au lieu de "
+                          f"{_taille(p0)} % ({t0})", lisibles, r, etape)
+        return _piste("autre_instrument", f"{j['sens'].capitalize()} de {_taille(j['pourcentage'])} % de "
+                      f"{j['ticker']} à la place de {t0}", lisibles, r, etape)
+    if ventes and achats:
+        a = ", ".join(f"{_taille(j['pourcentage'])} % de {j['ticker']}" for j in achats)
+        v = ", ".join(f"{_taille(j['pourcentage'])} % de {j['ticker']}" for j in ventes)
+        return _piste("vente_pour_financer", f"Achat de {a} payé par la vente de {v}", lisibles, r, etape)
+    return _piste("achat_partage", "Achat partagé : " + ", ".join(
+        f"{_taille(j['pourcentage'])} % de {j['ticker']}" for j in lisibles), lisibles, r, etape)
+
+
+def extraire_pistes(trace: list, ticker, sens, pourcentage, operation="comptant") -> list:
+    """Les pistes testées, dans l'ordre, construites par le code à partir des résultats des outils de la trace.
+
+    Chaque piste : `famille`, `libelle_famille`, `description`, `ordres`, `verdict` ({code, libelle}), `score`,
+    `direction` ({cas, libelle}) et `etape`. Le texte du modèle n'y entre jamais ; un appel en erreur n'en fait pas.
+    """
+    from moteur import notation
+
+    demande = _ordre(ticker, sens, pourcentage)
+    pistes, score_avant = [], None
+    for e in trace or []:
+        r = e.get("resultat")
+        if not isinstance(r, dict) or "erreur" in r:
+            continue
+        if e.get("outil") in ("simuler_ordre", "simuler_scenario"):
+            if score_avant is None:
+                score_avant = (r.get("avant") or {}).get("score")
+            p = _piste_simulation(r, demande, e.get("etape"))
+            if p:
+                pistes.append(p)
+        elif e.get("outil") == "chercher_taille_compatible" and r.get("lancee", True) and r.get("courbe"):
+            courbe = r["courbe"]
+            taille = r.get("taille_compatible_pct")
+            point = (next(p for p in courbe if p["taille_pct"] == taille) if taille is not None
+                     else max(courbe, key=lambda p: p["score"]))
+            v = notation.verdict(r.get("contraintes_strictes") or {"violee": False, "themes_violes": []}, point["score"])
+            d = notation.direction(score_avant, point["score"]) if score_avant is not None else {}
+            t = str(r.get("ticker") or demande["ticker"]).strip().upper()
+            if taille is not None:
+                description = (f"{demande['sens'].capitalize()} de {_taille(taille)} % au lieu de "
+                               f"{_taille(r.get('taille_demandee_pct'))} % ({t})")
+            else:
+                description = f"Aucun montant compatible jusqu'à {_taille(r.get('taille_demandee_pct'))} % ({t})"
+            pistes.append(_piste("montant_reduit", description,
+                                 [_ordre(t, demande["sens"], point["taille_pct"], r.get("operation"))],
+                                 {"verdict": v, "score": point["score"], "direction": d}, e.get("etape")))
+    return pistes
 
 
 # --- Erreurs ------------------------------------------------------------------------------------
@@ -339,7 +440,14 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
     return {"explication": explication, "trace": trace, "modele": modele_nom,
             "duree_s": round(time.monotonic() - debut, 2), "erreur": erreur,
             "garde_fou": etat_garde_fou, "ancrage": ancrage,
-            "substitut": extraire_substitut(trace, ticker)}
+            "substitut": extraire_substitut(trace, ticker), "pistes": _pistes_sures(trace, ticker, sens, pourcentage)}
+
+
+def _pistes_sures(trace, ticker, sens, pourcentage) -> list:
+    try:
+        return extraire_pistes(trace, ticker, sens, pourcentage)
+    except Exception:
+        return []
 
 
 def _afficher(r: dict) -> None:

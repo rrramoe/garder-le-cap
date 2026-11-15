@@ -18,7 +18,7 @@ pytestmark = pytest.mark.skipif(
     reason="data/prices_daily.csv absent : régénérez-le avec data/build_dataset.py",
 )
 
-CHAMPS = {"explication", "trace", "modele", "duree_s", "erreur", "garde_fou", "ancrage", "substitut"}
+CHAMPS = {"explication", "trace", "modele", "duree_s", "erreur", "garde_fou", "ancrage", "substitut", "pistes"}
 CHAMPS_ETAPE = {"etape", "outil", "arguments", "resultat_resume", "resultat"}
 MOTS_INTERDITS = ("bonne idée", "mauvaise idée", "je recommande", "je conseille")
 
@@ -343,3 +343,69 @@ def test_suivi_qui_leve_ne_casse_pas_l_analyse():
         raise RuntimeError("affichage en panne")
     r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(SCENARIO_ROBERT), sur_etape=casse)
     assert r["erreur"] is None and r["explication"] == "**Verdict** : en tension." and len(r["trace"]) == 4
+
+
+# --- Pistes testées (construites par le code) ---------------------------------------------------
+
+PARTAGE = [{"ticker": "TSLA", "sens": "achat", "pourcentage": 7.5}, {"ticker": "XIU.TO", "sens": "achat", "pourcentage": 7.5}]
+FINANCE = [{"ticker": "TSLA", "sens": "achat", "pourcentage": 15}, {"ticker": "XBB.TO", "sens": "vente", "pourcentage": 10}]
+SCENARIO_PISTES = SCENARIO_ROBERT[:4] + [
+    [("lister_instruments", {"classe": "actions"})],
+    [("simuler_ordre", {**ORDRE_ROBERT, "ticker": "SPY"})],
+    [("simuler_scenario", {"client_id": "robert", "ordres": PARTAGE})],
+    [("simuler_scenario", {"client_id": "robert", "ordres": FINANCE})],
+    "**Verdict** : en tension.",
+]
+
+
+def test_outil_simuler_scenario():
+    o = {t.tool_name: t for t in creer_outils("robert")}
+    assert o["simuler_scenario"]("robert", PARTAGE) == api.simuler_scenario("robert", PARTAGE)
+    assert "erreur" in o["simuler_scenario"]("mateo", PARTAGE)
+
+
+def test_pistes_construites_depuis_les_resultats_des_outils():
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(SCENARIO_PISTES))
+    pistes = r["pistes"]
+    assert [p["famille"] for p in pistes] == ["montant_reduit", "autre_instrument", "achat_partage",
+                                              "vente_pour_financer"]
+    assert [p["etape"] for p in pistes] == [4, 6, 7, 8]
+    taille = api.chercher_taille_compatible("robert", "TSLA", "achat", 15)
+    assert pistes[0]["ordres"] == [{"ticker": "TSLA", "sens": "achat", "pourcentage": taille["taille_compatible_pct"]}]
+    assert pistes[0]["verdict"]["code"] == "compatible" and pistes[0]["score"] >= 50
+    assert pistes[0]["direction"]["cas"] == "reste_dans_la_politique"
+    spy = api.simuler_ordre("robert", "SPY", "achat", 15)
+    assert pistes[1]["score"] == spy["score"] and pistes[1]["verdict"]["code"] == spy["verdict"]["code"]
+    assert pistes[1]["direction"]["cas"] == spy["direction"]["cas"] and "SPY" in pistes[1]["description"]
+    for p, ordres in ((pistes[2], PARTAGE), (pistes[3], FINANCE)):
+        s = api.simuler_scenario("robert", ordres)
+        assert p["score"] == s["score"] and p["verdict"]["code"] == s["verdict"]["code"]
+        assert [o["ticker"] for o in p["ordres"]] == [o["ticker"] for o in ordres]
+    assert "payé par la vente de 10 % de XBB.TO" in pistes[3]["description"]
+    assert all(set(p) == {"famille", "libelle_famille", "description", "ordres", "verdict", "score", "direction",
+                          "etape"} for p in pistes)
+    assert r["substitut"]["ticker"] == "SPY"                     # le champ existant reste cohérent
+    assert r["trace"][6]["resultat_resume"].startswith("Scénario : achat de 7,5 % de TSLA, achat de 7,5 % de XIU.TO.")
+    json.dumps(r)
+
+
+def test_pas_de_piste_pour_l_ordre_lui_meme_ni_pour_une_erreur():
+    scenario = SCENARIO_ROBERT[:3] + [
+        [("simuler_scenario", {"client_id": "robert", "ordres": [{"ticker": "RY.TO", "sens": "achat", "pourcentage": 15},
+                                                                  {"ticker": "SPY", "sens": "achat", "pourcentage": 5}]})],
+        "Texte."]
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(scenario))
+    assert r["pistes"] == []
+    assert inspection.inspecter("mateo", "XOM", "achat", 8, modele=ModeleSimule(
+        [[("simuler_ordre", {"client_id": "mateo", "ticker": "XOM", "sens": "achat", "pourcentage": 8})], "X."]))["pistes"] == []
+
+
+def test_montant_plus_petit_sans_taille_compatible():
+    trace = [{"etape": 1, "outil": "simuler_ordre", "arguments": {}, "resultat": api.simuler_ordre("robert", "BTC-USD", "achat", 5)},
+             {"etape": 2, "outil": "chercher_taille_compatible", "arguments": {},
+              "resultat": api.chercher_taille_compatible("robert", "BTC-USD", "achat", 5)}]
+    p = inspection.extraire_pistes(trace, "BTC-USD", "achat", 5)
+    if trace[1]["resultat"]["taille_compatible_pct"] is None:
+        assert p[0]["verdict"]["code"] == "en_tension" and p[0]["description"].startswith("Aucun montant compatible")
+    else:
+        assert p[0]["verdict"]["code"] == "compatible"

@@ -136,6 +136,25 @@ def simuler_ordre(client, ticker: str, sens: str, pourcentage: float, operation:
 
 
 @_api
+def simuler_scenario(client, ordres: list) -> dict:
+    """Plusieurs ordres (1 à 4) appliqués ensemble : même résultat que `simuler_ordre`, plus `ordres`.
+
+    Chaque ordre : `{ticker, sens, pourcentage}` (+ `operation`). Les ventes sont versées à l'encaisse et
+    paient les achats ; leur total ne dépasse pas celui des achats.
+    """
+    fiche = _client.construire_fiche(client)
+    r = notation.simuler_scenario(fiche, ordres)
+    r["solidite"] = _solidite.solidite(r["portefeuille_apres_pct"], fiche, r["apres"])
+    cles = list(SOURCES_NOTATION) + [d["source"] for d in r["contraintes_strictes"]["detail"] if d.get("source")]
+    cles.append("hypothese_solidite")
+    for j in r["ordres"]:
+        cles += notation.SOURCES_OPERATIONS.get(j["operation"], ())
+    return {"client": fiche["id"], **r, "score": r["apres"]["score"], "dimension_min": r["apres"]["dimension_min"],
+            "mesure_min": r["apres"]["mesure_min"], "periode": _periode_donnees(),
+            "sources": _sources(*dict.fromkeys(cles))}
+
+
+@_api
 def chercher_taille_compatible(client, ticker: str, sens: str, pourcentage: float, operation: str = "comptant") -> dict:
     """Plus grande taille (pas de 0,5 %) avec score >= 50, et courbe du score selon la taille."""
     fiche = _client.construire_fiche(client)
