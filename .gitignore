@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+data/prices_daily.csv
+data/corporate_actions.csv
+.env
+*.env
+.streamlit/secrets.toml
+.DS_Store
