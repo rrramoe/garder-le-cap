@@ -743,3 +743,19 @@ def test_explorateur_qui_conclut_sans_piste():
                              equipe=True, modele_explorateur=ModeleSimule(explorateur))
     assert r["agents"][1]["statut"] == "termine" and r["pistes"] == []
     assert r["agents"][1]["bilan"].startswith("aucun ajustement raisonnable")
+
+
+def test_correction_quand_le_texte_dit_exclu_pour_un_debutant():
+    from agent.inspection import motifs_de_correction
+    assert motifs_de_correction({"statut": "appuyee"}, "La vente à découvert est exclue pour un profil débutant.")
+    assert not motifs_de_correction({"statut": "appuyee"}, "Un thème que vous excluez. Vous êtes débutant.")
+
+
+def test_faits_de_l_instrument_compacts():
+    from agent.explorateur import faits_instrument
+    f = faits_instrument(api.lire_fiche_instrument("SHOP.TO"))
+    assert f["etiquettes"] and "sources" not in json.dumps(f)
+    if "faits_marche" in f:
+        assert set(f["faits_marche"]) == {"pire_annee", "baisses_de_plus_de_20_pct", "beta", "rendement_dividende",
+                                          "correlation_avec_taux_10_ans"}
+    assert len(json.dumps(f, ensure_ascii=False)) < 2500

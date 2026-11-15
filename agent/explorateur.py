@@ -56,12 +56,31 @@ def faits_client(fiche: dict) -> dict:
     return faits
 
 
+def _chemin(d, *cles):
+    for c in cles:
+        d = d.get(c) if isinstance(d, dict) else None
+    return d
+
+
 def faits_instrument(f: dict) -> dict:
+    """L'instrument en peu de mots : identité, statistiques, étiquettes (toutes, quelles qu'elles soient), quelques
+    faits de marché et son profil (entreprise ou fonds), sans sources ni dates de collecte."""
     s = f.get("statistiques_cad") or {}
-    return {"symbole": f.get("symbole"), "nom": f.get("nom"), "classe_politique": f.get("classe_politique"),
-            "classe_actif": f.get("classe_actif"), "secteur": f.get("secteur"), "devise": f.get("devise"),
-            "volatilite_annualisee": s.get("volatilite_annualisee"), "pire_baisse": s.get("pire_baisse"),
-            "etiquettes": {k: v.get("valeur") for k, v in (f.get("etiquettes") or {}).items()}}
+    fm = f.get("faits_marche") or {}
+    faits = {"symbole": f.get("symbole"), "nom": f.get("nom"), "classe_politique": f.get("classe_politique"),
+             "classe_actif": f.get("classe_actif"), "secteur": f.get("secteur"), "devise": f.get("devise"),
+             "volatilite_annualisee": s.get("volatilite_annualisee"), "pire_baisse": s.get("pire_baisse"),
+             "etiquettes": {k: v.get("valeur") for k, v in (f.get("etiquettes") or {}).items()}}
+    if fm:
+        faits["faits_marche"] = {
+            "pire_annee": _chemin(fm, "performance", "pire_annee"),
+            "baisses_de_plus_de_20_pct": _chemin(fm, "risque", "baisses_de_plus_de_20_pct"),
+            "beta": {m: v.get("beta") for m, v in (fm.get("marches") or {}).items() if isinstance(v, dict)},
+            "rendement_dividende": _chemin(fm, "revenu", "rendement_dividende"),
+            "correlation_avec_taux_10_ans": _chemin(fm, "taux", "correlation_avec_taux_10_ans")}
+    if isinstance(f.get("profil"), dict):
+        faits["profil"] = {k: v for k, v in f["profil"].items() if k not in ("source", "recupere_le", "sources")}
+    return faits
 
 
 def operations_avancees_permises(fiche: dict) -> bool:

@@ -554,6 +554,10 @@ def motifs_de_correction(ancrage: dict, explication: str | None = None) -> list:
         if not motifs:
             motifs.append("Le garde-fou Bedrock ne trouve pas l'appui d'un passage dans les résultats des outils : "
                           + str(ancrage.get("message", "")))
+    if explication and re.search(r"exclu[a-z]*[^.]*(débutant|expérience)|(débutant|expérience)[^.]*exclu", explication,
+                                 flags=re.IGNORECASE):
+        motifs.append("Le texte dit qu'une opération est exclue à cause de l'expérience : c'est faux, l'expérience ne "
+                      "change pas le verdict, seules les pistes de l'explorateur restent au comptant.")
     mots = nombre_de_mots(explication)
     if mots > LIMITE_MOTS:
         motifs.append(f"Le texte compte {mots} mots ; la limite absolue est de {LIMITE_MOTS} mots.")
