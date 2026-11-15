@@ -19,7 +19,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 CHAMPS = {"explication", "trace", "modele", "duree_s", "erreur", "garde_fou", "ancrage", "substitut", "pistes", "intention",
-          "agents"}
+          "agents", "correction"}
 CHAMPS_ETAPE = {"etape", "outil", "arguments", "resultat_resume", "resultat", "agent"}
 MOTS_INTERDITS = ("bonne idée", "mauvaise idée", "je recommande", "je conseille")
 
@@ -608,3 +608,37 @@ def test_redaction_annoncee_au_texte_final_seulement():
                          sur_etape=evenements.append)
     moments = [e["moment"] for e in evenements]
     assert moments.count("redaction") == 1 and moments.index("redaction") > moments.index("fin_outil")
+
+
+# --- Correction de son texte après vérification --------------------------------------------------
+
+def test_correction_apres_un_chiffre_faux():
+    scenario = SCENARIO_ROBERT + ["**Verdict** : en tension, avec un score de 39,6."]
+    scenario[4] = "**Verdict** : en tension, avec un score de 97,3."
+    evenements = []
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(scenario), equipe=False,
+                             sur_etape=evenements.append)
+    assert r["correction"]["faite"] and r["correction"]["reussie"]
+    assert r["correction"]["motifs"] == ["Le chiffre 97,3 ne figure dans aucun résultat d'outil."]
+    assert r["explication"] == "**Verdict** : en tension, avec un score de 39,6."
+    assert r["ancrage"]["chiffres_non_sources"] == []
+    assert r["trace"][-1]["outil"] == "corriger_le_texte" and r["trace"][-1]["agent"] == "principal"
+    assert r["trace"][-1]["resultat_resume"] == "L'agent a corrigé son texte après vérification."
+    moments = [e["moment"] for e in evenements]
+    assert moments[-5:] == ["redaction", "verification", "correction", "verification", "fin"]
+
+
+def test_correction_une_seule_fois():
+    scenario = SCENARIO_ROBERT + ["**Verdict** : score 12,3."]
+    scenario[4] = "**Verdict** : score 97,3."
+    modele = ModeleSimule(scenario)
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=modele, equipe=False)
+    assert r["correction"]["faite"] and not r["correction"]["reussie"]
+    assert r["ancrage"]["statut"] == "non_appuyee" and "12,3" in r["ancrage"]["message"]   # l'avis reste
+    assert modele.appels == 6                                                             # 5 tours + 1 réécriture
+
+
+def test_pas_de_correction_quand_le_texte_est_juste():
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(SCENARIO_ROBERT), equipe=False)
+    assert r["correction"] == {"faite": False, "motifs": []}
+    assert all(e["outil"] != "corriger_le_texte" for e in r["trace"])

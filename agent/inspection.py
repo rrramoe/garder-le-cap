@@ -484,13 +484,29 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
                                  (explo or {}).get("trace") or [])
     except Exception:
         trace = []
-    if explication:
-        suivi.emettre("verification")
-    try:
-        ancrage = _garde_fou.verifier_ancrage(explication, trace, consigne(identifiant_client(client), T, S, pourcentage),
-                                              utiliser_garde_fou=not simule)
-    except Exception:
-        ancrage = {"statut": "indisponible", "message": "Vérification de l'ancrage impossible."}
+    requete = consigne(identifiant_client(client), T, S, pourcentage)
+    ancrage = _verifier(explication, trace, requete, simule, suivi)
+    correction = {"faite": False, "motifs": []}
+    motifs = motifs_de_correction(ancrage) if explication else []
+    if motifs and agent is not None and not etat_garde_fou["intervenu"]:
+        # Une seule réécriture, vérifiée à son tour ; si elle échoue aussi, l'avis de la vérification reste.
+        suivi.emettre("correction")
+        correction = {"faite": True, "motifs": motifs, "reussie": False}
+        try:
+            reponse = agent(consigne_correction(motifs), limits={"turns": 2})
+            nouveau = texte_final(getattr(reponse, "message", None))
+            if getattr(reponse, "stop_reason", "") != "guardrail_intervened" and nouveau:
+                explication = nouveau
+                trace = fusionner_traces(extraire_trace(agent.messages, T), (explo or {}).get("trace") or [])
+                ancrage = _verifier(explication, trace, requete, simule, suivi)
+                correction["reussie"] = not motifs_de_correction(ancrage)
+        except Exception:
+            pass
+        trace = trace + [{"etape": len(trace) + 1, "agent": "principal", "outil": "corriger_le_texte",
+                          "arguments": {}, "resultat": {"motifs": motifs, "reussie": correction["reussie"]},
+                          "resultat_resume": ("L'agent a corrigé son texte après vérification."
+                                              if correction["reussie"] else
+                                              "L'agent a réécrit son texte après vérification ; des problèmes restent.")}]
     if not etat_garde_fou["actif"]:
         etat_garde_fou["avis"] = ("Garde-fou Bedrock non configuré : les appels au modèle ne sont pas filtrés."
                                   if config is None else "Modèle simulé : garde-fou non appliqué.")
@@ -504,7 +520,34 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
             "garde_fou": etat_garde_fou, "ancrage": ancrage,
             "substitut": extraire_substitut(trace, T), "pistes": pistes,
             "intention": (explo or {}).get("intention"),
-            "agents": decrire_agents(equipe, trace, envoi)}
+            "agents": decrire_agents(equipe, trace, envoi), "correction": correction}
+
+
+def _verifier(explication, trace, requete, simule, suivi) -> dict:
+    if explication:
+        suivi.emettre("verification")
+    try:
+        return _garde_fou.verifier_ancrage(explication, trace, requete, utiliser_garde_fou=not simule)
+    except Exception:
+        return {"statut": "indisponible", "message": "Vérification de l'ancrage impossible."}
+
+
+def motifs_de_correction(ancrage: dict) -> list:
+    """Les problèmes trouvés par les contrôles (chiffres non sourcés, passage non appuyé), en français."""
+    if (ancrage or {}).get("statut") != "non_appuyee":
+        return []
+    motifs = [f"Le chiffre {c} ne figure dans aucun résultat d'outil." for c in ancrage.get("chiffres_non_sources") or []]
+    if not motifs:
+        motifs.append("Le garde-fou Bedrock ne trouve pas l'appui d'un passage dans les résultats des outils : "
+                      + str(ancrage.get("message", "")))
+    return motifs
+
+
+def consigne_correction(motifs: list) -> str:
+    return ("Vérification de ton rapport par le code et le garde-fou : des problèmes ont été trouvés.\n- "
+            + "\n- ".join(motifs) +
+            "\nRéécris le rapport complet une fois, dans la même structure et la même limite de mots, sans appeler "
+            "d'outil. N'écris que des chiffres présents dans les résultats des outils ; retire ou remplace les autres.")
 
 
 def fusionner_traces(trace_principal: list, trace_explorateur: list) -> list:
