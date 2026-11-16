@@ -292,6 +292,17 @@ def ecart() -> tuple[str, str]:
          + f'<g class="{f.apparait(3.95, dy=0)}"><path d="M400 112 V228 M392 112 H408 M392 228 H408" fill="none" stroke="{BLANC}" stroke-width="1.8" stroke-linecap="round"/></g>'
          + texte(415, 175, "l'écart,", 13, BLANC, True, classe=f.apparait(4.25, dx=-6, dy=0))
          + texte(415, 192, "mesuré", 13, BLANC, True, classe=f.apparait(4.35, dx=-6, dy=0)))
+    # L'écart mesuré devient une note : le même cadran que dans les scènes 3 et 4, sans chiffre, à son niveau.
+    rj = 13.0
+    tourj = 2 * math.pi * rj
+    arcj = 0.75 * tourj
+    vide, pleine = "stroke-dasharray: 0.1 999;", f"stroke-dasharray: {arcj * 0.32:.1f} 999;"
+    c += (f'<g class="{f.apparait(4.5, dy=0, echelle=0.8)}">'
+          f'<circle cx="430" cy="141" r="{rj}" fill="none" stroke="{BLANC}" stroke-opacity=".16" stroke-width="5" stroke-linecap="round" '
+          f'stroke-dasharray="{arcj:.1f} {tourj:.1f}" transform="rotate(135 430 141)"/>'
+          f'<g transform="rotate(135 430 141)"><circle class="{f.cle([(0, vide), (4.65, vide), (5.3, pleine), (f.duree, pleine)])}" '
+          f'cx="430" cy="141" r="{rj}" fill="none" stroke="{AMBRE}" stroke-width="5" stroke-linecap="round" stroke-dasharray="{arcj * 0.32:.1f} 999"/></g>'
+          + texte(451, 145.5, "note", 12.5, CLAIR, True) + "</g>")
     return f.scene(decor + f.fin(c),
                    titre="Un ordre peut rester dans votre politique de placement ou s'en écarter : l'écart est mesuré")
 
