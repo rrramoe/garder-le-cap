@@ -1209,13 +1209,8 @@ def section_agent(rapport: dict) -> None:
     # Un paragraphe par point : chaque titre en gras ouvre un paragraphe, avec de l'air avant lui.
     texte = re.sub(r"\s*(\*\*(?:Le verdict|La raison|Ce qui est possible|Votre objectif|À savoir)\.\*\*)", r"\n\n\1", texte)
     st.markdown(texte.strip())
-    details = []
-    if agent.get("modele"):
-        details.append(f"Modèle : {agent['modele']}")
-    if agent.get("duree_s") is not None:
-        details.append(f"durée : {nombre(agent['duree_s'])} s")
     st.caption("Texte rédigé par l'agent à partir des résultats des outils. Aucun chiffre ne vient du "
-               "modèle de langage. " + " ; ".join(details))
+               "modèle de langage.")
     if (agent.get("correction") or {}).get("faite"):
         st.caption(CORRECTION_TEXTE)
     afficher_verification(agent)
@@ -1237,19 +1232,23 @@ def afficher_verification(agent: dict) -> None:
         st.warning(VERIFICATION_TEXTE["non_appuyee"])
     elif a.get("message"):
         st.caption(a["message"])
+
+
+def details_verification(agent: dict) -> list[str]:
+    """Le détail technique du contrôle, en français simple, pour les étapes repliées de l'analyse."""
+    a = agent.get("ancrage") or {}
     details = []
     if a.get("chiffres_non_sources"):
         details.append("chiffres absents des calculs : " + ", ".join(a["chiffres_non_sources"]))
     if (a.get("ancrage") or {}).get("score") is not None:
-        details.append(f"ancrage du passage le moins appuyé {nombre(a['ancrage']['score'], 2)} "
-                       f"(seuil {nombre(a['ancrage']['seuil'], 2)})")
+        details.append(f"accord du passage le moins appuyé avec les calculs : {nombre(a['ancrage']['score'], 2)} "
+                       f"(minimum demandé {nombre(a['ancrage']['seuil'], 2)})")
     gf = agent.get("garde_fou") or {}
     if gf.get("actif"):
         details.append(f"garde-fou Bedrock, version {gf.get('version')}")
     elif gf.get("avis"):
         details.append(gf["avis"])
-    if details:
-        st.caption("Contrôle : " + " ; ".join(details) + ".")
+    return details
 
 
 def section_etapes(rapport: dict, niveau: str) -> None:
@@ -1257,6 +1256,14 @@ def section_etapes(rapport: dict, niveau: str) -> None:
     if agent.get("trace") and not agent.get("erreur"):
         trace = agent["trace"]
         st.caption("Les outils appelés par l'agent, dans l'ordre.")
+        technique = []
+        if agent.get("modele"):
+            technique.append(f"modèle de langage : {agent['modele']}")
+        if agent.get("duree_s") is not None:
+            technique.append(f"durée de l'analyse : {nombre(agent['duree_s'])} s")
+        technique += details_verification(agent)
+        if technique:
+            st.caption("Détails techniques : " + " ; ".join(technique) + ".")
     else:
         trace = rapport["trace_moteur"]
         st.caption("Les appels au moteur de calcul faits par l'interface, dans l'ordre.")

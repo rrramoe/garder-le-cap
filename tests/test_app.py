@@ -182,6 +182,9 @@ def test_verification_de_l_explication(agent_simule):
     texte = _inspecter(at, "robert")
     assert "À lire avec prudence" in texte
     assert "chiffres absents des calculs : 56,3" in texte and "garde-fou Bedrock, version 2" in texte
+    # Rien à côté du modèle dans la lecture principale : ces détails vivent dans les étapes repliées.
+    assert "Détails techniques : " in texte and "Contrôle : " not in texte and "Modèle : " not in texte
+    assert "ancrage" not in texte
 
 
 def test_solidite_et_origine_des_fichiers(sans_agent):
