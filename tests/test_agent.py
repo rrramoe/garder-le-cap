@@ -11,7 +11,7 @@ from strands.models.model import Model
 
 from agent import identifiants, inspection
 from agent.outils import NOMS_OUTILS, creer_outils
-from moteur import notation, api, donnees
+from moteur import api, donnees, notation
 
 pytestmark = pytest.mark.skipif(
     not (donnees.dossier_donnees() / "prices_daily.csv").exists(),
@@ -78,11 +78,12 @@ SCENARIO_ROBERT = [
 # --- Outils -------------------------------------------------------------------------------------
 
 
+
 @pytest.fixture(autouse=True)
 def sans_geographie(monkeypatch):
-    """Ces essais portent sur les agents, construits sur l'ordre de Robert : la mesure géographique (testée dans
-    test_familles) est mise de côté pour garder un montant compatible à chercher."""
-    monkeypatch.setattr(notation, "mesure_geographie", lambda ex: {"note": None, "statut": "sans_objet"})
+    """Ces essais supposent que Robert part dans sa politique ; sa répartition géographique de départ (9 % d'actions
+    hors du Canada pour une limite de 11 %) l'en sort. Mise de côté ici seulement ; testée dans test_familles."""
+    monkeypatch.setattr(notation, "mesure_geographie", lambda *a: {"note": None, "statut": "sans_objet"})
 
 def test_outils_noms_snake_case():
     outils = creer_outils("robert")

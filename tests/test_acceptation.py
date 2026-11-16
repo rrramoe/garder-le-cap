@@ -30,12 +30,11 @@ def test_1_robert_tsla():
     assert r["dimension_min"] == "risque"
     assert r["mesure_min"] == "pire_annee"
     assert r["apres"]["notes"]["risque"]["mesures"]["ampleur"]["note"] == pytest.approx(40, abs=1)
-    # Avant l'ordre, la répartition géographique de Robert (70 % des actions au Canada) est déjà hors limite :
-    # l'achat d'un titre américain l'en rapproche, mais aucun montant ne ramène toutes les notes à 50.
-    assert r["direction"]["cas"] == "hors_politique_rapproche"
+    # Avant l'ordre, Robert a 9 % d'actions hors du Canada pour une cible de 21 % (limite 11 %) : déjà hors politique.
+    assert r["direction"]["cas"] == "hors_politique_aggrave"
     t = api.chercher_taille_compatible("robert", "TSLA", "achat", 15)
     assert t["lancee"] is True
-    assert t["taille_compatible_pct"] is None
+    assert t["taille_compatible_pct"] == 7.0
     assert len(t["courbe"]) == 30
 
 

@@ -1,7 +1,7 @@
 """Scénario de plusieurs ordres et cause du verdict (moteur), sans nouvelle note."""
 import pytest
 
-from moteur import notation, api, donnees
+from moteur import api, donnees
 
 pytestmark = pytest.mark.skipif(
     not (donnees.dossier_donnees() / "prices_daily.csv").exists(),
@@ -9,11 +9,6 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-
-@pytest.fixture(autouse=True)
-def sans_geographie(monkeypatch):
-    """Ces essais portent sur une autre règle : la mesure géographique (testée dans test_familles) est mise de côté."""
-    monkeypatch.setattr(notation, "mesure_geographie", lambda ex: {"note": None, "statut": "sans_objet"})
 
 def _jambe(ticker, sens, pct, **extra):
     return {"ticker": ticker, "sens": sens, "pourcentage": pct, **extra}
@@ -80,9 +75,10 @@ def test_cause_risque():
 
 
 def test_cause_plafond_d_une_action():
-    c = api.simuler_ordre("robert", "RY.TO", "achat", 15)["cause"]
+    # JNJ plutôt que RY.TO : un achat canadien de 15 % ferait décider la géographie des actions.
+    c = api.simuler_ordre("robert", "JNJ", "achat", 15)["cause"]
     assert c["type"] == "plafond" and c["mesure"] == "plus_grosse_action"
-    assert c["instrument"] == "RY.TO" and c["poids"] == 21.0 and c["plafond"] == 15 and c["porte_par_l_ordre"]
+    assert c["instrument"] == "JNJ" and c["poids"] == 20.0 and c["plafond"] == 15 and c["porte_par_l_ordre"]
 
 
 def test_cause_plafond_d_un_fonds_et_crypto():
@@ -94,7 +90,7 @@ def test_cause_plafond_d_un_fonds_et_crypto():
 
 def test_cause_contrainte_stricte_et_ordre_compatible():
     assert api.simuler_ordre("mateo", "XOM", "achat", 8)["cause"]["type"] == "contrainte_stricte"
-    c = api.simuler_ordre("robert", "XIU.TO", "achat", 2)["cause"]
+    c = api.simuler_ordre("robert", "SPY", "achat", 5)["cause"]
     assert c["sous_le_seuil"] is False
 
 
@@ -106,5 +102,5 @@ def test_cause_sans_nouvelle_note():
 
 
 def test_cause_porte_le_detail_de_la_mesure():
-    c = api.simuler_ordre("robert", "RY.TO", "achat", 15)["cause"]
-    assert c["detail_mesure"]["poids"] == 21.0 and c["detail_mesure"]["plafond"] == 15
+    c = api.simuler_ordre("robert", "JNJ", "achat", 15)["cause"]
+    assert c["detail_mesure"]["poids"] == 20.0 and c["detail_mesure"]["plafond"] == 15

@@ -331,28 +331,34 @@ def note_diversification(port: dict, fiche: dict) -> dict:
     else:
         mesures["plus_gros_fonds"] = {"note": 100.0, "ticker": None, "poids": 0.0,
                                       "plafond": plafonds["fonds_negocie_en_bourse"], "libelle": "Plus gros fonds négocié en bourse"}
-    mesures["geographie_actions"] = mesure_geographie(ex)
+    mesures["geographie_actions"] = mesure_geographie(ex, fourchettes["actions"]["cible"])
     return {**_noter(mesures), "poids_par_classe": classes}
 
 
-def mesure_geographie(ex: dict) -> dict:
-    """Part des actions canadiennes dans les actions, face à la répartition de référence de la banque."""
+def mesure_geographie(ex: dict, cible_actions: float) -> dict:
+    """Actions canadiennes et actions hors du Canada, en % du portefeuille, face à la référence de la banque.
+
+    Cibles : cible d'actions du profil x 40 % (Canada) et x 60 % (États-Unis 40 % + étranger 20 %) ; limites à
+    10 points de part et d'autre de chaque cible (RBC GAM, en % du portefeuille). La plus faible des deux décide.
+    """
     g = references.charger("limites_risque")["geographie_actions"]
+    parts, ecart = g["parts_des_actions_de_reference"], float(g["ecart_limite_points"])
     actions = {t: w for t, w in ex.items() if w > EPS and references.classe_politique(t) == "actions"}
-    total = sum(actions.values())
-    m = {"libelle": "Part des actions canadiennes dans les actions", "cible": g["cible_canada_pct"],
-         "limite_basse": g["cible_canada_pct"] - g["ecart_limite_points"],
-         "limite_haute": g["cible_canada_pct"] + g["ecart_limite_points"], "unite": "%",
-         "source": g["source_cible"], "source_limite": g["source_ecart"], "hypothese": "hypothese_geographie"}
-    if total <= EPS:
-        m.update(note=None, statut="sans_objet", phrase="aucune action")
-        return m
-    canada = sum(w for t, w in actions.items() if instruments.fiche(t)["devise"] == "CAD") / total * 100
-    m.update(valeur=canada, hors_canada=100 - canada,
-             note=note_lineaire(abs(canada - g["cible_canada_pct"]), 0.0, float(g["ecart_limite_points"])),
-             phrase=f"Canada {_fr(canada, 0)} % des actions, ailleurs {_fr(100 - canada, 0)} % ; "
-                    f"référence 40 / 60, limite {m['limite_basse']} à {m['limite_haute']} % au Canada")
-    return m
+    canada = sum(w for t, w in actions.items() if instruments.fiche(t)["devise"] == "CAD")
+    ailleurs = sum(actions.values()) - canada
+    cibles = {"canada": cible_actions * parts["canada"], "hors_canada": cible_actions * (parts["etats_unis"] + parts["etranger"])}
+    valeurs = {"canada": canada, "hors_canada": ailleurs}
+    sous = {k: {"valeur": valeurs[k], "cible": cibles[k], "limite_basse": cibles[k] - ecart, "limite_haute": cibles[k] + ecart,
+                "note": note_lineaire(abs(valeurs[k] - cibles[k]), 0.0, ecart)} for k in cibles}
+    k = min(sous, key=lambda x: sous[x]["note"])
+    noms = {"canada": "actions canadiennes", "hors_canada": "actions hors du Canada"}
+    return {"libelle": "Actions canadiennes et hors du Canada, en % du portefeuille, face à la référence de la banque",
+            "note": sous[k]["note"], "decide": k, "sous_mesures": sous, "valeur": sous[k]["valeur"],
+            "cible": sous[k]["cible"], "limite_basse": sous[k]["limite_basse"], "limite_haute": sous[k]["limite_haute"],
+            "unite": "%", "source": g["source_cible"], "source_limite": g["source_ecart"],
+            "phrase": (f"{noms[k]} {_fr(sous[k]['valeur'])} % du portefeuille ; cible {_fr(sous[k]['cible'])} %, "
+                       f"limites {_fr(sous[k]['limite_basse'])} à {_fr(sous[k]['limite_haute'])} % "
+                       f"(Canada {_fr(canada)} %, ailleurs {_fr(ailleurs)} %)")}
 
 
 # ---------------------------------------------------------------- préférences souples

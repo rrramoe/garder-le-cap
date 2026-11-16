@@ -125,12 +125,19 @@ def test_pire_annee_face_a_la_banque():
 
 
 def test_geographie_des_actions():
+    """En % du portefeuille : Canada face à cible d'actions x 40 %, ailleurs face à x 60 %, limites à 10 points."""
     r = api.etat_des_lieux("robert")
     m = r["notes"]["diversification"]["mesures"]["geographie_actions"]
     port = references.charger("personas")["personas"]["robert"]["portefeuille_pct"]
     u = pd.read_csv(D / "assets_universe.csv").set_index("ticker")
     act = {t: w for t, w in port.items() if t in CLASSES["actions"]["instruments"]}
-    canada = sum(w for t, w in act.items() if u.loc[t, "currency"] == "CAD") / sum(act.values()) * 100
-    assert m["valeur"] == pytest.approx(canada, abs=1e-6)
-    assert m["note"] == pytest.approx(max(0, 100 - 50 * abs(canada - 40) / 10), abs=1e-6)
-    assert (m["limite_basse"], m["cible"], m["limite_haute"]) == (30, 40, 50)
+    canada = sum(w for t, w in act.items() if u.loc[t, "currency"] == "CAD")
+    ailleurs = sum(act.values()) - canada
+    cible = PROFILS["conservateur"]["fourchettes"]["actions"]["cible"]            # 35
+    notes = {"canada": max(0, 100 - 50 * abs(canada - 0.4 * cible) / 10),
+             "hors_canada": max(0, 100 - 50 * abs(ailleurs - 0.6 * cible) / 10)}
+    assert (0.4 * cible, 0.6 * cible) == pytest.approx((14, 21))
+    assert m["sous_mesures"]["canada"]["valeur"] == pytest.approx(canada)
+    assert m["sous_mesures"]["hors_canada"]["valeur"] == pytest.approx(ailleurs)
+    assert m["note"] == pytest.approx(min(notes.values()), abs=1e-6)
+    assert m["decide"] == min(notes, key=notes.get)

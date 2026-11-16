@@ -58,6 +58,7 @@ def test_robert_tsla_en_tension(sans_agent):
     carte = _verdict(at)
     assert "En tension" in carte and "120 000 $" in carte and "15,0 %" in carte
     assert "pire année" in carte
+    assert "56 000 $" in texte and "7,0 %" in texte  # taille compatible, en dollars et en %
     assert AVIS in texte
     assert "chercher_taille_compatible" in texte  # étapes : appels du moteur faits par l'interface
 
@@ -112,7 +113,7 @@ def test_montant_en_dollars_et_type_d_ordre(sans_agent):
     assert len(prix) == 1 and prix[0].value > 0  # pré-rempli avec le dernier prix connu en CAD
     at.button(key="inspecter").click().run()
     assert not at.exception, at.exception
-    assert "En tension" in _verdict(at)
+    assert "Compatible" in _verdict(at)
     assert "exécuté à" in _textes(at)
 
 
