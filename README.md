@@ -8,7 +8,7 @@ L'outil renseigne, il ne conseille pas : le client propose, l'outil met l'idée 
 Le verdict suit la règle du maillon le plus faible : une chaîne n'est qu'aussi solide que son maillon le plus faible.
 Projet réalisé par Rami Houheche pour le Datathon PolyFinances 2026, défi AlphaForge AI.
 
-**Application en ligne :** _lien public à venir_
+**Application en ligne :** http://ec2-18-211-136-210.compute-1.amazonaws.com/
 
 ## Guide d'installation
 
@@ -22,7 +22,7 @@ Projet réalisé par Rami Houheche pour le Datathon PolyFinances 2026, défi Alp
 ### Installation
 
 ```bash
-git clone <adresse de ce dépôt> garder-le-cap
+git clone https://github.com/rrramoe/garder-le-cap.git garder-le-cap
 cd garder-le-cap
 uv venv --python 3.13 .venv
 uv pip install -r requirements.txt
@@ -116,8 +116,8 @@ Sans AWS, les tests qui appellent Bedrock, le garde-fou ou S3 sont sautés, de m
    - **Préférences** : l'ordre respecte-t-il mes préférences ?
 
    Chaque angle prend sa mesure la plus faible, et le verdict suit l'angle le plus faible : **compatible**, **en tension** ou **incompatible**. Rien ne se compense.
-4. **Deux agents** (Strands Agents sur Amazon Bedrock). Le **chef de dossier** monte le dossier de l'ordre et rédige l'explication pour ce client. Pour un ordre en tension, il envoie l'**explorateur**, qui cherche et teste des pistes (montant plus petit, autre instrument, achat partagé avec un fonds diversifié, achat payé par une vente).
-5. **Ce que le code garde pour lui** : chaque note, chaque score, chaque verdict et chaque piste vient du moteur (`moteur/api.py`), jamais d'un agent. Le code décide aussi quand l'explorateur part, borne ses essais et vérifie que chaque chiffre de l'explication vient d'un outil. Le détail est dans [`docs/agents.md`](docs/agents.md), l'interface du moteur dans [`docs/api_moteur.md`](docs/api_moteur.md).
+4. **Deux agents** (Strands Agents sur Amazon Bedrock) : le chef de dossier comprend et dirige, l'explorateur cherche. Le **chef de dossier** lit le cas des deux côtés (le client et l'ordre) et décide s'il faut chercher, et sous quel mandat. Quand l'ordre n'est pas compatible, il peut envoyer l'**explorateur**, qui cherche et teste des pistes sous ce mandat : un montant plus petit, un autre instrument, un achat partagé avec un fonds diversifié, un achat payé par une vente. Le chef de dossier juge ensuite les pistes et rédige l'explication pour ce client.
+5. **Ce que le code garde pour lui** : chaque note, chaque score, chaque verdict et chaque piste vient du moteur (`moteur/api.py`), jamais d'un agent. Le code refuse aussi d'envoyer l'explorateur pour un ordre compatible, borne ses essais et vérifie que chaque chiffre de l'explication vient d'un outil. Le détail est dans [`docs/agents.md`](docs/agents.md), l'interface du moteur dans [`docs/api_moteur.md`](docs/api_moteur.md).
 
 ```mermaid
 flowchart LR
@@ -125,10 +125,11 @@ flowchart LR
     O["Ordre"] --> M
     P --> M["Moteur : contraintes strictes, cinq angles, maillon le plus faible"]
     M --> V{"Verdict"}
-    V -->|"en tension"| E["Explorateur : pistes testées par le moteur"]
-    V --> C["Chef de dossier : explication"]
-    E --> C
-    C --> G["Contrôles : chiffres et garde-fou Bedrock"]
+    V --> C["Chef de dossier : comprend le cas, fixe le mandat"]
+    C -->|"ordre non compatible"| E["Explorateur : pistes testées par le moteur"]
+    E -->|"pistes"| J["Chef de dossier : juge les pistes, rédige l'explication"]
+    C --> J
+    J --> G["Contrôles : chiffres et garde-fou Bedrock"]
     G --> R["Rapport au client"]
 ```
 
@@ -140,7 +141,7 @@ flowchart LR
 | **Strands Agents** | Le kit qui fait des deux agents des agents à outils : appels au moteur, envoi de l'explorateur, suivi des étapes en direct dans l'interface. |
 | **Amazon Bedrock Guardrails** | Le garde-fou refuse le conseil financier personnalisé et les demandes de transaction réelle, et mesure l'ancrage de l'explication dans les résultats des outils (vérification d'ancrage contextuel). Sa configuration publiée est dans `docs/configuration/guardrail-config.json`, identifiants masqués. |
 | **Amazon S3** | Un bucket privé garde les fichiers de référence (`reference/*.json`) : accès public bloqué, chiffrement par défaut, accès refusé hors TLS. L'application les y lit, et revient au dossier local si S3 ne répond pas. |
-| **Hébergement de l'application publique** | _à compléter_ |
+| **Amazon EC2** | L'application publique (lien en haut de page) est servie par une instance EC2. |
 
 ## Sources, hypothèses et limites
 
