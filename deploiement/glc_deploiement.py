@@ -7,7 +7,9 @@
     python deploiement/glc_deploiement.py verifier [--analyse] [--distant]
                                                             # état, commit, page vue de l'extérieur, vraies analyses
     python deploiement/glc_deploiement.py commit             # commit qui tourne
-    python deploiement/glc_deploiement.py supprimer          # retire toutes les ressources créées
+    python deploiement/glc_deploiement.py creer-cloudfront   # adresse HTTPS : distribution CloudFront devant l'instance
+    python deploiement/glc_deploiement.py supprimer-cloudfront  # la désactive puis la supprime (10 à 15 min)
+    python deploiement/glc_deploiement.py supprimer          # retire toutes les ressources créées (CloudFront compris)
 
 Les droits de l'instance (Bedrock : les deux modèles et le garde-fou ; S3 : le bucket privé) viennent d'un rôle IAM :
 aucune clé n'est posée sur la machine. Le code (archive `git archive` du commit), les données non publiées
@@ -164,8 +166,8 @@ def attendre_ssm(delai_s: int = 600) -> None:
     sys.exit("L'instance ne répond pas à Systems Manager.")
 
 
-def http(chemin: str, delai_s: int = 10) -> tuple[int, str]:
-    adresse = url()
+def http(chemin: str, delai_s: int = 10, base: str | None = None) -> tuple[int, str]:
+    adresse = base or url()
     try:
         with urllib.request.urlopen(adresse.rstrip("/") + chemin, timeout=delai_s) as r:
             return r.status, r.read(4000).decode("utf-8", "replace")
@@ -398,11 +400,19 @@ def verifier(args) -> int:
         vu = sante == 200 and page == 200 and "<title>Streamlit</title>" in html
         print(f"Vu de ce poste : santé {sante or corps}, page {page or html} → {'répond' if vu else 'NE RÉPOND PAS'}")
         ok &= vu
+        https = url_https()
+        if https:
+            sante_s, _ = http("/_stcore/health", base=https)
+            page_s, html_s = http("/", base=https)
+            vu_s = sante_s == 200 and page_s == 200 and "<title>Streamlit</title>" in html_s
+            print(f"HTTPS (CloudFront) {https} : santé {sante_s}, page {page_s} → {'répond' if vu_s else 'NE RÉPOND PAS'}")
+            ok &= vu_s
         if args.distant:
             import asyncio
             from essai_distant import principal as essai_distant
-            print("Vraie analyse par l'adresse publique, comme un navigateur…")
-            ok &= asyncio.run(essai_distant(url())) == 0
+            for adresse in [a for a in (https, url()) if a]:
+                print(f"Vraie analyse par {adresse}, comme un navigateur…")
+                ok &= asyncio.run(essai_distant(adresse)) == 0
     if args.analyse:
         print("Vraie analyse sur la machine (application, moteur, agents Bedrock, garde-fou, bucket)…")
         ok_a, _ = ssm([f"cd /opt/glc/courant && {ENV_SERVICE} GLC_RACINE=/opt/glc/courant "
@@ -412,9 +422,91 @@ def verifier(args) -> int:
     return 0 if ok else 1
 
 
+# ---------------------------------------------------------------- CloudFront (adresse HTTPS)
+
+CF_COMMENTAIRE = "Garder le cap : application publique en HTTPS (glc-deploiement)"
+CF_ORIGINE = "glc-instance"
+CACHING_DISABLED = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"   # politique gérée Managed-CachingDisabled
+ALL_VIEWER = "216adef6-5c7f-47e4-b989-5492eafa07d3"         # politique gérée Managed-AllViewer
+
+
+def distribution() -> dict | None:
+    cf = boto3.client("cloudfront")
+    for page in cf.get_paginator("list_distributions").paginate():
+        for d in page["DistributionList"].get("Items", []) or []:
+            if d.get("Comment") == CF_COMMENTAIRE:
+                return d
+    return None
+
+
+def url_https() -> str | None:
+    d = distribution()
+    return f"https://{d['DomainName']}/" if d else None
+
+
+def config_distribution(origine: str) -> dict:
+    """Devant l'instance : HTTP vers l'origine (port 80), HTTPS pour le visiteur, aucun cache, tout l'en-tête du
+    visiteur transmis (Host, cookies, chaînes de requête, passage au WebSocket de /_stcore/stream)."""
+    return {
+        "CallerReference": f"{NOM}-{int(time.time())}",
+        "Comment": CF_COMMENTAIRE,
+        "Enabled": True,
+        "PriceClass": "PriceClass_100",
+        "HttpVersion": "http2",
+        "IsIPV6Enabled": True,
+        "Origins": {"Quantity": 1, "Items": [{
+            "Id": CF_ORIGINE, "DomainName": origine,
+            "CustomOriginConfig": {"HTTPPort": PORT, "HTTPSPort": 443, "OriginProtocolPolicy": "http-only",
+                                   "OriginSslProtocols": {"Quantity": 1, "Items": ["TLSv1.2"]},
+                                   "OriginReadTimeout": 60, "OriginKeepaliveTimeout": 60}}]},
+        "DefaultCacheBehavior": {
+            "TargetOriginId": CF_ORIGINE, "ViewerProtocolPolicy": "redirect-to-https", "Compress": True,
+            "AllowedMethods": {"Quantity": 7, "Items": ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"],
+                               "CachedMethods": {"Quantity": 2, "Items": ["GET", "HEAD"]}},
+            "CachePolicyId": CACHING_DISABLED, "OriginRequestPolicyId": ALL_VIEWER},
+        "ViewerCertificate": {"CloudFrontDefaultCertificate": True},
+    }
+
+
+def creer_cloudfront(args) -> None:
+    verifier_gel()
+    d = distribution()
+    if d:
+        print("Distribution CloudFront existante réutilisée.")
+    else:
+        origine = url().split("/")[2]
+        cf = boto3.client("cloudfront")
+        d = cf.create_distribution_with_tags(DistributionConfigWithTags={
+            "DistributionConfig": config_distribution(origine), "Tags": {"Items": ETIQUETTES}})["Distribution"]
+        print("Distribution CloudFront créée ; déploiement en cours (quelques minutes)…")
+        cf.get_waiter("distribution_deployed").wait(Id=d["Id"], WaiterConfig={"Delay": 20, "MaxAttempts": 60})
+    adresse = f"https://{d['DomainName']}/"
+    configuration.ecrire_valeurs({"GLC_URL_HTTPS": adresse})
+    print(f"Adresse HTTPS : {adresse} (écrite dans {configuration.chemin_fichier().name}, non publié)")
+
+
+def supprimer_cloudfront(args=None) -> None:
+    """Désactive la distribution, attend qu'elle soit déployée désactivée, puis la supprime (10 à 15 min)."""
+    d = distribution()
+    if not d:
+        print("Aucune distribution CloudFront.")
+        return
+    cf = boto3.client("cloudfront")
+    r = cf.get_distribution_config(Id=d["Id"])
+    config, etag = r["DistributionConfig"], r["ETag"]
+    if config["Enabled"]:
+        config["Enabled"] = False
+        etag = cf.update_distribution(Id=d["Id"], DistributionConfig=config, IfMatch=etag)["ETag"]
+        print("Distribution CloudFront désactivée ; attente de la propagation…")
+    cf.get_waiter("distribution_deployed").wait(Id=d["Id"], WaiterConfig={"Delay": 30, "MaxAttempts": 60})
+    cf.delete_distribution(Id=d["Id"], IfMatch=cf.get_distribution(Id=d["Id"])["ETag"])
+    print("Distribution CloudFront supprimée.")
+
+
 # ---------------------------------------------------------------- supprimer
 
 def supprimer(args) -> None:
+    supprimer_cloudfront()
     ec2, iam, s3 = client("ec2"), boto3.client("iam"), client("s3")
     i = instance()
     a = ip_elastique()
@@ -478,6 +570,8 @@ def main() -> int:
                    help="lancer aussi une vraie analyse par l'adresse publique, depuis ce poste (1 à 4 min)")
     v.set_defaults(f=verifier)
     sous.add_parser("commit").set_defaults(f=commit)
+    sous.add_parser("creer-cloudfront").set_defaults(f=creer_cloudfront)
+    sous.add_parser("supprimer-cloudfront").set_defaults(f=supprimer_cloudfront)
     sous.add_parser("supprimer").set_defaults(f=supprimer)
     args = parser.parse_args()
     if not identifiants.charger_identifiants() and not identifiants.identifiants_disponibles():

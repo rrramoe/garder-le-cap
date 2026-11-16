@@ -39,3 +39,15 @@ def test_gel_apres_minuit_est():
     d.verifier_gel(datetime(2026, 11, 16, 4, 58, tzinfo=timezone.utc))
     with pytest.raises(SystemExit):
         d.verifier_gel(datetime(2026, 11, 16, 4, 59, tzinfo=timezone.utc))
+
+
+def test_distribution_https_sans_cache_et_tout_l_en_tete():
+    c = d.config_distribution("origine.example")
+    o = c["Origins"]["Items"][0]["CustomOriginConfig"]
+    assert o["OriginProtocolPolicy"] == "http-only" and o["HTTPPort"] == 80
+    assert o["OriginReadTimeout"] == 60 and o["OriginKeepaliveTimeout"] == 60
+    b = c["DefaultCacheBehavior"]
+    assert b["ViewerProtocolPolicy"] == "redirect-to-https"
+    assert (b["CachePolicyId"], b["OriginRequestPolicyId"]) == (d.CACHING_DISABLED, d.ALL_VIEWER)
+    assert c["ViewerCertificate"] == {"CloudFrontDefaultCertificate": True} and c["PriceClass"] == "PriceClass_100"
+    assert "Logging" not in c
