@@ -52,8 +52,8 @@ COULEUR_AUTRE = PISTE
 # fait le tour, du bleu d'accent vers le violet, et à un halo doux. Une seule recette, réglée ici.
 LUEUR_A = ACCENT          # la lumière part du bleu d'accent
 LUEUR_B = VIOLET          # et va vers le violet
-LUEUR_VITESSE = "7s"      # un tour, au repos
-LUEUR_VIVE = "2.2s"       # un tour, pendant qu'une analyse tourne
+LUEUR_VITESSE = "8s"      # au repos : un passage de lumière (le dernier quart du temps), puis le repos
+LUEUR_VIVE = "2.2s"       # pendant qu'une analyse tourne, ou au survol : un passage, en continu
 LUEUR_FORCE = "0.20"      # l'opacité du halo, au repos
 LUEUR_FORTE = "0.38"      # et pendant qu'une analyse tourne
 
@@ -162,22 +162,24 @@ div[class*="st-key-carte"] {{ background: var(--surface); border: 1px solid var(
 .stApp .glc-faits div b {{ font-size: var(--t2); font-weight: 600; color: var(--encre); font-variant-numeric: tabular-nums; }}
 
 /* ---------- introduction et choix du compte ---------- */
-div[class*="st-key-introduction"] {{ max-width: 1080px; margin: 16px auto 0 auto; }}
+div[class*="st-key-introduction"] {{ max-width: 1168px; margin: 4px auto 0 auto; gap: 8px; }}
 .stApp .glc-pas-intro {{ display: flex; align-items: center; gap: 6px; }}
 .stApp .glc-pas-intro span {{ font-size: var(--t1); font-weight: 600; color: var(--gris); margin-right: 8px;
   font-variant-numeric: tabular-nums; }}
 .stApp .glc-pas-intro i {{ width: 22px; height: 4px; border-radius: 4px; background: var(--piste); }}
 .stApp .glc-pas-intro i.ici {{ background: var(--encre); }}
-.stApp .glc-intro {{ min-height: 404px; padding-top: 26px; }}
-.stApp .glc-intro h1 {{ font-size: var(--t5); font-weight: 700; line-height: 1.18; margin: 0 0 18px 0;
+.stApp .glc-intro {{ height: 318px; display: flex; flex-direction: column; justify-content: flex-end; }}
+.stApp .glc-intro h1 {{ font-size: var(--t5); font-weight: 700; line-height: 1.16; margin: 0 0 12px 0;
   letter-spacing: -0.03em; color: var(--encre); }}
-.stApp .glc-intro h1 span {{ display: block; }}
+.stApp .glc-intro h1 span.avant, .stApp .glc-intro h1 span.apres {{ display: block; }}
+.stApp .glc-intro h1 [data-testid="stHeaderActionElements"] {{ display: none; }}
 .stApp .glc-intro h1 span.avant {{ color: var(--gris); }}
 .stApp .glc-intro p {{ font-size: var(--t3); line-height: 1.5; color: var(--encre); margin: 0 0 8px 0; }}
 .stApp .glc-intro p.fort {{ font-weight: 700; }}
-.stApp .glc-intro p.note {{ font-size: var(--t1); color: var(--gris); margin: 16px 0 20px 0; padding-left: 12px;
+.stApp .glc-intro p.note {{ font-size: var(--t1); color: var(--gris); margin: 6px 0 0 0; padding-left: 12px;
   border-left: 2px solid var(--bord); }}
-.stApp .glc-vue {{ background: var(--voile); border-radius: 20px; padding: 28px; height: 480px; overflow: hidden;
+.stApp .glc-vue {{ background: var(--voile); border-radius: 20px; padding: 28px;
+  height: clamp(420px, calc(100vh - 230px), 660px); overflow: hidden;
   display: flex; flex-direction: column; justify-content: center; position: relative; }}
 .stApp .glc-vue.film {{ padding: 14px; }}
 .stApp .glc-vue svg.film {{ width: 100%; height: 100%; display: block; overflow: visible; }}
@@ -219,7 +221,18 @@ div[class*="st-key-introduction"] {{ max-width: 1080px; margin: 16px auto 0 auto
   text-align: center; font-size: var(--t2); font-weight: 600; padding: 10px 0; opacity: .55; }}
 .stApp .glc-vue:has(.glc-billet) {{ padding: 28px 84px; }}
 div[class*="st-key-introduction"] .stButton > button[kind="tertiary"] {{ float: right; }}
-div[class*="st-key-carte_compte"] .glc-faits {{ margin: 14px 0 6px 0; }}
+div[class*="st-key-carte_compte"] .glc-faits {{ margin: 10px 0 4px 0; }}
+div[class*="st-key-carte_compte"] .allure {{ margin: 10px 0 0 0; }}
+div[class*="st-key-carte_compte"] .allure svg {{ width: 100%; height: 54px; display: block; }}
+div[class*="st-key-carte_compte"] .allure p {{ margin: 2px 0 0 0; font-size: var(--t1); }}
+.stApp .glc-chemin {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 4px; }}
+.stApp .glc-chemin > div {{ display: flex; gap: 12px; align-items: flex-start; background: var(--voile);
+  border-radius: var(--rayon); padding: 14px 16px; }}
+.stApp .glc-chemin b {{ flex: none; display: inline-flex; align-items: center; justify-content: center; width: 24px;
+  height: 24px; border-radius: 50%; background: {LUEUR_B}; color: {BLANC}; font-size: var(--t1); }}
+.stApp .glc-chemin p {{ margin: 0; font-size: var(--t1); color: var(--gris); line-height: 1.45; }}
+.stApp .glc-chemin strong {{ display: block; font-size: var(--t2); color: var(--encre); }}
+@media (max-width: 640px) {{ .stApp .glc-chemin {{ grid-template-columns: 1fr; }} }}
 
 /* ---------- étapes numérotées ---------- */
 .stApp .glc-pas {{ display: grid; grid-template-columns: 28px 1fr; gap: 4px 12px; padding: 10px 0;
@@ -266,34 +279,57 @@ div[class*="st-key-carte"] {{ gap: 10px; padding: 18px 20px; }}
 .stApp .glc-pas {{ padding: 8px 0; }}
 div[class*="st-key-zone_sigma"] > div[data-testid="stVerticalBlock"], div[class*="st-key-zone_sigma"] {{ gap: 12px; }}
 
-/* ---------- la lueur : le contour vivant de ce que le service ajoute ---------- */
-@property --glc-angle {{ syntax: "<angle>"; initial-value: 0deg; inherits: false; }}
-@keyframes glc-tour {{ to {{ --glc-angle: 360deg; }} }}
-@keyframes glc-halo {{ 0%, 100% {{ opacity: .55; }} 50% {{ opacity: 1; }} }}
-@keyframes glc-balaye {{ from {{ background-position: 130% 0; }} to {{ background-position: -130% 0; }} }}
-@keyframes glc-coule {{ 0% {{ transform: translateY(-10px); opacity: 0; }} 15% {{ opacity: 1; }}
-  85% {{ opacity: 1; }} 100% {{ transform: translateY(var(--course, 64px)); opacity: 0; }} }}
-@keyframes glc-pouls-doc {{ 0% {{ box-shadow: 0 0 0 0 rgba(127, 86, 217, .45); }}
-  100% {{ box-shadow: 0 0 0 18px rgba(127, 86, 217, 0); }} }}
-.stApp .glc-lueur, div[class*="st-key-zone_sigma"], .stApp .glc-doc {{ position: relative;
+/* ---------- la lueur : le contour vivant de ce que le service ajoute ----------
+   Bon marché pour le navigateur : le contour et le halo sont fixes (un dégradé, une ombre) ; seule une
+   petite lumière bouge, par translation, sur sa propre couche : aucun fond, aucune ombre n'est repeint. */
+/* Au repos, la lumière passe puis se repose : le navigateur ne dessine aucune image pendant le repos. */
+@keyframes glc-file {{ 0%, 76% {{ transform: translateX(-180px); }} 100% {{ transform: translateX(100%); }} }}
+@keyframes glc-file-retour {{ 0%, 76% {{ transform: translateX(100%); }} 100% {{ transform: translateX(-180px); }} }}
+@keyframes glc-file-vive {{ from {{ transform: translateX(-180px); }} to {{ transform: translateX(100%); }} }}
+@keyframes glc-file-retour-vive {{ from {{ transform: translateX(100%); }} to {{ transform: translateX(-180px); }} }}
+@keyframes glc-reflet {{ 0%, 76% {{ transform: translateX(-130%); }} 100% {{ transform: translateX(130%); }} }}
+@keyframes glc-reflet-vif {{ from {{ transform: translateX(-130%); }} to {{ transform: translateX(130%); }} }}
+@keyframes glc-coule {{ 0%, 76% {{ transform: translateY(-16px); opacity: 0; }} 80% {{ opacity: 1; }}
+  96% {{ opacity: 1; }} 100% {{ transform: translateY(var(--course, 64px)); opacity: 0; }} }}
+@keyframes glc-pouls-doc {{ 0% {{ opacity: .9; }} 100% {{ opacity: 0; }} }}
+.stApp .glc-lueur, div[class*="st-key-zone_sigma"], .stApp .glc-doc {{ position: relative; overflow: hidden;
   border: 1.5px solid transparent !important; --glc-fond: var(--surface);
   background: linear-gradient(var(--glc-fond), var(--glc-fond)) padding-box,
-              conic-gradient(from var(--glc-angle), {LUEUR_A}, {LUEUR_B} 22%, {BORD} 42%, {BORD} 78%, {LUEUR_A}) border-box;
-  animation: glc-tour {LUEUR_VITESSE} linear infinite;
+              linear-gradient(120deg, {LUEUR_A}, {BORD} 30%, {BORD} 70%, {LUEUR_B}) border-box;
   box-shadow: 0 14px 44px -18px rgba(26, 97, 169, {LUEUR_FORCE}), 0 0 26px -6px rgba(127, 86, 217, {LUEUR_FORCE}); }}
+.stApp .glc-lueur::before, div[class*="st-key-zone_sigma"]::before, .stApp .glc-doc::before,
+.stApp .glc-lueur::after, div[class*="st-key-zone_sigma"]::after, .stApp .glc-doc::after {{ content: "";
+  position: absolute; left: 0; right: 0; height: 2px; pointer-events: none; will-change: transform;
+  background: linear-gradient(90deg, transparent, {LUEUR_A} 35%, {LUEUR_B} 65%, transparent) no-repeat;
+  background-size: 180px 100%; }}
+.stApp .glc-lueur::before, div[class*="st-key-zone_sigma"]::before, .stApp .glc-doc::before {{ top: 0;
+  animation: glc-file {LUEUR_VITESSE} linear infinite; }}
+.stApp .glc-lueur::after, div[class*="st-key-zone_sigma"]::after, .stApp .glc-doc::after {{ bottom: 0;
+  animation: glc-file-retour {LUEUR_VITESSE} linear infinite; }}
 div[class*="st-key-zone_sigma"] {{ --glc-fond: {BLEU_PALE}; border-radius: 18px; padding: 16px 16px 18px 16px; }}
-div[class*="st-key-zone_sigma"]:has(.glc-direct) {{ animation-duration: {LUEUR_VIVE};
+/* pendant qu'une analyse tourne : la lumière passe plus vite, le halo se renforce (une ombre fixe, posée une fois) */
+div[class*="st-key-zone_sigma"]:has(.glc-direct)::before, div[class*="st-key-zone_sigma"]:hover::before {{
+  animation: glc-file-vive {LUEUR_VIVE} linear infinite; }}
+div[class*="st-key-zone_sigma"]:has(.glc-direct)::after, div[class*="st-key-zone_sigma"]:hover::after {{
+  animation: glc-file-retour-vive {LUEUR_VIVE} linear infinite; }}
+div[class*="st-key-zone_sigma"]:has(.glc-direct)::before, div[class*="st-key-zone_sigma"]:has(.glc-direct)::after {{
+  height: 3px; }}
+div[class*="st-key-zone_sigma"]:has(.glc-direct) {{
   box-shadow: 0 14px 48px -14px rgba(26, 97, 169, {LUEUR_FORTE}), 0 0 34px -4px rgba(127, 86, 217, {LUEUR_FORTE}); }}
 .stApp .glc-sigma {{ display: flex; align-items: center; gap: 8px; margin: 0 0 2px 2px; font-size: var(--t1);
   font-weight: 700; color: var(--encre); letter-spacing: .01em; }}
 .stApp .glc-sigma span {{ font-weight: 500; color: var(--gris); }}
-.st-key-inspecter button[kind="primary"] {{ border-color: transparent;
-  background: linear-gradient(105deg, {LUEUR_A} 0%, {LUEUR_A} 38%, {LUEUR_B} 50%, {LUEUR_A} 62%, {LUEUR_A} 100%);
-  background-size: 260% 100%; animation: glc-balaye 5.5s linear infinite;
+/* le bouton de l'analyse : un reflet le traverse de temps en temps ; il passe en continu au survol */
+.st-key-inspecter button[kind="primary"] {{ position: relative; overflow: hidden; border-color: transparent;
+  background: linear-gradient(105deg, {LUEUR_A} 55%, {LUEUR_B} 140%);
   box-shadow: 0 8px 22px -6px rgba(26, 97, 169, .45), 0 0 18px -4px rgba(127, 86, 217, .35); }}
-.st-key-inspecter button[kind="primary"]:hover {{ background-color: {LUEUR_A}; border-color: transparent; }}
+.st-key-inspecter button[kind="primary"]::after {{ content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .38) 50%, transparent 65%);
+  will-change: transform; animation: glc-reflet {LUEUR_VITESSE} ease-in-out infinite; }}
+.st-key-inspecter button[kind="primary"]:hover::after {{ animation: glc-reflet-vif 1.6s ease-in-out infinite; }}
+.st-key-inspecter button[kind="primary"]:hover {{ border-color: transparent; }}
 /* le chemin du profil : la fiche, le passage où la lumière court, la politique de placement */
-@keyframes glc-court {{ 0% {{ transform: translateX(-24px); opacity: 0; }} 20% {{ opacity: 1; }} 80% {{ opacity: 1; }}
+@keyframes glc-court {{ 0%, 76% {{ transform: translateX(-26px); opacity: 0; }} 80% {{ opacity: 1; }} 96% {{ opacity: 1; }}
   100% {{ transform: translateX(var(--course, 64px)); opacity: 0; }} }}
 @keyframes glc-eclair {{ 0% {{ opacity: 1; transform: scaleY(3.2); }} 100% {{ opacity: 1; transform: none; }} }}
 .stApp .glc-etape {{ display: flex; align-items: center; gap: 8px; margin: 0 0 6px 0; font-size: var(--t1);
@@ -306,7 +342,7 @@ div[class*="st-key-zone_sigma"]:has(.glc-direct) {{ animation-duration: {LUEUR_V
   background: linear-gradient(90deg, {BORD}, {LUEUR_A} 60%, {LUEUR_B}); }}
 .stApp .glc-passage .fil i {{ position: absolute; top: 0; left: 0; width: 26px; height: 2px; border-radius: 2px;
   background: linear-gradient(90deg, transparent, {BLANC}, {LUEUR_B}); --course: 96px;
-  animation: glc-court 1.9s linear infinite; }}
+  will-change: transform; animation: glc-court {LUEUR_VITESSE} linear infinite; }}
 div[class*="st-key-passage_"] .glc-passage .fil {{ animation: glc-eclair .9s ease-out 1; }}
 div[class*="st-key-passage_"] .glc-lien {{ display: none; }}
 @media (max-width: 640px) {{
@@ -349,13 +385,18 @@ div[class*="st-key-politique_"] .glc-article .source {{ font-size: 12px; }}
 .stApp .glc-lien .canal {{ position: relative; width: 3px; height: 64px; border-radius: 3px; overflow: hidden;
   background: linear-gradient({BORD}, {LUEUR_A}); }}
 .stApp .glc-lien .canal i {{ position: absolute; left: 0; top: 0; width: 3px; height: 16px; border-radius: 3px;
-  background: linear-gradient(transparent, {BLANC}, {LUEUR_B}); animation: glc-coule 1.8s linear infinite; }}
-.stApp .glc-lien .canal i:nth-child(2) {{ animation-delay: -.6s; }}
-.stApp .glc-lien .canal i:nth-child(3) {{ animation-delay: -1.2s; }}
+  background: linear-gradient(transparent, {BLANC}, {LUEUR_B}); will-change: transform;
+  animation: glc-coule {LUEUR_VITESSE} linear infinite; }}
+.stApp .glc-lien .canal i:nth-child(2) {{ animation-delay: .12s; }}
+.stApp .glc-lien .canal i:nth-child(3) {{ animation-delay: .24s; }}
 .stApp .glc-lien .mot {{ font-size: var(--t1); font-weight: 600; color: var(--violet); background: {VIOLET_PALE};
   border-radius: 999px; padding: 2px 12px; }}
-div[class*="st-key-politique_"] .glc-doc {{ animation: glc-tour {LUEUR_VITESSE} linear infinite,
-  glc-pouls-doc .9s ease-out 1, glc-arrive .22s ease-out both; }}
+div[class*="st-key-politique_"] {{ position: relative; }}
+div[class*="st-key-politique_"]::after {{ content: ""; position: absolute; inset: -6px; border-radius: 18px;
+  pointer-events: none; opacity: 0; will-change: opacity;
+  background: radial-gradient(closest-side, rgba(127, 86, 217, .0) 70%, rgba(127, 86, 217, .30));
+  animation: glc-pouls-doc .9s ease-out 1; }}
+div[class*="st-key-politique_"] .glc-doc {{ animation: glc-arrive .22s ease-out both; }}
 .stApp .glc-vue svg.film .carte {{ filter: drop-shadow(0 8px 18px rgba(var(--ombre), .10)); }}
 
 /* ---------- mouvement, avec retenue ---------- */
@@ -367,7 +408,7 @@ div[class*="st-key-politique_"] .glc-doc {{ animation: glc-tour {LUEUR_VITESSE} 
 .stApp .glc-angle circle.arc {{ animation: glc-arc .7s cubic-bezier(.2, .7, .2, 1) both; }}
 .stApp svg.ecart path.trait {{ stroke-dasharray: var(--long, 240); animation: glc-trace .8s ease-out both; }}
 .stApp svg.ecart path.trait.tard {{ animation-delay: .7s; }}
-.stApp svg.glc-courbe path.trait {{ stroke-dasharray: var(--long, 600); animation: glc-trace .9s ease-out both; }}
+
 .stApp table.glc-table tbody tr {{ transition: background .15s ease; }}
 .stApp table.glc-table tbody tr:hover {{ background: var(--voile); }}
 .stApp .stButton > button {{ transition: background .15s ease, border-color .15s ease, box-shadow .2s ease,
@@ -616,10 +657,10 @@ hr {{ border-color: var(--bord); }}
   .stApp .glc-barre {{ display: none; }}
   .stApp .glc-sombre .note {{ position: static; display: block; margin: 0 0 6px 0; }}
   .st-key-page label[data-testid="stRadioOption"] {{ padding: 6px 10px; }}
-  .stApp .glc-intro {{ min-height: 0; padding-top: 4px; }}
+  .stApp .glc-intro {{ height: auto; display: block; }}
   .stApp .glc-intro h1 {{ font-size: var(--t4); }}
   .stApp .glc-vue, .stApp .glc-vue:has(.glc-billet) {{ height: auto; min-height: 220px; padding: 14px; }}
-  .stApp .glc-vue.film {{ height: 320px; padding: 8px; }}
+  .stApp .glc-vue.film {{ height: auto; aspect-ratio: 1.3; padding: 8px; }}
   .stApp .glc-paire {{ grid-template-columns: 1fr; }}
   .stApp .glc-paire > svg {{ transform: rotate(90deg); }}
   .stApp table.glc-table .nb {{ white-space: normal; }}

@@ -6,9 +6,9 @@ import streamlit as st
 
 from moteur import api, references
 from interface import composants as C
-from interface import etat, films
-from interface.theme import BLANC, BLEU_CLAIR, ENCRE, GRIS, TENSION
-from interface.textes import (AIDE_ANGLES, BOUTON_ACTION, BOUTON_ESSAI, BOUTON_PASSER_INTRO, CHAMPS_Q, CLASSES,
+from interface import etat, films, marche
+from interface.theme import ACCENT, BLANC, BLEU_CLAIR, ENCRE, GRIS, TENSION
+from interface.textes import (AIDE_ANGLES, BOUTON_ACTION, BOUTON_ESSAI, BOUTON_PASSER_INTRO, CHAMPS_Q, CHEMIN, CLASSES,
                               INTRO_FIN, INTRO_REPRENDRE, INTRO_RETOUR, INTRO_SUIVANT, INTRODUCTION, ISSUE_REGLE,
                               ISSUES, LIMITE, OPERATIONS, QUESTIONNAIRE, TYPES_ORDRE, angles_du_bloc,
                               charger_reference, dollars, francais, instruments, libelle_option, nom_angle, nombre, pct)
@@ -310,7 +310,7 @@ def _titre(titre: str) -> str:
     phrases = [x.strip() for x in titre.replace(". ", ".|").split("|") if x.strip()]
     if len(phrases) > 1:
         return (f'<h1><span class="avant">{C.e(" ".join(phrases[:-1]))}</span>'
-                f'<span>{C.e(phrases[-1])}</span></h1>')
+                f'<span class="apres">{C.e(phrases[-1])}</span></h1>')
     return f"<h1>{C.e(titre)}</h1>"
 
 
@@ -327,7 +327,9 @@ def introduction() -> None:
             points = "".join(f'<i class="{"ici" if i == n else ""}"></i>' for i in range(dernier + 1))
             C.montrer(f'<div class="glc-pas-intro"><span>{n + 1} / {dernier + 1}</span>{points}</div>')
         haut_droite.button(BOUTON_PASSER_INTRO, key="passer_intro", type="tertiary", on_click=etat.finir_introduction)
-        gauche, droite = st.columns([1, 1.1], gap="large", vertical_alignment="top")
+        # Le texte et ses boutons forment un seul groupe, à la même place sur tous les panneaux ; le dessin
+        # prend la hauteur de l'écran qui reste, centré sur ce groupe.
+        gauche, droite = st.columns([1, 1.32], gap="large", vertical_alignment="center")
         with gauche:
             C.montrer(f'<div class="glc-intro">{_titre(titre)}' + "".join(f"<p>{C.e(l)}</p>" for l in lignes)
                       + (f'<p class="note">{C.e(note)}</p>' if note else "") + "</div>")
@@ -363,9 +365,16 @@ def comptes() -> None:
             profil = fc["deduit"]["profil"]["libelle"] if "erreur" not in fc else ""
             faits = (f'<div><span>Profil</span><b>{C.e(profil)}</b></div>' if profil else "") + \
                     f'<div><span>Portefeuille</span><b>{C.e(dollars(c["valeur"]))}</b></div>'
+            histoire = marche.valeur_du_portefeuille(c["portefeuille_pct"], c["valeur"])
+            allure = (f'<div class="allure">{C.courbe(histoire, 300, 54, ACCENT, remplie=True)}'
+                      f'<p>{C.variation(marche.variation(histoire), marche.PERIODE)}</p></div>' if histoire else "")
             C.montrer(f'<p class="glc-h2">{C.e(c["nom"])}{C.marqueur("compte prêt")}</p>'
-                      f'<p class="glc-sur">{C.e(c["description"])}</p>'
+                      f'<p class="glc-sur">{C.e(c["description"])}</p>{allure}'
                       f'<div class="glc-faits">{faits}</div>')
+            o = c.get("ordre_demo")
+            if o:  # l'ordre que ce compte s'apprête à passer : c'est lui qu'on pourra analyser
+                C.montrer(f'<p class="glc-sur" style="margin:0 0 4px 0">Ordre prêt · '
+                          f'{C.e(_texte_ordre(o["sens"], o["pourcentage"], o["ticker"], c["valeur"]))}</p>')
             st.button("Ouvrir ce compte", key=f"compte_{cid}", width="stretch",
                       on_click=etat.choisir_compte, args=(cid,))
     for cid, c in nouveaux.items():
@@ -377,5 +386,9 @@ def comptes() -> None:
                           "puis composez votre portefeuille.</p>")
             droite.button("Créer un compte", key=f"compte_{cid}", width="stretch",
                           on_click=etat.choisir_compte, args=(cid,))
+    # Le chemin qui attend le visiteur, une fois le compte ouvert : il sait où il va.
+    C.montrer('<div class="glc-chemin">' + "".join(
+        f'<div><b>{i}</b><p><strong>{C.e(nom)}</strong>{C.e(quoi)}</p></div>'
+        for i, (nom, quoi) in enumerate(CHEMIN, start=1)) + "</div>")
     bas_gauche, bas_droite = st.columns([1, 1], vertical_alignment="center")
     bas_gauche.button(BOUTON_ESSAI, key="essayer", type="tertiary", on_click=etat.essayer_avec_un_exemple)

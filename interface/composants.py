@@ -187,7 +187,7 @@ def etape_du_chemin(numero: int, mot: str) -> str:
 
 def passage(fils: int = 5) -> str:
     """Le passage d'une carte à l'autre : des fils où la lumière court de gauche à droite, sans fin."""
-    return ('<div class="glc-passage">' + "".join(f'<span class="fil"><i style="animation-delay:-{k * 0.37:.2f}s"></i></span>'
+    return ('<div class="glc-passage">' + "".join(f'<span class="fil"><i style="animation-delay:{k * 0.09:.2f}s"></i></span>'
                                                   for k in range(fils)) + "</div>")
 
 

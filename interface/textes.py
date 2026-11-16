@@ -80,6 +80,10 @@ INTRODUCTION = [
      ""),
 ]
 INTRO_SUIVANT, INTRO_RETOUR, INTRO_FIN, INTRO_REPRENDRE = "Suivant", "Retour", "Choisir un compte", "Reprendre"
+# Le chemin d'un compte, montré au moment de le choisir.
+CHEMIN = [("Profil", "Votre fiche devient votre politique de placement."),
+          ("Portefeuille", "Où vous en êtes, sous chaque angle."),
+          ("Négocier", "Analysez un ordre avant de le passer.")]
 BOUTON_PASSER_INTRO = "Passer l'introduction"
 BOUTON_ESSAI = "Analyser tout de suite un ordre d'exemple"
 # Comment le service fonctionne, en mots simples. Rien n'est dit ici qui ne soit construit.

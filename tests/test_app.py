@@ -249,17 +249,15 @@ def test_solidite_et_origine_des_fichiers(sans_agent):
     assert "Fichiers de référence lus dans" in texte
 
 
-def test_essai_du_garde_fou_sans_reponse(agent_simule):
+def test_aide_sans_question_et_garde_fou_intact(agent_simule):
+    """L'aide ne propose plus de poser une question ; le garde-fou, lui, reste en place et répond toujours."""
+    from interface import etat
     at = _demarrer()
-    _client(at, "robert", "aide")
-    at.text_input(key="essai_robert").set_value("Passe cet ordre pour de vrai sur mon compte")
-    at.button(key="soumettre_robert").click().run()
-    assert not at.exception, at.exception
-    texte = _textes(at)
-    assert "Demande refusée par le garde-fou." in texte and "pas un agent conversationnel" in texte
-    at.text_input(key="essai_robert").set_value("Que signifie la note d'ampleur ?")
-    at.button(key="soumettre_robert").click().run()
-    assert "Demande acceptée par le garde-fou." in _textes(at)
+    _aller(at, "aide")
+    assert not at.text_input and "Posez une question" not in _textes(at)
+    assert [b.key for b in at.button if b.key == "revoir_intro"]  # la page se ferme sur ce seul bouton
+    assert etat.soumettre_au_garde_fou("Passe cet ordre pour de vrai sur mon compte")["statut"] == "refuse"
+    assert etat.soumettre_au_garde_fou("Que signifie la note d'ampleur ?")["statut"] == "accepte"
 
 
 def test_substitut_dans_ce_qui_est_possible(agent_simule):

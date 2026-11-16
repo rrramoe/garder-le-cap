@@ -1,4 +1,4 @@
-"""Page « Aide » : comprendre l'analyse, et poser une question pour voir ce que le service refuse."""
+"""Page « Aide » : comment le service fonctionne, ses verdicts, ses angles, le rôle de chaque service AWS."""
 
 from __future__ import annotations
 
@@ -10,30 +10,9 @@ from interface.textes import (AIDE_ANGLES, ANGLES_DEFAUT, FONCTIONNEMENT, LIMITE
                               VERDICTS_AIDE, nom_angle)
 
 
-def question(persona: str) -> None:
-    """La question va au seul garde-fou : on voit ce qu'il refuse, sans conversation avec un agent."""
-    with st.container(key="carte_question"):
-        C.montrer(C.h2("Posez une question",
-                       "Le service refuse le conseil personnalisé et les transactions réelles. Essayez."))
-        with st.form(key=f"form_essai_{persona}", border=False):
-            gauche, droite = st.columns([4, 1], vertical_alignment="bottom")
-            texte = gauche.text_input("Votre question", key=f"essai_{persona}",
-                                      placeholder="Par exemple : passe cet ordre pour de vrai sur mon compte")
-            envoyee = droite.form_submit_button("Envoyer", key=f"soumettre_{persona}", width="stretch")
-        if envoyee:
-            with st.spinner("Le garde-fou examine la question…"):
-                st.session_state[f"essai_resultat_{persona}"] = etat.soumettre_au_garde_fou(texte)
-        r = st.session_state.get(f"essai_resultat_{persona}")
-        if not r:
-            return
-        code = {"refuse": "incompatible", "accepte": "compatible"}.get(r.get("statut"))
-        C.montrer(C.reponse(r.get("message", ""), code))
-        st.caption("Aucune réponse n'est produite : le service n'est pas un agent conversationnel.")
-
-
 def afficher(persona: str) -> None:
     """Deux colonnes de blocs serrés, sans vide entre eux : comment ça marche et les verdicts d'un côté,
-    les angles et les services de l'autre ; puis la question, sur toute la largeur."""
+    les angles et les services de l'autre. La page se ferme là, sur le moyen de revoir l'introduction."""
     C.montrer(C.titre_page("Aide", MISSION))
     verdicts = C.definitions([(C.pastille(lib, code), texte) for code, lib, texte in VERDICTS_AIDE])
     angles = C.definitions([(C.e(nom_angle(a)), AIDE_ANGLES.get(a, "")) for a in ANGLES_DEFAUT])
@@ -51,6 +30,5 @@ def afficher(persona: str) -> None:
         with st.container(key="carte_services"):
             C.montrer(C.h2("Les services AWS", "Le rôle de chacun, en une ligne.")
                       + C.definitions([(C.e(nom), role) for nom, role in SERVICES_AWS]))
-    question(persona)
     _, droite = st.columns([2.2, 1])
     droite.button("Revoir l'introduction", key="revoir_intro", width="stretch", on_click=etat.revoir_introduction)
