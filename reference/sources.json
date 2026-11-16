@@ -181,5 +181,18 @@
     "source": "Yahoo Finance via yfinance (même source que les prix des organisateurs), téléchargement non publié dans le dépôt",
     "date": "2026-11-15",
     "nature": "publie"
+  },
+  "fbngp_pire_annee_2024": {
+    "libelle": "Pire rendement sur un an de l'indice de référence de chaque profil : Revenu -9,64 %, Conservateur -10,58 %, Équilibré -16,35 %, Croissance -21,30 %, Croissance maximale -26,10 % (historique 07-2005 à 08-2024)",
+    "source": "Financière Banque Nationale – Gestion de patrimoine, documents « Profil d'investisseur » 32022, 32020, 32019, 32021, 32023 (fbngp.ca)",
+    "date": "2024-09",
+    "nature": "publie",
+    "limite": "L'historique de la banque couvre 19 ans, le nôtre 5."
+  },
+  "hypothese_objectif": {
+    "libelle": "Une mesure par objectif : « Préserver mon capital » = pire rendement cumulé sur une fenêtre de la durée de l'horizon (entre 1 et 3 ans), limite 0 %, pente = pire année publiée du profil ; « Revenu régulier » = rendement en revenu du portefeuille (dividendes des 12 derniers mois), cible celui du portefeuille étalon de référence, limite celui de l'étalon le plus audacieux (ou la moitié de la cible s'il n'est pas plus bas) ; « Croissance équilibrée » = poids des actions face à la fourchette du profil ; « Croissance à long terme » = poids des actions, côté bas seulement",
+    "source": "Hypothèse du projet",
+    "date": "2026-11-15",
+    "nature": "hypothese"
   }
 }

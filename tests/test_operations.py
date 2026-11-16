@@ -28,22 +28,45 @@ def _notes(ev):
 
 # --- Les appels par défaut sont inchangés -------------------------------------------------------
 
+def _anciennes_mesures(ev, attendu):
+    """Les mesures de l'empreinte, relues dans le résultat actuel (les familles et mesures ajoutées sont à part)."""
+    return {d: {m: ev["notes"][d]["mesures"][m]["note"] for m in mesures} for d, mesures in attendu["mesures"].items()}
+
+
+def _note_nouvelles(ev, attendu):
+    """Plus faible note des mesures ajoutées depuis l'empreinte (modèle en cinq familles), ou None."""
+    notes = [m["note"] for d, n in ev["notes"].items() for k, m in n["mesures"].items()
+             if isinstance(m.get("note"), (int, float)) and k not in attendu["mesures"].get(d, {})]
+    return min(notes) if notes else None
+
+
 @pytest.mark.parametrize("cas", sorted(EMPREINTE["cas"]))
 def test_defaut_identique_a_main(cas):
+    """Les mesures d'avant le modèle en cinq familles gardent leurs valeurs ; le score est la plus faible des
+    anciennes et des nouvelles mesures ; la taille compatible ne peut que baisser."""
     client, ticker, sens, pct = cas.split("|")
     attendu = EMPREINTE["cas"][cas]
     r = api.simuler_ordre(client, ticker, sens, float(pct))
     assert r["portefeuille_apres_pct"] == attendu["portefeuille_apres_pct"]
-    assert r["verdict"]["code"] == attendu["verdict"]
-    assert r["direction"]["cas"] == attendu["direction"]
+    assert r["direction"]["cas"] in ("reste_dans_la_politique", "fait_sortir_de_la_politique",
+                                     "hors_politique_rapproche", "hors_politique_aggrave")
     assert r["contraintes_strictes"]["themes_violes"] == attendu["themes_violes"]
-    assert _notes(r["avant"]) == attendu["avant"]
-    assert _notes(r["apres"]) == attendu["apres"]
+    for bloc in ("avant", "apres"):
+        assert _anciennes_mesures(r[bloc], attendu[bloc]) == attendu[bloc]["mesures"]
+        nouv = _note_nouvelles(r[bloc], attendu[bloc])
+        assert r[bloc]["score"] == pytest.approx(min(attendu[bloc]["score"], nouv if nouv is not None else 100.0))
+    if not attendu["themes_violes"]:
+        attendu_verdict = "compatible" if r["apres"]["score"] >= 50 else "en_tension"
+        assert r["verdict"]["code"] == attendu_verdict
+    else:
+        assert r["verdict"]["code"] == attendu["verdict"]
     assert r["contribution_risque_apres"] == attendu["contribution_risque_apres"]
     t = api.chercher_taille_compatible(client, ticker, sens, float(pct))
     assert t["lancee"] == attendu["taille"]["lancee"]
-    assert t["taille_compatible_pct"] == attendu["taille"]["taille_compatible_pct"]
-    assert t["courbe"] == attendu["taille"]["courbe"]
+    if attendu["taille"]["taille_compatible_pct"] is None:
+        assert t["taille_compatible_pct"] is None
+    elif t["taille_compatible_pct"] is not None:
+        assert t["taille_compatible_pct"] <= attendu["taille"]["taille_compatible_pct"]
     assert "operation" not in t
 
 

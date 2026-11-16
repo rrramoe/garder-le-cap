@@ -116,13 +116,23 @@ TYPES_ORDRE = {
 
 CLASSES = {"liquidites": "Liquidités", "revenu_fixe": "Revenu fixe", "actions": "Actions",
            "alternatifs": "Titres alternatifs"}
-DIMENSIONS = {"risque": "Risque", "diversification": "Diversification", "preferences": "Préférences"}
+DIMENSIONS = {"objectif": "Objectif", "risque": "Risque", "liquidite": "Liquidité",
+              "diversification": "Diversification", "preferences": "Préférences"}
+FAMILLES_DEFAUT = ("objectif", "risque", "liquidite", "diversification", "preferences")
 AIDE_DIMENSIONS = {
+    "objectif": "Ce que l'ordre fait pour l'objectif de votre fiche.",
+    "liquidite": "L'argent dont vous aurez besoin dans l'année.",
     "risque": "Les pertes possibles, d'après le passé.",
     "diversification": "Ne pas mettre tous ses œufs dans le même panier.",
     "preferences": "Les thèmes que vous voulez éviter ou rechercher.",
 }
 MESURES = {
+    "capital_preserve": "capital préservé sur l'horizon",
+    "revenu": "revenu du portefeuille",
+    "actions": "part des actions face à votre objectif",
+    "fluctuations": "fluctuations (échelle des régulateurs)",
+    "pire_annee": "pire année",
+    "liquidites_besoin": "liquidités face à votre besoin",
     "ampleur": "pire baisse",
     "duree": "temps pour se remettre d'une baisse",
     "classe_liquidites": "part des liquidités",
@@ -240,6 +250,10 @@ def secteur_fr(s: str) -> str:
 
 def decrire_mesure(dimension: str, cle: str, m: dict) -> str:
     """Une phrase courte avec les chiffres d'une mesure, tels que le moteur les donne."""
+    if m.get("statut") in ("indetermine", "sans_objet"):
+        return "inconnu" if m["statut"] == "indetermine" else "sans objet"
+    if m.get("phrase"):
+        return m["phrase"]
     if cle == "ampleur" and dimension == "risque":
         return (f"pire baisse passée {pct_frac(m['pire_baisse'])} ; "
                 f"limite du profil {pct_frac(m['pire_baisse_limite'])}")
@@ -332,6 +346,14 @@ def jauge(note: float | None, avant: float | None = None, hauteur: int = 10) -> 
             f'<div style="width:{n}%;height:100%;background:{couleur};border-radius:{hauteur}px;"></div>'
             f'<div title="limite 50" style="position:absolute;left:50%;top:-4px;width:2px;height:{hauteur + 8}px;'
             f'background:{MARINE};"></div>{marque}</div>')
+
+
+def familles(bloc: dict) -> list:
+    return [f for f in bloc.get("familles", FAMILLES_DEFAUT) if f in bloc.get("notes", {})]
+
+
+def titre_famille(dim: str, n: dict) -> str:
+    return n.get("question") or DIMENSIONS.get(dim, dim)
 
 
 def ligne_note(titre: str, note: float | None, avant: float | None = None, aide: str = "") -> None:
@@ -861,15 +883,13 @@ def onglet_portefeuille(persona: str, fiche: dict, fiche_client: dict) -> None:
                     f'<span style="color:{couleur};font-weight:600;">{statut}</span></div>',
                     unsafe_allow_html=True)
         st.markdown(jauge(e["score"], hauteur=12), unsafe_allow_html=True)
-        cols = st.columns(3)
-        for col, dim in zip(cols, ("risque", "diversification", "preferences")):
+        for dim in familles(e):
             n = e["notes"][dim]
-            with col:
-                if n.get("sans_objet"):
-                    ligne_note(DIMENSIONS[dim], None)
-                    st.caption("Aucun thème à éviter ou à rechercher.")
+            with st.container():
+                if n.get("sans_objet") or n.get("note") is None:
+                    ligne_note(titre_famille(dim, n), None)
                     continue
-                ligne_note(DIMENSIONS[dim], n["note"], aide=AIDE_DIMENSIONS[dim])
+                ligne_note(titre_famille(dim, n), n["note"], aide=AIDE_DIMENSIONS.get(dim, ""))
                 m = n["mesures"].get(n["mesure_min"], {})
                 if n["note"] >= 99.95:
                     st.caption("Sur la cible.")
@@ -1089,43 +1109,40 @@ def section_contraintes(sim: dict) -> None:
 
 
 def section_notes(sim: dict, niveau: str) -> None:
-    st.caption("Chaque note va de 0 à 100. Le score est la plus faible des trois.")
-    cols = st.columns(3)
-    for col, dim in zip(cols, ("risque", "diversification", "preferences")):
-        n0, n1 = sim["avant"]["notes"][dim], sim["apres"]["notes"][dim]
-        with col:
-            if n1.get("sans_objet"):
-                ligne_note(DIMENSIONS[dim], None)
-                continue
-            ligne_note(DIMENSIONS[dim], n1["note"], n0["note"], aide=AIDE_DIMENSIONS[dim])
+    st.caption("Chaque famille répond à une question, de 0 à 100 ; 50 est la limite de votre politique. "
+               "Le score est la plus faible des familles.")
+    for dim in familles(sim["apres"]):
+        n0, n1 = sim["avant"]["notes"].get(dim, {}), sim["apres"]["notes"][dim]
+        titre = titre_famille(dim, n1)
+        if n1.get("sans_objet") or n1.get("note") is None:
+            ligne_note(titre, None)
+            continue
+        ligne_note(titre, n1["note"], n0.get("note"), aide=AIDE_DIMENSIONS.get(dim, ""))
+        if niveau == "essentiel":
             st.caption("Sur la cible." if n1["note"] >= 99.95
                        else f"Point faible : {libelle_mesure(dim, n1['mesure_min'])}.")
-    legende_jauge(avec_avant=True)
-    if niveau == "essentiel":
-        return
-    lignes = []
-    for dim in ("risque", "diversification", "preferences"):
-        n0, n1 = sim["avant"]["notes"][dim], sim["apres"]["notes"][dim]
-        if n1.get("sans_objet"):
             continue
-        for cle, m1 in n1["mesures"].items():
-            if not isinstance(m1, dict) or "note" not in m1:
-                continue
-            m0 = n0["mesures"].get(cle, {})
-            lignes.append({"Note": DIMENSIONS[dim], "Mesure": libelle_mesure(dim, cle),
-                           "Avant": round(m0["note"]) if m0 and "note" in m0 else None,
-                           "Après": round(m1["note"]), "Chiffres": decrire_mesure(dim, cle, m1)})
-    st.markdown("**Toutes les mesures**")
-    st.dataframe(pd.DataFrame(lignes), hide_index=True, width="stretch",
-                 column_config={"Après": st.column_config.ProgressColumn(min_value=0, max_value=100, format="%d")})
+        with st.expander("Mesures", expanded=False):
+            lignes = []
+            for cle, m1 in n1["mesures"].items():
+                if not isinstance(m1, dict):
+                    continue
+                m0 = n0.get("mesures", {}).get(cle, {})
+                lignes.append({"Mesure": libelle_mesure(dim, cle),
+                               "Avant": round(m0["note"]) if isinstance(m0.get("note"), (int, float)) else None,
+                               "Après": round(m1["note"]) if isinstance(m1.get("note"), (int, float)) else None,
+                               "Chiffres": decrire_mesure(dim, cle, m1)})
+            st.dataframe(pd.DataFrame(lignes), hide_index=True, width="stretch",
+                         column_config={"Après": st.column_config.ProgressColumn(min_value=0, max_value=100,
+                                                                                 format="%d")})
+    legende_jauge(avec_avant=True)
     if niveau == "detaille":
         n0, n1 = sim["avant"]["notes"]["risque"], sim["apres"]["notes"]["risque"]
         st.caption(f"Volatilité du portefeuille (variation habituelle sur un an) : "
-                   f"{pct_frac(n0['volatilite_annualisee'])} → {pct_frac(n1['volatilite_annualisee'])}. "
-                   "Affichée, non notée.")
-    for dim in ("risque", "diversification", "preferences"):
-        for s in sim["apres"]["notes"][dim].get("signalements", []):
-            st.markdown(f"- Signalement : {s.get('message', '')}")
+                   f"{pct_frac(n0['volatilite_annualisee'])} → {pct_frac(n1['volatilite_annualisee'])}.")
+    for dim in familles(sim["apres"]):
+        for sg in sim["apres"]["notes"][dim].get("signalements", []):
+            st.markdown(f"- Signalement : {sg.get('message', '')}")
 
 
 def jambe_txt(o: dict, valeur: float) -> str:

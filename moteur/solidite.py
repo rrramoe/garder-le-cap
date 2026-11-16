@@ -91,7 +91,8 @@ def note_risque_fenetre(port: dict, fiche: dict, fenetre: str) -> dict:
 
 def solidite(port: dict, fiche: dict, evaluation: dict) -> dict:
     """Solidité du score `evaluation` (résultat de notation.evaluer sur `port`, période complète)."""
-    autres = {k: v["note"] for k, v in evaluation["notes"].items() if k != "risque"}
+    autres = {k: v["note"] for k, v in evaluation["notes"].items()
+              if k != "risque" and isinstance(v.get("note"), (int, float))}
     fenetres = {}
     for nom, libelle in FENETRES.items():
         rend = _rendements_fenetre(nom)

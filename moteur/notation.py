@@ -337,18 +337,130 @@ def note_preferences(port: dict, fiche: dict, ordre: dict | None = None) -> dict
             "signalements": signalements}
 
 
+# ---------------------------------------------------------------- échelle commune et familles
+
+def _fr(x: float, d: int = 1) -> str:
+    return f"{x:.{d}f}".replace(".", ",")
+
+
+def note_lineaire(x: float, cible: float, limite: float) -> float:
+    """Échelle commune : 100 sur la cible, 50 à la limite, droite prolongée au-delà ; plancher 0, plafond 100."""
+    if limite == cible:
+        return 100.0 if x == cible else 0.0
+    return float(min(100.0, max(0.0, 100.0 - 50.0 * (x - cible) / (limite - cible))))
+
+
+def _noter(mesures: dict) -> dict:
+    """Note d'une famille : sa mesure la plus faible ; une mesure sans note (indetermine, sans_objet) ne décide pas."""
+    notees = {k: m for k, m in mesures.items() if isinstance(m.get("note"), (int, float))}
+    if not notees:
+        return {"note": None, "mesure_min": None, "sans_objet": True, "mesures": mesures}
+    mesure_min = min(notees, key=lambda k: notees[k]["note"])
+    return {"note": notees[mesure_min]["note"], "mesure_min": mesure_min, "mesures": mesures}
+
+
+FAMILLES = {
+    "objectif": "L'ordre sert-il mon objectif ?",
+    "risque": "Le risque reste-t-il dans ce que j'accepte ?",
+    "liquidite": "Mon argent reste-t-il disponible ?",
+    "diversification": "Mon portefeuille reste-t-il bien réparti ?",
+    "preferences": "L'ordre respecte-t-il mes préférences ?",
+}
+FENETRE_MIN_ANNEES, FENETRE_MAX_ANNEES = 1, 3
+
+
+def pire_fenetre(valeur, annees: float) -> dict:
+    """Pire rendement cumulé sur une fenêtre glissante de `annees` ans (en séances du calendrier, 252 par an)."""
+    n = int(round(annees * donnees.JOURS_PAR_AN))
+    v = valeur.to_numpy()
+    if len(v) <= n:
+        return {"valeur": None}
+    r = v[n:] / v[:-n] - 1.0
+    i = int(np.argmin(r))
+    return {"valeur": float(r[i]), "debut": valeur.index[i].date().isoformat(),
+            "fin": valeur.index[i + n].date().isoformat()}
+
+
+def _pire_annee_banque(profil_id: str) -> tuple[float, str]:
+    ref = references.charger("limites_risque")["pire_annee_banque_pct"]
+    return ref["par_profil"][profil_id] / 100.0, ref["source"]
+
+
+def _rendement_revenu(poids_pct: dict) -> float | None:
+    total = 0.0
+    for t, w in poids_pct.items():
+        y = ((instruments.fiche(t).get("faits_marche") or {}).get("revenu") or {}).get("rendement_dividende")
+        if not isinstance(y, (int, float)):
+            return None
+        total += w / 100.0 * y
+    return total
+
+
+def note_objectif(port: dict, fiche: dict) -> dict:
+    obj = fiche["questionnaire"]["objectif"]
+    profil_id = fiche["deduit"]["profil"]["valeur"]
+    f_actions = fiche["deduit"]["fourchettes_pct"]["valeur"]["actions"]
+    base = {"objectif": obj, "source": "hypothese_objectif"}
+    if obj == "preserver_capital":
+        h = float(fiche["deduit"]["horizon_annees"]["valeur"])
+        annees = min(FENETRE_MAX_ANNEES, max(FENETRE_MIN_ANNEES, h))
+        pf = pire_fenetre(donnees.valeur_portefeuille(port), annees)
+        pente, src = _pire_annee_banque(profil_id)
+        m = {**base, "libelle": "Pire rendement cumulé sur une fenêtre de la durée de l'horizon",
+             "fenetre_annees": annees, "horizon_annees": h, "fenetre_ajustee": annees != h,
+             "cible": abs(pente), "limite": 0.0, "unite": "fraction", "source_pente": src}
+        if pf["valeur"] is None:
+            m.update(note=None, statut="indetermine")
+        else:
+            m.update(note=note_lineaire(pf["valeur"], abs(pente), 0.0), valeur=pf["valeur"],
+                     debut=pf["debut"], fin=pf["fin"],
+                     phrase=f"pire rendement sur {_fr(annees, 0)} an(s) : {_fr(pf['valeur'] * 100)} % ; limite : 0 % (capital intact)")
+        return _noter({"capital_preserve": m})
+    if obj == "revenu_regulier":
+        et = baisses_etalons(profil_id)
+        y = _rendement_revenu(port)
+        cible = _rendement_revenu(_poids_etalon(et["reference"]["composition_pct"]))
+        limite = _rendement_revenu(_poids_etalon(et["limite"]["composition_pct"]))
+        m = {**base, "libelle": "Rendement en revenu du portefeuille (dividendes des 12 derniers mois)",
+             "unite": "fraction", "source_donnees": "donnees_dividendes"}
+        if y is None or cible is None or limite is None:
+            m.update(note=None, statut="indetermine")
+            return _noter({"revenu": m})
+        moitie = limite >= cible
+        if moitie:
+            limite = cible / 2.0
+        m.update(note=note_lineaire(y, cible, limite), valeur=y, cible=cible, limite=limite,
+                 limite_moitie_de_la_cible=moitie,
+                 phrase=f"revenu {_fr(y * 100, 2)} % par an ; cible {_fr(cible * 100, 2)} %, limite {_fr(limite * 100, 2)} %")
+        return _noter({"revenu": m})
+    w = poids_par_classe(port).get("actions", 0.0)
+    b, c, hmax = f_actions["min"], f_actions["cible"], f_actions["max"]
+    if obj == "croissance_equilibree":
+        note = note_classe(w, b, c, hmax)
+        phrase = f"actions {_fr(w)} % ; cible {_fr(c, 0)} %, permis {_fr(b, 0)} à {_fr(hmax, 0)} %"
+    else:  # croissance_long_terme : côté bas seulement
+        note = 100.0 if w >= c else note_lineaire(w, c, b)
+        phrase = f"actions {_fr(w)} % ; cible {_fr(c, 0)} % ou plus, minimum {_fr(b, 0)} %"
+    return _noter({"actions": {**base, "libelle": "Poids des actions face à la fourchette du profil", "note": note,
+                               "valeur": w, "cible": c, "limite": b, "max": hmax, "unite": "%", "phrase": phrase}})
+
+
 # ---------------------------------------------------------------- score
 
 def evaluer(port: dict, fiche: dict, ordre: dict | None = None) -> dict:
     notes = {
+        "objectif": note_objectif(port, fiche),
         "risque": note_risque(port, fiche),
         "diversification": note_diversification(port, fiche),
         "preferences": note_preferences(port, fiche, ordre),
     }
-    dim = min(notes, key=lambda k: notes[k]["note"])
-    score = notes[dim]["note"]
+    for fam, n in notes.items():
+        n["question"] = FAMILLES[fam]
+    notees = {k: n for k, n in notes.items() if isinstance(n.get("note"), (int, float))}
+    dim = min(notees, key=lambda k: notees[k]["note"])
+    score = notees[dim]["note"]
     return {"score": score, "dimension_min": dim, "mesure_min": notes[dim]["mesure_min"], "notes": notes,
-            "dans_la_politique": score >= SEUIL_COMPATIBLE}
+            "familles": list(notes), "dans_la_politique": score >= SEUIL_COMPATIBLE}
 
 
 def direction(score_avant: float, score_apres: float) -> dict:
@@ -499,7 +611,11 @@ def cause(fiche: dict, ordres: list, cs: dict, apres: dict, port_apres: dict) ->
          # La mesure telle que le moteur la décrit (entrées, cible, limite, source…), quelle que soit sa famille.
          "detail_mesure": {k: v for k, v in m.items() if not isinstance(v, (list, dict)) or k in
                            ("entrees", "cible", "limite", "source", "sources")}}
-    if dim == "risque":
+    if dim == "risque" and mes not in ("ampleur", "duree") or dim in ("objectif", "liquidite"):
+        c.update(type=dim, valeur=m.get("valeur"), cible=m.get("cible"), limite=m.get("limite"),
+                 libelle_mesure=m.get("libelle"), phrase=m.get("phrase"))
+        c["porte_par_l_ordre"] = True
+    elif dim == "risque":
         c["type"] = "risque"
         if mes == "ampleur":
             c.update(valeur=m.get("pire_baisse"), limite=m.get("pire_baisse_limite"),
@@ -537,7 +653,7 @@ def cause(fiche: dict, ordres: list, cs: dict, apres: dict, port_apres: dict) ->
     c["autres_mesures_sous_le_seuil"] = [
         {"dimension": d, "mesure": k, "note": v["note"]}
         for d, n in apres["notes"].items() for k, v in n["mesures"].items()
-        if v["note"] < SEUIL_COMPATIBLE and (d, k) != (dim, mes)]
+        if isinstance(v.get("note"), (int, float)) and v["note"] < SEUIL_COMPATIBLE and (d, k) != (dim, mes)]
     return c
 
 
