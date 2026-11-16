@@ -58,7 +58,8 @@ def test_defaut_identique_a_main(cas):
     r = api.simuler_ordre(client, ticker, sens, float(pct))
     assert r["portefeuille_apres_pct"] == attendu["portefeuille_apres_pct"]
     assert r["direction"]["cas"] in ("reste_dans_la_politique", "fait_sortir_de_la_politique",
-                                     "hors_politique_rapproche", "hors_politique_aggrave")
+                                     "hors_politique_rapproche", "hors_politique_aggrave",
+                                     "revient_dans_la_politique", "hors_politique_inchange")
     assert r["contraintes_strictes"]["themes_violes"] == attendu["themes_violes"]
     for bloc in ("avant", "apres"):
         publiees = {d: {m: pytest.approx(_publiee(v), abs=1e-6) for m, v in ms.items()}

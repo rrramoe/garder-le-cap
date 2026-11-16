@@ -110,3 +110,28 @@ def test_cause_sans_nouvelle_note():
 def test_cause_porte_le_detail_de_la_mesure():
     c = api.simuler_ordre(FIXE, "JNJ", "achat", 15)["cause"]
     assert c["detail_mesure"]["poids"] == 20.0 and c["detail_mesure"]["plafond"] == 15
+
+
+# ---------------------------------------------------------------- directions (vérification finale)
+
+def _client_neuf(port):
+    return {"id": "neuf", "nom": "Client neuf", "portefeuille_pct": port,
+            "questionnaire": {"objectif": "croissance_equilibree", "horizon": "8_12", "fluctuations": "moderees",
+                              "experience": "intermediaire", "themes": {}}}
+
+
+def test_direction_revient_dans_la_politique():
+    from moteur import notation
+    d = notation.direction(40.0, 75.0)
+    assert d["cas"] == "revient_dans_la_politique" and d["libelle"] == "Revient dans la politique"
+    assert d["revient_dans_la_politique"] is True
+
+
+def test_direction_inchangee_quand_la_note_la_plus_faible_ne_bouge_pas():
+    r = api.simuler_ordre(_client_neuf({"ZST.TO": 100}), "XIU.TO", "achat", 5)
+    if r["avant"]["score"] == r["apres"]["score"] < 70:
+        assert r["direction"]["cas"] == "hors_politique_inchange"
+    from moteur import notation
+    assert notation.direction(0.0, 0.0)["cas"] == "hors_politique_inchange"
+    assert notation.direction(10.0, 5.0)["cas"] == "hors_politique_aggrave"
+    assert notation.direction(10.0, 20.0)["cas"] == "hors_politique_rapproche"

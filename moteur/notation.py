@@ -579,6 +579,10 @@ def direction(score_avant: float, score_apres: float) -> dict:
             cas, lib = "reste_dans_la_politique", "Reste dans la politique"
         else:
             cas, lib = "fait_sortir_de_la_politique", "Fait sortir de la politique"
+    elif score_apres >= SEUIL_COMPATIBLE:
+        cas, lib = "revient_dans_la_politique", "Revient dans la politique"
+    elif abs(score_apres - score_avant) < 1e-9:
+        cas, lib = "hors_politique_inchange", "Hors politique, sans changement sur l'angle le plus faible"
     elif score_apres > score_avant:
         cas, lib = "hors_politique_rapproche", "Hors politique et rapproche"
     else:

@@ -161,6 +161,8 @@ DIRECTIONS_TEXTE = {
     "fait_sortir_de_la_politique": "Votre portefeuille sortirait de votre politique.",
     "hors_politique_rapproche": "Votre portefeuille est déjà hors politique ; l'ordre l'en rapproche.",
     "hors_politique_aggrave": "Votre portefeuille est déjà hors politique ; l'ordre aggrave l'écart.",
+    "revient_dans_la_politique": "Votre portefeuille est hors politique ; l'ordre l'y ramène.",
+    "hors_politique_inchange": "Votre portefeuille est déjà hors politique ; l'ordre ne change pas son angle le plus faible.",
 }
 STATUTS_CONTRAINTE = {"violee": "non respectée", "respectee": "respectée", "signalee": "signalée",
                       "ignoree": "ignorée", "non_applicable": "sans objet"}

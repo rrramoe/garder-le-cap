@@ -92,7 +92,7 @@ Notes du portefeuille actuel, sans ordre : `score`, `dimension_min`, `mesure_min
 | `avant`, `apres` | Même forme que `etat_des_lieux` : `score`, `dimension_min`, `mesure_min`, `notes` |
 | `score`, `dimension_min`, `mesure_min` | Raccourcis vers `apres` |
 | `verdict` | `{code, libelle, raison}`, `code` = `compatible`, `en_tension`, `incompatible` |
-| `direction` | `{cas, libelle, score_avant, score_apres, revient_dans_la_politique}` ; `cas` = `reste_dans_la_politique`, `fait_sortir_de_la_politique`, `hors_politique_rapproche`, `hors_politique_aggrave` ; `remarque` si une contrainte stricte est violée |
+| `direction` | `{cas, libelle, score_avant, score_apres, revient_dans_la_politique}` ; `cas` = `reste_dans_la_politique`, `fait_sortir_de_la_politique`, `revient_dans_la_politique` (hors politique avant, note de passage atteinte après), `hors_politique_rapproche`, `hors_politique_inchange` (note la plus faible identique), `hors_politique_aggrave` ; `remarque` si une contrainte stricte est violée |
 | `contribution_risque_apres` | `{ticker, poids_pct, part_du_risque_pct}` : affiché, non noté |
 | `operation` | `{code, libelle, levier_avant, levier_apres, exposition_brute_apres_pct, exposition_empruntee_apres_pct, hypotheses, limites, controle_experience}` (voir plus bas) |
 | `solidite` | Voir `solidite` ci-dessous : le score après l'ordre sur 2022 seule et sur la période sans 2022 |

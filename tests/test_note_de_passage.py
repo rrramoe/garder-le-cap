@@ -43,6 +43,10 @@ def test_verdicts_directions_et_tailles_inchanges(cle):
         return
     client, ticker, sens, pct = _client(parts[0]), parts[1], parts[2], float(parts[3])
     r = api.simuler_ordre(client, ticker, sens, pct)
-    assert (r["verdict"]["code"], r["direction"]["cas"]) == (attendu["verdict"], attendu["direction"])
+    # Deux cas de direction ajoutés depuis la référence : « revient » (ancien « rapproche » qui atteint la note de
+    # passage) et « inchangé » (ancien « aggrave » sans changement de la note la plus faible).
+    nouveaux = {"revient_dans_la_politique": "hors_politique_rapproche", "hors_politique_inchange": "hors_politique_aggrave"}
+    cas = nouveaux.get(r["direction"]["cas"], r["direction"]["cas"])
+    assert (r["verdict"]["code"], cas) == (attendu["verdict"], attendu["direction"])
     if "taille" in attendu:
         assert api.chercher_taille_compatible(client, ticker, sens, pct).get("taille_compatible_pct") == attendu["taille"]
