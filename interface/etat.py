@@ -257,9 +257,19 @@ def accepte_sur_etape(fonction) -> bool:
         return False
 
 
+def accepte(fonction, parametre: str) -> bool:
+    """Vrai si la fonction de l'agent connaît ce paramètre."""
+    try:
+        return parametre in inspect.signature(fonction).parameters
+    except (TypeError, ValueError):
+        return False
+
+
 def appeler_agent(fiche: dict, ticker: str, sens: str, pourcentage: float, operation: str = "comptant",
-                  sur_etape=None) -> dict:
-    """Appelle l'agent s'il existe ; renvoie toujours un dict {explication, trace, erreur, ...}."""
+                  sur_etape=None, relancer: bool = False) -> dict:
+    """Appelle l'agent s'il existe ; renvoie toujours un dict {explication, trace, erreur, ...}.
+
+    `relancer` demande une analyse neuve quand l'agent garde la mémoire de ses analyses."""
     try:
         from agent.inspection import inspecter  # import paresseux : le module peut être absent
     except Exception:
@@ -267,6 +277,8 @@ def appeler_agent(fiche: dict, ticker: str, sens: str, pourcentage: float, opera
     options = {"operation": operation}
     if sur_etape is not None and accepte_sur_etape(inspecter):
         options["sur_etape"] = sur_etape
+    if relancer and accepte(inspecter, "relancer"):
+        options["relancer"] = True
     try:
         r = inspecter(copy.deepcopy(fiche), ticker, sens, pourcentage, **options)
     except Exception as exc:  # l'agent ne doit jamais faire tomber l'analyse
@@ -277,6 +289,14 @@ def appeler_agent(fiche: dict, ticker: str, sens: str, pourcentage: float, opera
     if not r.get("erreur") and not r.get("explication"):
         r["erreur"] = "aucune explication reçue"
     return r
+
+
+def relancer_l_analyse(persona: str) -> None:
+    """Redemande aux agents une analyse neuve du même ordre ; le résultat du moteur reste en place."""
+    rapport = st.session_state.get(f"rapport_{persona}")
+    if rapport is not None:
+        rapport["agent"] = None
+        rapport["relancer"] = True
 
 
 def soumettre_au_garde_fou(texte: str) -> dict:

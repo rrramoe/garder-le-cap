@@ -153,6 +153,9 @@ div[class*="st-key-accueil"] {{ background: var(--voile); border-radius: var(--r
   border: 1px solid var(--bord); border-radius: 999px; padding: 0 7px; line-height: 1.5; vertical-align: 1px;
   margin-left: 6px; white-space: nowrap; }}
 
+div[class*="st-key-deja_faite"] {{ margin-bottom: -8px; }}
+div[class*="st-key-deja_faite"] .stButton {{ display: flex; justify-content: flex-end; }}
+
 /* ---------- verdict ---------- */
 .stApp .glc-verdict {{ border-radius: var(--rayon); border: 1px solid var(--bord); background: var(--surface);
   padding: 22px 24px; position: relative; overflow: hidden; }}

@@ -22,6 +22,7 @@ TITRE_ANALYSE = "Analyse de l'ordre"
 TITRE_ETAPES = "Étapes de l'analyse"
 DEPUIS_PRECEDENT = "Depuis l'analyse précédente"
 EN_DIRECT_AGENT = "Analyse en cours"
+DEJA_FAITE = "Analyse déjà faite pour cet ordre."
 DELAI_MAX_AGENT_S = 240  # au-delà, l'analyse du moteur reste seule affichée
 
 PAGES = {"portefeuille": "Portefeuille", "negocier": "Négocier", "profil": "Profil", "aide": "Aide"}

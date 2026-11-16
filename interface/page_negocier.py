@@ -16,8 +16,8 @@ from interface import composants as C
 from interface import etat
 from interface.theme import ENCRE, GRIS, OR, POLICE, SAUGE
 from interface.textes import (AIDE_ANGLES, ANGLES_DEFAUT, AVIS_SANS_AGENT, BOUTON_ACTION, BOUTON_PASSER, CORRECTION_TEXTE,
-                              DELAI_MAX_AGENT_S, DEPUIS_PRECEDENT, DIRECTIONS_TEXTE, EN_DIRECT_AGENT, LIBELLES_OUTILS,
-                              LIBELLES_PHASES, LIMITE, OPERATIONS, SOLIDITE_TEXTE, STATUTS_REGLE, THEMES, TITRE_ANALYSE,
+                              DEJA_FAITE, DELAI_MAX_AGENT_S, DEPUIS_PRECEDENT, DIRECTIONS_TEXTE, EN_DIRECT_AGENT, LIBELLES_OUTILS,
+                              LIBELLES_PHASES, LIMITE, MESURES, OPERATIONS, SOLIDITE_TEXTE, STATUTS_REGLE, THEMES, TITRE_ANALYSE,
                               TITRE_ETAPES, TYPES_ORDRE, VERIFICATION_TEXTE, angles_du_bloc, decrire_mesure,
                               derniers_prix_cad, dollars, francais, instruments, libelle_mesure, libelle_option,
                               libelle_theme_reponse, mesures_a_plat, nom_agent, nom_angle, nom_instrument, nombre,
@@ -450,14 +450,21 @@ def section_mesures(sim: dict) -> None:
 
 
 def section_solidite(solidite: dict | None) -> None:
+    """Le même calcul refait sur deux périodes : une mauvaise année de marché, puis le reste."""
     if not solidite or not solidite.get("fenetres"):
         st.caption("Solidité non calculée.")
         return
     lignes = []
     for f in solidite["fenetres"].values():
         cote = "respecte la politique de placement" if f["dans_la_politique"] else f"sous la note de passage ({LIMITE:g})"
-        lignes.append(f"<li>{C.e(f['libelle'])} : note de l'angle déterminant {note_txt(f['score'])}, {cote}.</li>")
-    C.montrer("<ul>" + "".join(lignes) + "</ul>")
+        angle = f" ({nom_angle(f['dimension_min']).lower()})" if f.get("dimension_min") else ""
+        texte = f"{C.e(f['libelle'])} : note de l'angle déterminant{C.e(angle)} {note_txt(f.get('score'))}, {cote}."
+        absentes = [MESURES.get(m, str(m).replace("_", " ")) for m in f.get("mesures_indeterminees") or []]
+        if absentes:
+            texte += f" Période trop courte pour mesurer : {C.e(', '.join(absentes))}."
+        lignes.append(f"<li>{texte}</li>")
+    tete = f"<p>{C.e(francais(solidite['explication']))}</p>" if solidite.get("explication") else ""
+    C.montrer(tete + "<ul>" + "".join(lignes) + "</ul>")
     st.caption("Les notes affichées plus haut restent celles de toute la période.")
 
 
@@ -541,10 +548,12 @@ def analyser_en_direct(rapport: dict) -> bool:
     file: queue.Queue = queue.Queue()
     sortie: dict = {}
     o = rapport["ordre"]
+    relancer = bool(rapport.pop("relancer", False))
 
     def travail():
         sortie["r"] = etat.appeler_agent(rapport["fiche"], o["ticker"], o["sens"], o["pourcentage"],
-                                         etat.operation_moteur(o.get("operation")), sur_etape=file.put)
+                                         etat.operation_moteur(o.get("operation")), sur_etape=file.put,
+                                         relancer=relancer)
 
     fil = threading.Thread(target=travail, name="analyse-agent", daemon=True)
     debut = time.monotonic()
@@ -612,6 +621,17 @@ def analyser_en_direct(rapport: dict) -> bool:
     return True
 
 
+def bloc_deja_faite(persona: str, rapport: dict) -> None:
+    """Une ligne discrète quand les agents rendent une analyse déjà faite pour cet ordre, et de quoi la relancer."""
+    memoire = (rapport.get("agent") or {}).get("memoire") or {}
+    if memoire.get("statut") != "deja_faite":
+        return
+    with st.container(key="deja_faite"):
+        gauche, droite = st.columns([5, 1], vertical_alignment="center")
+        gauche.caption(memoire.get("message") or DEJA_FAITE)
+        droite.button("Relancer", key="relancer", type="tertiary", on_click=etat.relancer_l_analyse, args=(persona,))
+
+
 # ---------------------------------------------------------------- l'analyse, de haut en bas
 
 def analyse(persona: str, rapport: dict, fiche_actuelle: dict) -> None:
@@ -626,6 +646,7 @@ def analyse(persona: str, rapport: dict, fiche_actuelle: dict) -> None:
     exp = rapport["fiche_client"].get("questionnaire", {}).get("experience", "intermediaire")
     ouvert = exp == "avancee"
 
+    bloc_deja_faite(persona, rapport)
     bloc_verdict(sim, rapport, valeur)
     bloc_angles(sim)
     bloc_a_retenir(sim)
@@ -637,7 +658,8 @@ def analyse(persona: str, rapport: dict, fiche_actuelle: dict) -> None:
             with st.spinner("L'agent rédige l'explication…"):
                 o = rapport["ordre"]
                 rapport["agent"] = etat.appeler_agent(rapport["fiche"], o["ticker"], o["sens"], o["pourcentage"],
-                                                      etat.operation_moteur(o.get("operation")))
+                                                      etat.operation_moteur(o.get("operation")),
+                                                      relancer=bool(rapport.pop("relancer", False)))
         st.rerun()
 
     bloc_possible(rapport, valeur)

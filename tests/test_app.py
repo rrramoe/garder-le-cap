@@ -497,3 +497,26 @@ def test_profil_la_politique_suit_la_fiche(sans_agent):
     assert not at.exception, at.exception
     apres = next(m.value for m in at.markdown if 'class="glc-doc"' in m.value)
     assert "profil Conservateur" not in apres and apres != document
+
+
+def test_analyse_deja_faite_et_relance(monkeypatch):
+    """Une analyse rendue de mémoire le dit en une ligne ; « Relancer » redemande une analyse neuve aux agents."""
+    import agent.inspection
+    appels = []
+
+    def inspecter(fiche, ticker, sens, pourcentage, operation="comptant", relancer=False):
+        appels.append(relancer)
+        memoire = {"statut": "nouvelle"} if relancer else {"statut": "deja_faite",
+                                                          "message": "Analyse déjà faite pour cet ordre."}
+        return {"explication": "**Le verdict.** En tension.", "trace": TRACE_SIMULEE, "erreur": None,
+                "memoire": memoire}
+
+    monkeypatch.setattr(agent.inspection, "inspecter", inspecter)
+    at = _demarrer()
+    texte = _inspecter(at, "robert")
+    assert "Analyse déjà faite pour cet ordre." in texte and appels == [False]
+    at.button(key="relancer").click().run()
+    assert not at.exception, at.exception
+    assert appels == [False, True]
+    assert "Analyse déjà faite" not in _textes(at) and not [b for b in at.button if b.key == "relancer"]
+    assert "En tension" in _verdict(at)
