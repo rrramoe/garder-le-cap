@@ -49,7 +49,7 @@ def fiche(persona: str, fiche_session: dict) -> None:
             st.radio(lib, echelle, key=etat.cle_q(persona, "theme_" + t), horizontal=True,
                      format_func=libelle_theme_reponse)
         ecarts = etat.fiche_modifiee(persona, fiche_session)
-        if ecarts:
+        if ecarts and enregistre["exemple"]:  # un nouveau compte n'a pas de fiche d'origine à retrouver
             gauche, droite = st.columns([3, 1], vertical_alignment="center")
             gauche.caption("Fiche modifiée : " + " ; ".join(ecarts) + ".")
             droite.button("Revenir à la fiche d'origine", on_click=etat.reinitialiser, args=(persona,),

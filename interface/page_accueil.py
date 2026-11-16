@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import base64
+import functools
+from pathlib import Path
+
 import streamlit as st
 
 from moteur import api, references
@@ -262,6 +266,29 @@ VUES = {"cap": _vue_cap, "fiche": _vue_fiche, "issues": _vue_issues, "resultat":
 
 # ---------------------------------------------------------------- l'introduction
 
+ASSETS = Path(__file__).resolve().parent / "assets"
+
+
+@functools.lru_cache(maxsize=None)
+def _clip(cle: str) -> tuple[str, str] | None:
+    """Le clip d'un panneau (MP4 muet) et son affiche, encodés pour être servis avec la page elle-même :
+    aucune adresse de plus à joindre, donc rien qui dépende du chemin par lequel on atteint l'application."""
+    video, affiche = ASSETS / f"intro_{cle}.mp4", ASSETS / f"intro_{cle}.jpg"
+    if not (video.exists() and affiche.exists()):
+        return None
+    return (base64.b64encode(video.read_bytes()).decode("ascii"), base64.b64encode(affiche.read_bytes()).decode("ascii"))
+
+
+def vue(cle: str) -> str:
+    """La vue d'un panneau : son clip s'il existe (il joue seul, muet, en boucle ; son affiche reste si la
+    lecture est impossible), sinon la vue fixe, faite des vrais composants."""
+    clip = _clip(cle)
+    if clip is None:
+        return f'<div class="glc-vue">{VUES[cle]()}</div>'
+    return ('<div class="glc-vue clip"><video autoplay muted loop playsinline preload="auto" '
+            f'poster="data:image/jpeg;base64,{clip[1]}" src="data:video/mp4;base64,{clip[0]}"></video></div>')
+
+
 def _titre(titre: str) -> str:
     """Un titre en plusieurs phrases se lit en deux temps : les premières posent, la dernière frappe."""
     phrases = [x.strip() for x in titre.replace(". ", ".|").split("|") if x.strip()]
@@ -297,7 +324,7 @@ def introduction() -> None:
             suivant.button(suite, key="intro_suivant", type="primary", width="stretch",
                            on_click=etat.avancer_introduction, args=(1, dernier))
         with droite:
-            C.montrer(f'<div class="glc-vue">{VUES[cle]()}</div>')
+            C.montrer(vue(cle))
 
 
 # ---------------------------------------------------------------- le choix d'un compte
