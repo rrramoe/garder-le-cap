@@ -168,7 +168,7 @@ div[class*="st-key-introduction"] {{ max-width: 1168px; margin: 4px auto 0 auto;
   font-variant-numeric: tabular-nums; }}
 .stApp .glc-pas-intro i {{ width: 22px; height: 4px; border-radius: 4px; background: var(--piste); }}
 .stApp .glc-pas-intro i.ici {{ background: var(--encre); }}
-.stApp .glc-intro {{ height: 318px; display: flex; flex-direction: column; justify-content: flex-end; }}
+.stApp .glc-intro {{ height: 344px; display: flex; flex-direction: column; justify-content: flex-end; }}
 .stApp .glc-intro h1 {{ font-size: var(--t5); font-weight: 700; line-height: 1.16; margin: 0 0 12px 0;
   letter-spacing: -0.03em; color: var(--encre); }}
 .stApp .glc-intro h1 span.avant, .stApp .glc-intro h1 span.apres {{ display: block; }}
