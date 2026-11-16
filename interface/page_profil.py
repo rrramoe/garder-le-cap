@@ -32,7 +32,7 @@ def fiche(persona: str, fiche_session: dict) -> None:
             plus_longue = max(len(libelle_option(champ, o)) for o in QUESTIONNAIRE[champ]["options"])
             return max(0.8, len(QUESTIONNAIRE[champ]["libelle"]) / 33, min(plus_longue / 40, 1.6))
 
-        largeurs = [max(largeur(c) for c in champs) for _, champs in groupes]
+        largeurs = [max([len(RUBRIQUES[cle][1]) / 33] + [largeur(c) for c in champs]) for cle, champs in groupes]
         colonnes = st.columns(largeurs, gap="medium")
         for colonne, (cle, champs) in zip(colonnes, groupes):
             with colonne:
