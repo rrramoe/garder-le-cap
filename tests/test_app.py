@@ -551,7 +551,7 @@ def test_introduction_puis_choix_du_compte(sans_agent):
     assert at.session_state["etape"] == "introduction" and not at.radio  # ni navigation ni compte avant le choix
     assert "Simulation à but éducatif. Aucune transaction réelle." in _textes(at)
     assert len(INTRODUCTION) == 5
-    assert INTRODUCTION[0][1].startswith("Les institutions ont un département de risque.")  # la phrase du projet
+    assert INTRODUCTION[0][1].startswith("Les professionnels ont un département de risque.")  # la phrase du projet
     for n, (_, titre, lignes, note) in enumerate(INTRODUCTION):
         texte = _textes(at)
         assert f"{n + 1} / {len(INTRODUCTION)}" in texte and lignes[0] in texte and note in texte

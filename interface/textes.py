@@ -51,7 +51,7 @@ LIBELLES_PHASES = {
 # Tous ses mots sont ici. Par panneau : la vue, le titre, une ou deux phrases, et au plus un essentiel
 # technique, dit à voix basse. {nom}, {montant} et {titre} sont remplis avec l'ordre prêt d'un compte enregistré.
 INTRODUCTION = [
-    ("cap", "Les institutions ont un département de risque. Le particulier n'a que son enthousiasme.",
+    ("cap", "Les professionnels ont un département de risque. Le particulier n'a que son enthousiasme.",
      ["Garder le cap vous donne le vôtre : à chaque ordre, il mesure l'écart avec votre politique de placement "
       "et vos objectifs, avant que vous ne le passiez."],
      ""),
