@@ -232,7 +232,8 @@ class Explorateur:
             # L'entrée de l'explorateur n'est faite que de faits écrits par le code et de la mission du chef de
             # dossier : le garde-fou Bedrock, qui y voyait parfois une demande de transaction, s'applique à ses
             # phrases montrées dans le rapport (voir `_bilan`), pas à cette entrée.
-            m = creer_modele(nom_modele(m), garde_fou=False)
+            from .inspection import EFFORT_EXPLORATEUR
+            m = creer_modele(nom_modele(m), effort=EFFORT_EXPLORATEUR, garde_fou=False)
         avancees = operations_avancees_permises(api.lire_fiche_client(self.client))
         outils = creer_outils_explorateur(self.client, registre=self.registre, operations_avancees=avancees,
                                           mode=self.mode, ticker_ordre=self.ordre["ticker"], bornes=self.bornes)

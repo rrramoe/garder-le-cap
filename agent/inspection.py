@@ -39,6 +39,8 @@ MINIMUM_SECOND_TOUR_S = 12     # en dessous, pas de second tour
 # Profondeur de raisonnement (output_config.effort) : « medium » garde les preuves de l'équipe et divise le temps
 # de chaque tour ; GLC_EFFORT=high revient au défaut du modèle.
 EFFORT = os.environ.get("GLC_EFFORT", "medium").strip() or None
+# L'explorateur cherche sous un mandat déjà écrit : un effort plus bas suffit et raccourcit ses tours.
+EFFORT_EXPLORATEUR = os.environ.get("GLC_EFFORT_EXPLORATEUR", "low").strip() or None
 TENTATIVES_SDK = {"max_attempts": 4, "mode": "adaptive"}   # mode de tentatives de botocore (ThrottlingException)
 PROMPT_SYSTEME = Path(__file__).parent / "prompts" / "systeme.md"        # agent seul
 PROMPT_PRINCIPAL = Path(__file__).parent / "prompts" / "principal.md"    # chef de dossier de l'équipe
