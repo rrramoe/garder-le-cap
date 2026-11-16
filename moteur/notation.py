@@ -1,7 +1,7 @@
 """Notation d'un ordre (sections 7.1 à 7.6 et 8.1 de la spécification).
 
-Échelle commune : 100 = sur la cible, 50 = exactement à la limite de la politique,
-sous 50 = au-delà, plancher à 0. Chaque note renvoie ses composantes.
+Échelle commune : 100 = sur la cible, NOTE_DE_PASSAGE (70) = exactement à la limite de la politique,
+sous 70 = au-delà, 0 au double de la distance. Chaque note renvoie ses composantes.
 """
 from __future__ import annotations
 
@@ -12,7 +12,32 @@ import numpy as np
 from . import donnees, instruments, references
 from .client import poids_par_classe
 
-SEUIL_COMPATIBLE = 50.0
+# Note de passage : la seule place où elle est fixée. Les formules des mesures donnent une note brute
+# (100 sur la cible, 50 à la limite, 0 au double de la distance) ; `convertir` la porte sur l'échelle publiée
+# (100 sur la cible, NOTE_DE_PASSAGE à la limite, 0 au double de la distance), droite de chaque côté de la limite.
+NOTE_DE_PASSAGE = 70.0
+SEUIL_COMPATIBLE = NOTE_DE_PASSAGE
+_LIMITE_BRUTE = 50.0
+
+
+def convertir(note_brute: float) -> float:
+    """Note brute (limite à 50) → note publiée (limite à NOTE_DE_PASSAGE). Croissante : aucun verdict ne change."""
+    if note_brute >= _LIMITE_BRUTE:
+        return NOTE_DE_PASSAGE + (note_brute - _LIMITE_BRUTE) * (100.0 - NOTE_DE_PASSAGE) / (100.0 - _LIMITE_BRUTE)
+    return note_brute * NOTE_DE_PASSAGE / _LIMITE_BRUTE
+
+
+def convertir_famille(famille: dict) -> dict:
+    """Convertit en place les notes d'une famille, de ses mesures et de leurs sous-mesures."""
+    for m in famille.get("mesures", {}).values():
+        if isinstance(m.get("note"), (int, float)):
+            m["note"] = convertir(m["note"])
+        for sm in (m.get("sous_mesures") or {}).values():
+            if isinstance(sm, dict) and isinstance(sm.get("note"), (int, float)):
+                sm["note"] = convertir(sm["note"])
+    if isinstance(famille.get("note"), (int, float)):
+        famille["note"] = convertir(famille["note"])
+    return famille
 PAS_TAILLE = 0.5
 EPS = 1e-9
 
@@ -539,12 +564,13 @@ def evaluer(port: dict, fiche: dict, ordre: dict | None = None) -> dict:
         "preferences": note_preferences(port, fiche, ordre),
     }
     for fam, n in notes.items():
+        convertir_famille(n)
         n["question"] = FAMILLES[fam]
     notees = {k: n for k, n in notes.items() if isinstance(n.get("note"), (int, float))}
     dim = min(notees, key=lambda k: notees[k]["note"])
     score = notees[dim]["note"]
     return {"score": score, "dimension_min": dim, "mesure_min": notes[dim]["mesure_min"], "notes": notes,
-            "familles": list(notes), "dans_la_politique": score >= SEUIL_COMPATIBLE}
+            "familles": list(notes), "note_de_passage": NOTE_DE_PASSAGE, "dans_la_politique": score >= SEUIL_COMPATIBLE}
 
 
 def direction(score_avant: float, score_apres: float) -> dict:
@@ -579,8 +605,9 @@ def verdict(contraintes: dict, score: float) -> dict:
         return {"code": "incompatible", "libelle": "Incompatible",
                 "raison": "Contrainte stricte violée : " + ", ".join(contraintes["themes_violes"]) + "."}
     if score >= SEUIL_COMPATIBLE:
-        return {"code": "compatible", "libelle": "Compatible", "raison": "Score de 50 ou plus."}
-    return {"code": "en_tension", "libelle": "En tension", "raison": "Score sous 50 : au-delà d'une limite de la politique."}
+        return {"code": "compatible", "libelle": "Compatible", "raison": f"Note la plus faible de {NOTE_DE_PASSAGE:g} ou plus."}
+    return {"code": "en_tension", "libelle": "En tension",
+            "raison": f"Note la plus faible sous {NOTE_DE_PASSAGE:g} : au-delà d'une limite de la politique."}
 
 
 def bloc_operation(port_avant: dict, port_apres: dict, operation: str, fiche: dict, apres: dict) -> dict:
@@ -642,7 +669,7 @@ def simuler(fiche: dict, ticker: str, sens: str, pourcentage: float, operation: 
 
 
 def taille_compatible(fiche: dict, ticker: str, sens: str, pourcentage: float, operation: str = "comptant") -> dict:
-    """Plus grande taille, par pas de 0,5 %, jusqu'au montant demandé, avec score >= 50."""
+    """Plus grande taille, par pas de 0,5 %, jusqu'au montant demandé, dont la note la plus faible atteint la note de passage."""
     port = fiche["portefeuille_pct"]
     appliquer_ordre(port, ticker, sens, pourcentage, operation)  # valide l'ordre demandé
     cs = contraintes_strictes(fiche, ticker, sens, operation)

@@ -14,6 +14,11 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+
+def _publiee(n):
+    """Note brute (limite à 50) portée sur l'échelle publiée (limite à 70), recalculée ici indépendamment du moteur."""
+    return n * 70 / 50 if n < 50 else 70 + (n - 50) * 30 / 50
+
 def _prix_cad(ticker):
     """Prix ajusté en CAD, recalculé à la main : calendrier XIU.TO ∪ SPY, report en avant, change du jour."""
     p = pd.read_csv(D / "prices_daily.csv", parse_dates=["date"])
@@ -177,4 +182,4 @@ def test_eviter_la_devise_etrangere_mesure_le_poids_en_usd():
     r = api.simuler_ordre(_client(devise_etrangere="eviter"), "AAPL", "achat", 5)
     m = r["apres"]["notes"]["preferences"]["mesures"]["devise_etrangere"]
     assert m["poids_expose"] == pytest.approx(25.0)          # SPY 20 % + AAPL 5 %
-    assert m["note"] == pytest.approx(max(0.0, 100 - 50 * 25 / 15))
+    assert m["note"] == pytest.approx(_publiee(max(0.0, 100 - 50 * 25 / 15)))

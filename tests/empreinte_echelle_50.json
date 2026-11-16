@@ -1,0 +1,315 @@
+{
+ "note": "Verdicts, directions et tailles compatibles avec la note de passage à 50, avant le passage à 70 (géographie en % du portefeuille, cef4534).",
+ "cas": {
+  "amira|etat": {
+   "dans_la_politique": false
+  },
+  "amira|XIU.TO|achat|2": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "amira|XIU.TO|achat|6": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "amira|SPY|achat|2": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "amira|SPY|achat|6": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "amira|XBB.TO|achat|2": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "amira|XBB.TO|achat|6": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "amira|RY.TO|achat|2": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "amira|RY.TO|achat|6": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "amira|NVDA|achat|2": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "amira|NVDA|achat|6": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "amira|TSLA|achat|2": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "amira|TSLA|achat|6": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "amira|XOM|achat|2": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_rapproche"
+  },
+  "amira|XOM|achat|6": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "amira|GLD|achat|2": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "amira|GLD|achat|6": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "amira|BTC-USD|achat|2": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "amira|BTC-USD|achat|6": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "mateo|etat": {
+   "dans_la_politique": true
+  },
+  "mateo|XIU.TO|achat|2": {
+   "verdict": "compatible",
+   "direction": "reste_dans_la_politique"
+  },
+  "mateo|XIU.TO|achat|6": {
+   "verdict": "compatible",
+   "direction": "reste_dans_la_politique"
+  },
+  "mateo|SPY|achat|2": {
+   "verdict": "compatible",
+   "direction": "reste_dans_la_politique"
+  },
+  "mateo|SPY|achat|6": {
+   "verdict": "compatible",
+   "direction": "reste_dans_la_politique"
+  },
+  "mateo|XBB.TO|achat|2": {
+   "verdict": "compatible",
+   "direction": "reste_dans_la_politique"
+  },
+  "mateo|XBB.TO|achat|6": {
+   "verdict": "compatible",
+   "direction": "reste_dans_la_politique"
+  },
+  "mateo|RY.TO|achat|2": {
+   "verdict": "compatible",
+   "direction": "reste_dans_la_politique"
+  },
+  "mateo|RY.TO|achat|6": {
+   "verdict": "compatible",
+   "direction": "reste_dans_la_politique"
+  },
+  "mateo|NVDA|achat|2": {
+   "verdict": "compatible",
+   "direction": "reste_dans_la_politique"
+  },
+  "mateo|NVDA|achat|6": {
+   "verdict": "en_tension",
+   "direction": "fait_sortir_de_la_politique"
+  },
+  "mateo|TSLA|achat|2": {
+   "verdict": "compatible",
+   "direction": "reste_dans_la_politique"
+  },
+  "mateo|TSLA|achat|6": {
+   "verdict": "compatible",
+   "direction": "reste_dans_la_politique"
+  },
+  "mateo|XOM|achat|2": {
+   "verdict": "incompatible",
+   "direction": "reste_dans_la_politique"
+  },
+  "mateo|XOM|achat|6": {
+   "verdict": "incompatible",
+   "direction": "reste_dans_la_politique"
+  },
+  "mateo|GLD|achat|2": {
+   "verdict": "compatible",
+   "direction": "reste_dans_la_politique"
+  },
+  "mateo|GLD|achat|6": {
+   "verdict": "compatible",
+   "direction": "reste_dans_la_politique"
+  },
+  "mateo|BTC-USD|achat|2": {
+   "verdict": "compatible",
+   "direction": "reste_dans_la_politique"
+  },
+  "mateo|BTC-USD|achat|6": {
+   "verdict": "en_tension",
+   "direction": "fait_sortir_de_la_politique"
+  },
+  "robert|etat": {
+   "dans_la_politique": false
+  },
+  "robert|XIU.TO|achat|2": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "robert|XIU.TO|achat|6": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "robert|XIU.TO|achat|12": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave",
+   "taille": null
+  },
+  "robert|SPY|achat|2": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_rapproche"
+  },
+  "robert|SPY|achat|6": {
+   "verdict": "compatible",
+   "direction": "hors_politique_rapproche"
+  },
+  "robert|SPY|achat|12": {
+   "verdict": "compatible",
+   "direction": "hors_politique_rapproche",
+   "taille": 12.0
+  },
+  "robert|XBB.TO|achat|2": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "robert|XBB.TO|achat|6": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "robert|XBB.TO|achat|12": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave",
+   "taille": null
+  },
+  "robert|RY.TO|achat|2": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "robert|RY.TO|achat|6": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "robert|RY.TO|achat|12": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave",
+   "taille": null
+  },
+  "robert|NVDA|achat|2": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_rapproche"
+  },
+  "robert|NVDA|achat|6": {
+   "verdict": "compatible",
+   "direction": "hors_politique_rapproche"
+  },
+  "robert|NVDA|achat|12": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_rapproche",
+   "taille": 9.5
+  },
+  "robert|TSLA|achat|2": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_rapproche"
+  },
+  "robert|TSLA|achat|6": {
+   "verdict": "compatible",
+   "direction": "hors_politique_rapproche"
+  },
+  "robert|TSLA|achat|12": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave",
+   "taille": 7.0
+  },
+  "robert|XOM|achat|2": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_rapproche"
+  },
+  "robert|XOM|achat|6": {
+   "verdict": "compatible",
+   "direction": "hors_politique_rapproche"
+  },
+  "robert|XOM|achat|12": {
+   "verdict": "compatible",
+   "direction": "hors_politique_rapproche",
+   "taille": 12.0
+  },
+  "robert|GLD|achat|2": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "robert|GLD|achat|6": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "robert|GLD|achat|12": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave",
+   "taille": null
+  },
+  "robert|BTC-USD|achat|2": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "robert|BTC-USD|achat|6": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave"
+  },
+  "robert|BTC-USD|achat|12": {
+   "verdict": "en_tension",
+   "direction": "hors_politique_aggrave",
+   "taille": null
+  }
+ },
+ "portefeuilles": {
+  "amira": {
+   "ZST.TO": 8,
+   "XBB.TO": 7,
+   "XIU.TO": 14,
+   "SPY": 22,
+   "QQQ": 14,
+   "NVDA": 10,
+   "MSFT": 6,
+   "SHOP.TO": 4,
+   "CSU.TO": 3,
+   "BTC-USD": 5,
+   "ETH-USD": 3,
+   "GLD": 4
+  },
+  "mateo": {
+   "ZST.TO": 10,
+   "XBB.TO": 28,
+   "AGG": 8,
+   "ESGV": 20,
+   "RY.TO": 6,
+   "CNR.TO": 5,
+   "MFC.TO": 4,
+   "MSFT": 5,
+   "AAPL": 4,
+   "GLD": 10
+  },
+  "robert": {
+   "ZST.TO": 15,
+   "XBB.TO": 35,
+   "AGG": 15,
+   "XIU.TO": 8,
+   "RY.TO": 6,
+   "FTS.TO": 4,
+   "ENB.TO": 3,
+   "JNJ": 5,
+   "PG": 4,
+   "GLD": 5
+  }
+ }
+}

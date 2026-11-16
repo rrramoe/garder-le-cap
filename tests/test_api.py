@@ -22,6 +22,12 @@ APPELS = [
 ]
 
 
+
+def _publiee(n):
+    """Note brute (limite à 50) portée sur l'échelle publiée (limite à 70), recalculée ici indépendamment du moteur."""
+    return n * 70 / 50 if n < 50 else 70 + (n - 50) * 30 / 50
+
+
 @pytest.mark.parametrize("fn,args", APPELS)
 def test_json_et_sources(fn, args):
     r = fn(*args)
@@ -60,7 +66,7 @@ def test_vente_dans_un_theme_recherche():
     r = api.simuler_ordre("amira", "BTC-USD", "vente", 3)
     pref = r["apres"]["notes"]["preferences"]["mesures"]["crypto"]
     assert pref["poids_vendu"] == 3
-    assert pref["note"] == pytest.approx(90)
+    assert pref["note"] == pytest.approx(_publiee(90))
     assert r["portefeuille_apres_pct"]["ZST.TO"] == pytest.approx(11)
 
 

@@ -14,6 +14,11 @@ PROFILS = references.charger("profils")["profils"]
 CLASSES = references.charger("classes")["classes"]
 
 
+
+def _publiee(n):
+    """Note brute (limite à 50) portée sur l'échelle publiée (limite à 70), recalculée ici indépendamment du moteur."""
+    return n * 70 / 50 if n < 50 else 70 + (n - 50) * 30 / 50
+
 def _client(objectif, port, fluctuations="moderees", horizon="8_12", **q):
     return {"id": "essai", "nom": "Essai", "portefeuille_pct": port,
             "questionnaire": {"objectif": objectif, "horizon": horizon, "fluctuations": fluctuations,
@@ -21,7 +26,7 @@ def _client(objectif, port, fluctuations="moderees", horizon="8_12", **q):
 
 
 def _lin(x, cible, limite):
-    return min(100.0, max(0.0, 100 - 50 * (x - cible) / (limite - cible)))
+    return _publiee(min(100.0, max(0.0, 100 - 50 * (x - cible) / (limite - cible))))
 
 
 def _poids_actions(port):
@@ -43,7 +48,7 @@ def test_objectif_croissance_equilibree():
     attendu = 100 - 50 * (w - f["cible"]) / (f["max"] - f["cible"]) if w > f["cible"] else \
         100 - 50 * (f["cible"] - w) / (f["cible"] - f["min"])
     m = r["apres"]["notes"]["objectif"]["mesures"]["actions"]
-    assert m["note"] == pytest.approx(max(0, attendu))
+    assert m["note"] == pytest.approx(_publiee(max(0, attendu)))
 
 
 def test_objectif_croissance_long_terme_cote_bas_seulement():
@@ -63,7 +68,7 @@ def test_objectif_preserver_le_capital():
     pire = float((v / v.shift(3 * 252) - 1).min())
     pente = abs(references.charger("limites_risque")["pire_annee_banque_pct"]["par_profil"]["conservateur"]) / 100
     assert m["valeur"] == pytest.approx(pire, abs=1e-6)
-    assert m["note"] == pytest.approx(min(100, max(0, 50 + 50 * pire / pente)), abs=1e-4)
+    assert m["note"] == pytest.approx(_publiee(min(100, max(0, 50 + 50 * pire / pente))), abs=1e-4)
     court = api.etat_des_lieux({**c, "questionnaire": {**c["questionnaire"], "horizon": "moins_3"}})
     assert court["notes"]["objectif"]["mesures"]["capital_preserve"]["fenetre_annees"] == 1
     long_ = api.etat_des_lieux({**c, "questionnaire": {**c["questionnaire"], "horizon": "15_plus"}})
@@ -139,5 +144,5 @@ def test_geographie_des_actions():
     assert (0.4 * cible, 0.6 * cible) == pytest.approx((14, 21))
     assert m["sous_mesures"]["canada"]["valeur"] == pytest.approx(canada)
     assert m["sous_mesures"]["hors_canada"]["valeur"] == pytest.approx(ailleurs)
-    assert m["note"] == pytest.approx(min(notes.values()), abs=1e-6)
+    assert m["note"] == pytest.approx(_publiee(min(notes.values())), abs=1e-6)
     assert m["decide"] == min(notes, key=notes.get)

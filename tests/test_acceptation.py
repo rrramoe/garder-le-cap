@@ -15,6 +15,11 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+
+def _publiee(n):
+    """Note brute (limite à 50) portée sur l'échelle publiée (limite à 70), recalculée ici indépendamment du moteur."""
+    return n * 70 / 50 if n < 50 else 70 + (n - 50) * 30 / 50
+
 def _note(r, dim):
     return r["notes"][dim]["note"]
 
@@ -26,10 +31,10 @@ def test_1_robert_tsla():
     assert r["contraintes_strictes"]["violee"] is False
     assert r["verdict"]["code"] == "en_tension"
     # Modèle en cinq familles : la pire année (-17,7 % contre -10,58 % publiés) décide ; la pire baisse garde sa note.
-    assert r["score"] == pytest.approx(16, abs=1)
+    assert r["score"] == pytest.approx(_publiee(16.15), abs=1)
     assert r["dimension_min"] == "risque"
     assert r["mesure_min"] == "pire_annee"
-    assert r["apres"]["notes"]["risque"]["mesures"]["ampleur"]["note"] == pytest.approx(40, abs=1)
+    assert r["apres"]["notes"]["risque"]["mesures"]["ampleur"]["note"] == pytest.approx(_publiee(40), abs=1)
     # Avant l'ordre, Robert a 9 % d'actions hors du Canada pour une cible de 21 % (limite 11 %) : déjà hors politique.
     assert r["direction"]["cas"] == "hors_politique_aggrave"
     t = api.chercher_taille_compatible("robert", "TSLA", "achat", 15)
@@ -46,7 +51,7 @@ def test_2_mateo_xom():
     assert r["contraintes_strictes"]["themes_violes"] == ["ecarte_esg"]
     assert r["verdict"]["code"] == "incompatible"
     for dim in ("objectif", "risque", "preferences"):
-        assert _note(r["apres"], dim) >= 50
+        assert _note(r["apres"], dim) >= 70
     t = api.chercher_taille_compatible("mateo", "XOM", "achat", 8)
     assert t["lancee"] is False
     assert t["taille_compatible_pct"] is None
@@ -126,8 +131,8 @@ def test_5_notes_de_risque(client, ticker, pct, avant, apres):
     def anciennes(bloc):
         m = r[bloc]["notes"]["risque"]["mesures"]
         return min(m["ampleur"]["note"], m["duree"]["note"])
-    assert anciennes("avant") == pytest.approx(avant, abs=1)
-    assert anciennes("apres") == pytest.approx(apres, abs=1)
+    assert anciennes("avant") == pytest.approx(_publiee(avant), abs=1.5)
+    assert anciennes("apres") == pytest.approx(_publiee(apres), abs=1.5)
 
 
 def test_volatilite_spy_et_speculatifs():

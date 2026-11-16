@@ -14,7 +14,7 @@ api.simuler_ordre("robert", "TSLA", "achat", 15)
 - **Client** : un identifiant de persona (`"robert"`, `"mateo"`, `"amira"`) ou une fiche (dictionnaire). Une fiche peut partir d'un persona et modifier des réponses : `{"persona": "robert", "questionnaire": {"horizon": "15_plus", "themes": {"crypto": "exclure"}}}`. On peut aussi remplacer `portefeuille_pct`. Une fiche renvoyée par `lire_fiche_client` est acceptée telle quelle.
 - **Sens** : `"achat"` ou `"vente"`. **Pourcentage** : en % du portefeuille (15 = 15 %). Un achat est payé par l'encaisse (`ZST.TO`), une vente y est versée.
 - **Opération** (argument facultatif `operation`, voir plus bas) : `"comptant"` par défaut, `"marge"` ou `"decouvert"`. Au comptant, un achat plus gros que l'encaisse ou une vente plus grosse que la position renvoie une erreur.
-- Les notes vont de 0 à 100 (100 = sur la cible, 50 = limite de la politique). Les pires baisses sont des fractions négatives (−0,18 = −18 %). Les poids sont en %.
+- Les notes vont de 0 à 100 (100 = sur la cible, 70 = limite de la politique, la note de passage `NOTE_DE_PASSAGE`, portée par chaque résultat dans `note_de_passage`). Les pires baisses sont des fractions négatives (−0,18 = −18 %). Les poids sont en %.
 - Les réponses possibles au questionnaire sont dans `reference/questionnaire.json` (`objectif`, `horizon`, `fluctuations`, `capacite_perte`, `besoin_liquidite`, `experience`, et l'échelle des thèmes `exclure / eviter / neutre / rechercher / obligatoire`). Les thèmes sont dans `reference/themes.json` : une ligne par thème (`id`, `libelle`, `etiquette`) ; ajouter un thème, c'est ajouter une ligne et l'étiquette du même nom dans les fiches d'instruments (`scripts/construire_fiches.py`). Huit thèmes : les cinq de départ, plus `dividende`, `devise_etrangere` et `action_individuelle`. Un thème sans réponse vaut `neutre`.
 
 ## `lire_fiche_client(client)`
@@ -58,7 +58,7 @@ Sources : `donnees_marche`, `donnees_dividendes`, `donnees_taux`, conventions `h
 
 ## Modèle de notation en cinq familles
 
-Les contraintes strictes d'abord ; puis chaque famille prend sa mesure la plus faible ; le verdict suit la famille la plus faible (« une chaîne n'est qu'aussi solide que son maillon le plus faible »). Échelle commune : 100 sur la cible, 50 exactement à la limite, droite prolongée au-delà, plancher 0, plafond 100 (`notation.note_lineaire`). Une mesure ou une famille qui ne peut pas être calculée vaut `note: null` avec `statut` (`indetermine` ou `sans_objet`) et ne décide pas. Le champ `score` reste la note la plus faible ; l'interface ne l'affiche pas comme un chiffre global.
+Les contraintes strictes d'abord ; puis chaque famille prend sa mesure la plus faible ; le verdict suit la famille la plus faible (« une chaîne n'est qu'aussi solide que son maillon le plus faible »). Échelle commune : 100 sur la cible, 70 exactement à la limite (note de passage, fixée en un seul endroit : `notation.NOTE_DE_PASSAGE`, aussi `api.NOTE_DE_PASSAGE`), 0 au double de la distance, une droite de chaque côté de la limite : la même distance coûte 30 points dans la politique et 70 au-delà. Les formules des mesures donnent une note brute (limite à 50, `notation.note_lineaire`, `note_classe`…) que `notation.convertir` porte sur cette échelle ; la conversion est croissante et envoie la limite sur la limite, donc aucun verdict, direction ou taille compatible ne change (`tests/test_note_de_passage.py`). « Compatible » quand la note la plus faible vaut 70 ou plus. Une mesure ou une famille qui ne peut pas être calculée vaut `note: null` avec `statut` (`indetermine` ou `sans_objet`) et ne décide pas. Le champ `score` reste la note la plus faible ; l'interface ne l'affiche pas comme un chiffre global.
 
 `notes` : une entrée par famille, dans l'ordre de `familles`, chacune `{note, mesure_min, mesures, question}` (+ `sans_objet`). Chaque mesure porte `note`, `libelle`, et selon le cas `valeur`, `cible`, `limite`, `unite`, `phrase`, `source`, `hypothese`. Une famille ou une mesure ajoutée apparaît sans changement côté agents ou interface.
 
@@ -124,7 +124,7 @@ Section 7.7 : la note de risque du portefeuille après l'ordre est recalculée s
 
 | Champ | Contenu |
 |---|---|
-| `statut`, `libelle` | `solide` (le score est du même côté de 50 dans les deux fenêtres) ou `fragile` |
+| `statut`, `libelle` | `solide` (la note la plus faible est du même côté de 70 dans les deux fenêtres) ou `fragile` |
 | `explication`, `regle` | La règle et son résultat, en français |
 | `score_principal` | Le score de la période complète |
 | `fenetres` | `defavorable` et `favorable` : `{libelle, debut, fin, score, dimension_min, dans_la_politique, note_risque}` ; `note_risque` = `{note, mesure_min, mesures}` (`ampleur`, `duree`) |
@@ -134,7 +134,7 @@ Le même bloc figure dans le résultat de `simuler_ordre` (champ `solidite`). Fe
 
 ## `chercher_taille_compatible(client, ticker, sens, pourcentage, operation="comptant")`
 
-Plus grande taille, par pas de 0,5 % jusqu'au montant demandé, avec un score de 50 ou plus. Pour la marge ou le découvert, chaque point de la courbe porte aussi son `levier`, et le résultat rappelle `operation`.
+Plus grande taille, par pas de 0,5 % jusqu'au montant demandé, dont la note la plus faible atteint la note de passage (70). Pour la marge ou le découvert, chaque point de la courbe porte aussi son `levier`, et le résultat rappelle `operation`.
 
 | Champ | Contenu |
 |---|---|
@@ -186,7 +186,7 @@ Le mécanisme reste dans `reference/operations_experience.json` (hypothèse du p
 | Niveau | Effet |
 |---|---|
 | `exclure` | Contrainte stricte : entrée `achat_sur_marge` ou `vente_a_decouvert` dans `contraintes_strictes` (avec `controle: "experience_operation"`), verdict « incompatible », aucune taille cherchée. |
-| `eviter` | Préférence souple : mesure `achat_sur_marge` ou `vente_a_decouvert` dans `notes.preferences`, notée `max(0, 100 - 50 * e / 15)`, où `e` est le poids détenu à découvert ou acheté avec de l'argent emprunté après l'ordre. |
+| `eviter` | Préférence souple : mesure `achat_sur_marge` ou `vente_a_decouvert` dans `notes.preferences`, notée `max(0, 100 - 50 * e / 15)` en note brute (puis portée sur l'échelle à 70), où `e` est le poids détenu à découvert ou acheté avec de l'argent emprunté après l'ordre. |
 | `neutre` | Aucun effet (valeur actuelle). |
 
 `operation.controle_experience` résume le contrôle : `{id, experience, niveau, effet, raison, source}`, avec `effet` = `contrainte_stricte`, `preference_souple` (plus `note` et `poids_expose`) ou `aucun`.

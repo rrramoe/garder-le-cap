@@ -96,7 +96,7 @@ def solidite(port: dict, fiche: dict, evaluation: dict) -> dict:
     fenetres = {}
     for nom, libelle in FENETRES.items():
         rend = _rendements_fenetre(nom)
-        risque = note_risque_fenetre(port, fiche, nom)
+        risque = notation.convertir_famille(note_risque_fenetre(port, fiche, nom))
         notes = {"risque": risque["note"], **autres}
         dim = min(notes, key=notes.get)
         fenetres[nom] = {

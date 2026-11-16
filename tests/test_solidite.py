@@ -30,7 +30,7 @@ def test_fenetres():
 def test_regle_meme_cote_de_50():
     for persona, ticker, pct in [("robert", "TSLA", 15), ("robert", "TSLA", 11.5), ("amira", "NVDA", 7)]:
         r, s = _solidite(persona, ticker, pct)
-        cotes = {f["score"] >= 50 for f in s["fenetres"].values()}
+        cotes = {f["score"] >= 70 for f in s["fenetres"].values()}
         assert s["statut"] == ("solide" if len(cotes) == 1 else "fragile")
         assert s["score_principal"] == r["apres"]["score"]  # le score principal reste la période complète
 

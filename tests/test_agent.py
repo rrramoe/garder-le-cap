@@ -624,14 +624,14 @@ def test_redaction_annoncee_au_texte_final_seulement():
 # --- Correction de son texte après vérification --------------------------------------------------
 
 def test_correction_apres_un_chiffre_faux():
-    scenario = SCENARIO_ROBERT + ["**Verdict** : en tension, avec un score de 39,6."]
+    scenario = SCENARIO_ROBERT + ["**Verdict** : en tension, avec un score de 22,6."]
     scenario[4] = "**Verdict** : en tension, avec un score de 97,3."
     evenements = []
     r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(scenario), equipe=False,
                              sur_etape=evenements.append)
     assert r["correction"]["faite"] and r["correction"]["reussie"]
     assert r["correction"]["motifs"] == ["Le chiffre 97,3 ne figure dans aucun résultat d'outil."]
-    assert r["explication"] == "**Verdict** : en tension, avec un score de 39,6."
+    assert r["explication"] == "**Verdict** : en tension, avec un score de 22,6."
     assert r["ancrage"]["chiffres_non_sources"] == []
     assert r["trace"][-1]["outil"] == "corriger_le_texte" and r["trace"][-1]["agent"] == "principal"
     assert r["trace"][-1]["resultat_resume"] == "L'agent a corrigé son texte après vérification."

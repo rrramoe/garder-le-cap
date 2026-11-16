@@ -17,6 +17,11 @@ DECOUVERT = ("TSLA", "vente", 5, "decouvert")   # aucun TSLA détenu : 5 % à d�
 IDS = {"marge": "achat_sur_marge", "decouvert": "vente_a_decouvert"}
 
 
+
+def _publiee(n):
+    """Note brute (limite à 50) portée sur l'échelle publiée (limite à 70), recalculée ici indépendamment du moteur."""
+    return n * 70 / 50 if n < 50 else 70 + (n - 50) * 30 / 50
+
 def _client(experience, persona="amira"):
     return {"persona": persona, "questionnaire": {"experience": experience}}
 
@@ -52,11 +57,14 @@ def test_defaut_identique_a_main(cas):
                                      "hors_politique_rapproche", "hors_politique_aggrave")
     assert r["contraintes_strictes"]["themes_violes"] == attendu["themes_violes"]
     for bloc in ("avant", "apres"):
-        assert _anciennes_mesures(r[bloc], attendu[bloc]) == attendu[bloc]["mesures"]
+        publiees = {d: {m: pytest.approx(_publiee(v), abs=1e-6) for m, v in ms.items()}
+                    for d, ms in attendu[bloc]["mesures"].items()}
+        assert _anciennes_mesures(r[bloc], attendu[bloc]) == publiees
         nouv = _note_nouvelles(r[bloc], attendu[bloc])
-        assert r[bloc]["score"] == pytest.approx(min(attendu[bloc]["score"], nouv if nouv is not None else 100.0))
+        assert r[bloc]["score"] == pytest.approx(min(_publiee(attendu[bloc]["score"]),
+                                                     nouv if nouv is not None else 100.0), abs=1e-6)
     if not attendu["themes_violes"]:
-        attendu_verdict = "compatible" if r["apres"]["score"] >= 50 else "en_tension"
+        attendu_verdict = "compatible" if r["apres"]["score"] >= 70 else "en_tension"
         assert r["verdict"]["code"] == attendu_verdict
     else:
         assert r["verdict"]["code"] == attendu["verdict"]
@@ -205,7 +213,7 @@ def test_mecanisme_eviter(monkeypatch, ordre, e):
     assert not r["contraintes_strictes"]["violee"]
     m = r["apres"]["notes"]["preferences"]["mesures"][IDS[ordre[3]]]
     assert m["poids_expose"] == pytest.approx(e)
-    assert m["note"] == pytest.approx(max(0.0, 100 - 50 * e / 15))
+    assert m["note"] == pytest.approx(_publiee(max(0.0, 100 - 50 * e / 15)))
     assert r["operation"]["controle_experience"]["effet"] == "preference_souple"
     assert r["operation"]["controle_experience"]["note"] == pytest.approx(m["note"])
     assert IDS[ordre[3]] not in r["avant"]["notes"]["preferences"]["mesures"]
@@ -215,7 +223,7 @@ def test_mecanisme_eviter_exactement_au_repere(monkeypatch):
     # Mateo (10 % d'encaisse) achète 25 % de XIU.TO sur marge : 15 % empruntés, note 50.
     _table_modifiee(monkeypatch, {"intermediaire": "eviter"})
     r = api.simuler_ordre("mateo", "XIU.TO", "achat", 25, "marge")
-    assert r["apres"]["notes"]["preferences"]["mesures"]["achat_sur_marge"]["note"] == pytest.approx(50.0)
+    assert r["apres"]["notes"]["preferences"]["mesures"]["achat_sur_marge"]["note"] == pytest.approx(_publiee(50.0))
 
 
 def test_niveau_invalide_dans_le_fichier(monkeypatch):

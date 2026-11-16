@@ -28,7 +28,7 @@ BANDEAU = ("Simulation à but éducatif. Aucune transaction réelle. "
            "Ceci n'est pas un conseil financier personnalisé.")
 AVIS_SANS_AGENT = ("Explication de l'agent indisponible : le rapport ci-dessous vient "
                    "directement du moteur de calcul")
-LIMITE = 50
+LIMITE = api.NOTE_DE_PASSAGE  # note de passage : fixée par le moteur, jamais ici
 
 # Vocabulaire de l'action principale, en un seul endroit.
 BOUTON_ACTION = "Analyser l'ordre"
@@ -332,7 +332,7 @@ def mesures_a_plat(bloc: dict) -> dict:
 # ---------------------------------------------------------------- éléments visuels
 
 def jauge(note: float | None, avant: float | None = None, hauteur: int = 10) -> str:
-    """Barre 0 à 100 avec un repère à 50 (la limite). Une marque grise montre la valeur d'avant."""
+    """Barre 0 à 100 avec un repère à la note de passage (la limite). Une marque grise montre la valeur d'avant."""
     if note is None:
         return ""
     n = max(0.0, min(100.0, float(note)))
@@ -345,7 +345,7 @@ def jauge(note: float | None, avant: float | None = None, hauteur: int = 10) -> 
     return (f'<div style="position:relative;height:{hauteur}px;background:#E6E2DE;border-radius:{hauteur}px;'
             f'margin:4px 0 2px 0;">'
             f'<div style="width:{n}%;height:100%;background:{couleur};border-radius:{hauteur}px;"></div>'
-            f'<div title="limite 50" style="position:absolute;left:50%;top:-4px;width:2px;height:{hauteur + 8}px;'
+            f'<div title="limite {LIMITE:g}" style="position:absolute;left:{LIMITE:g}%;top:-4px;width:2px;height:{hauteur + 8}px;'
             f'background:{MARINE};"></div>{marque}</div>')
 
 
@@ -367,7 +367,7 @@ def ligne_note(titre: str, note: float | None, avant: float | None = None, aide:
 
 
 def legende_jauge(avec_avant: bool = False) -> None:
-    texte = "Trait foncé : limite de 50. Sous 50, la politique n'est plus respectée."
+    texte = f"Trait foncé : limite de {LIMITE:g}. Sous {LIMITE:g}, la politique n'est plus respectée."
     if avec_avant:
         texte += " Trait gris : avant l'ordre."
     st.caption(texte)
@@ -648,7 +648,7 @@ def graphique_courbe(taille: dict, valeur: float) -> alt.Chart:
     ligne = base.mark_line(color=MARINE, strokeWidth=2) + base.mark_circle(size=30, color=MARINE)
     limite = alt.Chart(pd.DataFrame({"y": [LIMITE]})).mark_rule(color=MARINE, strokeDash=[5, 4]).encode(y="y:Q")
     x_min, x_max = float(df["taille_pct"].min()), float(df["taille_pct"].max())
-    lim = pd.DataFrame({"y": [LIMITE], "x": [x_min], "lib": ["Limite : 50"]})
+    lim = pd.DataFrame({"y": [LIMITE], "x": [x_min], "lib": [f"Limite : {LIMITE:g}"]})
     couches = [zone, ligne, limite] + _etiquette(lim, MARINE, align="left", dy=12)
     if taille.get("taille_compatible_pct") is not None:
         x_tc = float(taille["taille_compatible_pct"])
@@ -942,7 +942,7 @@ def angles(sim: dict) -> None:
             ligne_note(titre, None)
         else:
             ligne_note(titre, n1["note"], n0.get("note"), aide=AIDE_DIMENSIONS.get(dim, ""))
-    st.caption(f"{CHAINE} À partir de 50, chaque angle respecte votre politique.")
+    st.caption(f"{CHAINE} À partir de {LIMITE:g}, chaque angle respecte votre politique.")
 
 
 def bloc_verdict(sim: dict, rapport: dict, valeur: float) -> None:
@@ -1027,7 +1027,7 @@ def section_solidite(solidite: dict | None) -> None:
         st.caption("Solidité non calculée.")
         return
     for f in solidite["fenetres"].values():
-        cote = "respecte la politique" if f["dans_la_politique"] else "sous la limite de 50"
+        cote = "respecte la politique" if f["dans_la_politique"] else f"sous la limite de {LIMITE:g}"
         st.markdown(f"- {f['libelle']} : note la plus faible {note_txt(f['score'])}, {cote}.")
     st.caption(f"{solidite['explication']} Les notes affichées plus haut restent celles de toute la période.")
 
@@ -1067,7 +1067,7 @@ def section_possible(taille: dict | None, valeur: float) -> None:
                     f"({pct(taille['taille_demandee_pct'])}) ne garde le score à {LIMITE} ou plus.")
     if taille.get("courbe"):
         st.altair_chart(graphique_courbe(taille, valeur), width="stretch")
-        st.caption("Note la plus faible selon le montant. La zone ombrée est sous la limite de 50.")
+        st.caption(f"Note la plus faible selon le montant. La zone ombrée est sous la limite de {LIMITE:g}.")
 
 
 def bloc_changements(rapport: dict, precedent: dict | None) -> None:
@@ -1125,7 +1125,7 @@ def section_contraintes(sim: dict) -> None:
 
 
 def section_notes(sim: dict, niveau: str) -> None:
-    st.caption("Chaque angle répond à une question, de 0 à 100 ; 50 est la limite de votre politique. "
+    st.caption(f"Chaque angle répond à une question, de 0 à 100 ; {LIMITE:g} est la limite de votre politique. "
                "Le plus faible décide.")
     for dim in familles(sim["apres"]):
         n0, n1 = sim["avant"]["notes"].get(dim, {}), sim["apres"]["notes"][dim]

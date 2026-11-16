@@ -14,6 +14,12 @@ pytestmark = pytest.mark.skipif(
 PROFILS = references.charger("profils")["profils"]
 
 
+
+def _publiee(n):
+    """Note brute (limite à 50) portée sur l'échelle publiée (limite à 70), recalculée ici indépendamment du moteur."""
+    return n * 70 / 50 if n < 50 else 70 + (n - 50) * 30 / 50
+
+
 @pytest.mark.parametrize("persona", ["amira", "mateo", "robert"])
 def test_personas_reponses_neutres(persona):
     q = references.charger("personas")["personas"][persona]["questionnaire"]
@@ -99,7 +105,7 @@ def test_besoin_achat_paye_par_l_encaisse_passe_en_tension():
     cible_profil = PROFILS["equilibre"]["fourchettes"]["liquidites"]["cible"]
     assert (m["valeur"], m["limite"], m["cible"]) == (8, 10, 10 + cible_profil)
     # échelle commune : 100 - 50 x (cible - valeur) / (cible - limite)
-    assert m["note"] == pytest.approx(100 - 50 * (15 - 8) / (15 - 10))
+    assert m["note"] == pytest.approx(_publiee(100 - 50 * (15 - 8) / (15 - 10)))
     # la diversification garde la fourchette du profil pour les liquidités
     d = avec["apres"]["notes"]["diversification"]["mesures"]["classe_liquidites"]
     assert (d["min"], d["cible"]) == (0, 5)

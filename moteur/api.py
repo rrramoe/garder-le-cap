@@ -20,6 +20,8 @@ from . import donnees, instruments, notation, references, solidite as _solidite
 from . import faits_marche as _faits
 from . import profils as _profils
 
+NOTE_DE_PASSAGE = notation.NOTE_DE_PASSAGE  # lue par l'interface ; chaque résultat la porte aussi
+
 SOURCES_FICHE_CLIENT = ("fbngp_profils_2024", "fbngp_politique_2022", "fidelity_crypto_2026", "hypothese_personas",
                         "hypothese_crypto_correspondance", "hypothese_plafonds_tous_profils", "hypothese_classes",
                         "hypothese_coherence_objectif", "acvm_capacite_perte", "hypothese_capacite_libelles")

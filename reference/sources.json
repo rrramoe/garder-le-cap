@@ -79,7 +79,7 @@
     "nature": "hypothese"
   },
   "hypothese_echelle": {
-    "libelle": "Échelle 100 / 50 / 0, règle de la note la plus faible, repère de 15 % pour les préférences souples",
+    "libelle": "Échelle 100 / 70 / 0 : 100 sur la cible, 70 (note de passage) exactement à la limite, 0 au double de la distance, droite de chaque côté de la limite (la même distance coûte 30 points dans la politique et 70 au-delà) ; règle de la note la plus faible ; repère de 15 % pour les préférences souples",
     "source": "Hypothèse du projet",
     "date": "2026-11-15",
     "nature": "hypothese"
@@ -153,7 +153,7 @@
     "nature": "hypothese"
   },
   "hypothese_besoin_liquidite": {
-    "libelle": "Famille Liquidité : les liquidités après l'ordre face au besoin déclaré pour l'année ; limite (50) = le besoin (borne haute de la tranche), cible (100) = le besoin plus la cible de liquidités du profil ; sans objet sans besoin. La fourchette des liquidités de la diversification reste celle du profil, pour que le besoin ne compte qu'une fois",
+    "libelle": "Famille Liquidité : les liquidités après l'ordre face au besoin déclaré pour l'année ; limite (note de passage) = le besoin (borne haute de la tranche), cible (100) = le besoin plus la cible de liquidités du profil ; sans objet sans besoin. La fourchette des liquidités de la diversification reste celle du profil, pour que le besoin ne compte qu'une fois",
     "source": "Hypothèse du projet",
     "date": "2026-11-15",
     "nature": "hypothese"

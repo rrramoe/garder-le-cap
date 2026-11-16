@@ -98,7 +98,7 @@ def test_cause_sans_nouvelle_note():
     r = api.simuler_ordre("robert", "TSLA", "achat", 15)
     assert r["cause"]["note"] == r["score"]
     for m in r["cause"]["autres_mesures_sous_le_seuil"]:
-        assert r["apres"]["notes"][m["dimension"]]["mesures"][m["mesure"]]["note"] == m["note"] < 50
+        assert r["apres"]["notes"][m["dimension"]]["mesures"][m["mesure"]]["note"] == m["note"] < 70
 
 
 def test_cause_porte_le_detail_de_la_mesure():
