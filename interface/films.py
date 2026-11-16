@@ -393,28 +393,37 @@ def resultat(angles: list[dict], verdict: dict, passage: float) -> tuple[str, st
     r = min(29.0, pas / 2 - 14)
     tour = 2 * math.pi * r
     arc = 0.75 * tour
-    decor, c = "", ""
+    decor, c, fond = "", "", ""
+    # Quand l'angle déterminant s'allume, les autres cadrans s'effacent un instant : un seul regard à la fois.
+    retrait = (f.cle([(0, "opacity: 1;"), (1.8, "opacity: 1;"), (2.15, "opacity: .38;"), (2.7, "opacity: .38;"),
+                      (3.2, "opacity: 1;"), (d, "opacity: 1;")], courbe=ALLER)
+               if any(a.get("decide") for a in angles) else "")
     for i, a in enumerate(angles):
         x, y, t = 20 + pas * (i + 0.5), 88, 0.1 + i * 0.22
+        pose, joue = "", ""
         if a.get("decide"):
-            c += (f'<rect class="{f.apparait(1.8, dy=0, echelle=0.92, duree=0.5)}" x="{x - pas / 2 + 4}" y="30" width="{pas - 8}" height="152" rx="14" '
-                  f'fill="{VIOLET}" fill-opacity=".30" stroke="{LILAS}" stroke-opacity=".7" stroke-width="1.4"/>'
-                  + f.anneau(x, y, 1.85, r + 6, LILAS)
-                  + texte(x, 160, "Angle", 10.5, LILAS, True, "middle", f.apparait(1.95))
-                  + texte(x, 173, "déterminant", 10.5, LILAS, True, "middle", f.apparait(1.95)))
-        decor += (f'<circle cx="{x}" cy="{y}" r="{r}" fill="none" stroke="{BLANC}" stroke-opacity=".14" stroke-width="7" stroke-linecap="round" '
-                  f'stroke-dasharray="{arc:.1f} {tour:.1f}" transform="rotate(135 {x} {y})"/>'
-                  + texte(x, 140, a["nom"], 10.5, BLANC if a.get("decide") else CLAIR, True, "middle"))
+            fond += (f'<rect class="{f.apparait(1.8, dy=0, echelle=0.92, duree=0.5)}" x="{x - pas / 2 + 4}" y="30" width="{pas - 8}" height="152" rx="14" '
+                     f'fill="{VIOLET}" fill-opacity=".34" stroke="{LILAS}" stroke-opacity=".7" stroke-width="1.4"/>')
+            joue += (f.anneau(x, y, 1.85, r + 6, LILAS)
+                     + texte(x, 160, "Angle", 10.5, LILAS, True, "middle", f.apparait(1.95))
+                     + texte(x, 173, "déterminant", 10.5, LILAS, True, "middle", f.apparait(1.95)))
+        pose += (f'<circle cx="{x}" cy="{y}" r="{r}" fill="none" stroke="{BLANC}" stroke-opacity=".14" stroke-width="7" stroke-linecap="round" '
+                 f'stroke-dasharray="{arc:.1f} {tour:.1f}" transform="rotate(135 {x} {y})"/>'
+                 + texte(x, 140, a["nom"], 10.5, BLANC if a.get("decide") else CLAIR, True, "middle"))
         note = a.get("note")
         if note is None:
-            decor += texte(x, y + 6, "—", 15, CLAIR, True, "middle")
+            pose += texte(x, y + 6, "—", 15, CLAIR, True, "middle")
         else:
             longueur = max(arc * max(0.0, min(100.0, note)) / 100, 0.1)
             couleur = MENTHE if note >= passage else AMBRE
-            c += (f'<g transform="rotate(135 {x} {y})"><circle class="{f.cle([(0, "stroke-dasharray: 0.1 999;"), (t, "stroke-dasharray: 0.1 999;"), (t + 0.9, f"stroke-dasharray: {longueur:.1f} 999;"), (d, f"stroke-dasharray: {longueur:.1f} 999;")])}" '
-                  f'cx="{x}" cy="{y}" r="{r}" fill="none" stroke="{couleur}" stroke-width="7" stroke-linecap="round" '
-                  f'stroke-dasharray="{longueur:.1f} 999"/></g>'
-                  + texte(x, y + 6.5, str(round(note)), 18, BLANC, True, "middle", f.apparait(t + 0.3, dy=0)))
+            joue += (f'<g transform="rotate(135 {x} {y})"><circle class="{f.cle([(0, "stroke-dasharray: 0.1 999;"), (t, "stroke-dasharray: 0.1 999;"), (t + 0.9, f"stroke-dasharray: {longueur:.1f} 999;"), (d, f"stroke-dasharray: {longueur:.1f} 999;")])}" '
+                     f'cx="{x}" cy="{y}" r="{r}" fill="none" stroke="{couleur}" stroke-width="7" stroke-linecap="round" '
+                     f'stroke-dasharray="{longueur:.1f} 999"/></g>'
+                     + texte(x, y + 6.5, str(round(note)), 18, BLANC, True, "middle", f.apparait(t + 0.3, dy=0)))
+        seul = "" if a.get("decide") else retrait
+        decor += f'<g class="{seul}">{pose}</g>'
+        c += f'<g class="{seul}">{joue}</g>'
+    decor = f.fin(fond) + decor
     code = verdict.get("code", "")
     teinte = SIGNES.get(code, (GRIS, VOILE))[0]
     tombe = f.cle([(0, "opacity: 0; transform: scale(1.4);"), (2.4, "opacity: 0; transform: scale(1.4);"),
