@@ -173,7 +173,7 @@ def bloc_a_retenir(sim: dict) -> None:
         points.append(("Point d'attention.", attention[0]["texte"]))
     if sim["verdict"]["code"] != "incompatible":
         c = sim.get("contribution_risque_apres")
-        if c and c.get("part_du_risque_pct") is not None:
+        if c and c.get("part_du_risque_pct") is not None and abs(c.get("poids_pct") or 0) >= 0.05:
             if c["poids_pct"] < 0:  # vente à découvert
                 points.append(("Part du risque.", f"La position à découvert sur {c['ticker']} "
                                f"({pct(-c['poids_pct'], 0)} du portefeuille) porterait "
@@ -212,12 +212,14 @@ def bloc_changements(rapport: dict, precedent: dict | None) -> None:
               for cle in a1 if cle in a0 and abs(a1[cle] - a0[cle]) >= 0.05]
     corps = (f'<p class="glc-h2">{C.e(DEPUIS_PRECEDENT)}</p>'
              f'<p class="glc-sur" style="margin-bottom:8px">Changé : {C.e(" ; ".join(changements))}.</p>'
-             f'<p style="margin:0 0 8px 0">{C.e(s0["verdict"]["libelle"])} → <b>{C.e(s1["verdict"]["libelle"])}</b></p>')
-    if lignes:
-        corps += C.tableau([("Angle", ""), ("Mesure", ""), ("Avant", "n"), ("Maintenant", "n")], lignes)
-    else:
+             f'<p style="margin:0">{C.e(s0["verdict"]["libelle"])} → <b>{C.e(s1["verdict"]["libelle"])}</b></p>')
+    if not lignes:
         corps += '<p class="glc-sur">Aucune mesure n\'a bougé.</p>'
-    C.montrer(f'<div class="glc-carte">{corps}</div>')
+    with st.container(key="carte_changements"):
+        C.montrer(corps)
+        if lignes:
+            with st.expander(f"Les mesures qui ont bougé ({len(lignes)})"):
+                C.montrer(C.tableau([("Angle", ""), ("Mesure", ""), ("Avant", "n"), ("Maintenant", "n")], lignes))
 
 
 # ---------------------------------------------------------------- l'analyse : ce qui est possible

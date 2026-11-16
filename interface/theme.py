@@ -92,11 +92,11 @@ div[data-testid="stCaptionContainer"] p, .stApp small {{ font-size: var(--t1); c
 .st-key-page label[data-testid="stRadioOption"][data-selected="true"] p {{ color: var(--encre); }}
 
 /* compte */
-.st-key-compte {{ align-items: flex-end; }}
-.st-key-compte div[data-testid="stPopover"] {{ width: auto; margin-left: auto; }}
-.st-key-compte div[data-testid="stPopover"] > div > button {{ border-radius: 999px; padding: 4px 14px 4px 10px;
+div[class*="st-key-compte"] {{ align-items: flex-end; }}
+div[class*="st-key-compte"] div[data-testid="stPopover"] {{ width: auto; margin-left: auto; }}
+div[class*="st-key-compte"] div[data-testid="stPopover"] > div > button {{ border-radius: 999px; padding: 4px 14px 4px 10px;
   min-height: 38px; border: 1px solid var(--bord); background: var(--surface); }}
-.st-key-compte div[data-testid="stPopover"] > div > button p {{ font-weight: 600; font-size: var(--t2); }}
+div[class*="st-key-compte"] div[data-testid="stPopover"] > div > button p {{ font-weight: 600; font-size: var(--t2); }}
 
 /* le menu du compte : une liste de clients, le client choisi sur fond gris chaud */
 div[data-testid="stPopoverBody"] {{ border-radius: var(--rayon); border: 1px solid var(--bord); padding: 14px;
@@ -205,7 +205,8 @@ div[class*="st-key-accueil"] {{ background: var(--voile); border-radius: var(--r
   align-items: center; padding: 7px 0; font-size: var(--t2); }}
 .stApp .glc-zone .pt {{ width: 10px; height: 10px; border-radius: 3px; }}
 .stApp .glc-zone .v {{ text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }}
-.stApp .glc-zone .piste {{ position: relative; height: 6px; border-radius: 6px; background: var(--voile); }}
+.stApp .glc-zone .piste {{ position: relative; height: 6px; border-radius: 6px; background: var(--voile);
+  margin: 0 8px; }}
 .stApp .glc-zone .permis {{ position: absolute; top: 0; bottom: 0; border-radius: 6px; background: {SAUGE}; opacity: .55; }}
 .stApp .glc-zone .cible {{ position: absolute; top: -3px; width: 2px; height: 12px; background: {GRIS}; opacity: .6; }}
 .stApp .glc-zone .ici {{ position: absolute; top: -4px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%;
@@ -308,6 +309,11 @@ div[class*="st-key-accueil"] {{ background: var(--voile); border-radius: var(--r
 .stApp .stButton > button[kind="primary"], .stApp .stFormSubmitButton > button[kind="primaryFormSubmit"] {{
   background: var(--accent); border-color: var(--accent); color: #fff; }}
 .stApp .stButton > button[kind="primary"]:hover {{ background: {ACCENT_VIF}; border-color: {ACCENT_VIF}; color: #fff; }}
+.stApp button:focus-visible {{ outline: 2px solid var(--encre); outline-offset: 2px; }}
+.stApp .stButton > button:focus:not(:active), .stApp div[data-testid="stPopover"] button:focus:not(:active),
+.stApp .stFormSubmitButton > button:focus:not(:active) {{ border-color: var(--bord); box-shadow: none;
+  color: var(--encre); }}
+.stApp .stButton > button[kind="primary"]:focus:not(:active) {{ border-color: var(--accent); color: #fff; }}
 .stApp .stButton > button[kind="tertiary"] {{ border: 0; background: transparent; color: var(--gris);
   padding: 0; min-height: 0; text-decoration: underline; text-underline-offset: 3px; }}
 
@@ -366,7 +372,7 @@ hr {{ border-color: var(--bord); }}
   .stMainBlockContainer {{ padding: 0 14px 56px 14px; }}
   .glc-marque .sous {{ display: none; }}
   .st-key-page div[role="radiogroup"] {{ margin: 0; overflow-x: auto; max-width: 100%; }}
-  .st-key-compte {{ justify-content: flex-start; }}
+  div[class*="st-key-compte"] {{ justify-content: flex-start; }}
   div[class*="st-key-carte"], .glc-carte, .glc-verdict {{ padding: 18px 16px; }}
   .glc-liste-def div {{ grid-template-columns: 1fr; gap: 2px; }}
 }}

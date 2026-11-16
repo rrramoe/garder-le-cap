@@ -79,6 +79,10 @@ def garder_les_choix() -> None:
             s[cle] = s[cle]
 
 
+def fermer_le_menu() -> None:
+    st.session_state["menu_compte"] = st.session_state.get("menu_compte", 0) + 1
+
+
 def essayer_avec_un_exemple() -> None:
     """Ouvre le billet d'ordre d'un client enregistré, déjà rempli : celui du compte s'il en a un, sinon le premier."""
     s = st.session_state

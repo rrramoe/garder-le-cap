@@ -28,7 +28,11 @@ def fiche(persona: str, fiche_session: dict) -> None:
             C.montrer(f'<p class="glc-rubrique">{C.e(nom)}<span>{C.e(question)}</span></p>')
 
         # Une colonne par rubrique, assez large pour que son plus long libellé tienne sur une ligne.
-        largeurs = [max([0.8] + [len(QUESTIONNAIRE[c]["libelle"]) / 33 for c in champs]) for _, champs in groupes]
+        def largeur(champ: str) -> float:
+            plus_longue = max(len(libelle_option(champ, o)) for o in QUESTIONNAIRE[champ]["options"])
+            return max(0.8, len(QUESTIONNAIRE[champ]["libelle"]) / 33, min(plus_longue / 40, 1.6))
+
+        largeurs = [max(largeur(c) for c in champs) for _, champs in groupes]
         colonnes = st.columns(largeurs, gap="medium")
         for colonne, (cle, champs) in zip(colonnes, groupes):
             with colonne:
@@ -45,7 +49,7 @@ def fiche(persona: str, fiche_session: dict) -> None:
             st.radio(lib, echelle, key=etat.cle_q(persona, "theme_" + t), horizontal=True,
                      format_func=libelle_theme_reponse)
         ecarts = etat.fiche_modifiee(persona, fiche_session)
-        if ecarts and enregistre["exemple"]:
+        if ecarts:
             gauche, droite = st.columns([3, 1], vertical_alignment="center")
             gauche.caption("Fiche modifiée : " + " ; ".join(ecarts) + ".")
             droite.button("Revenir à la fiche d'origine", on_click=etat.reinitialiser, args=(persona,),

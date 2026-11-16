@@ -32,9 +32,10 @@ def entete() -> str:
                 C.montrer(C.entete_marque())
             milieu.radio("Navigation", list(PAGES), key="page", horizontal=True, label_visibility="collapsed",
                          format_func=PAGES.get)
-            with droite.container(key="compte"):
+            # Le menu se referme quand un client est choisi : son conteneur change alors de clé.
+            with droite.container(key=f"compte_{st.session_state.get('menu_compte', 0)}"):
                 with st.popover(tous[st.session_state["persona"]]["nom"], icon=":material/account_circle:"):
-                    st.radio("Compte", list(tous), key="persona",
+                    st.radio("Compte", list(tous), key="persona", on_change=etat.fermer_le_menu,
                              format_func=lambda c: f"**{tous[c]['nom']}** · {tous[c]['description']}")
     return st.session_state["persona"]
 
