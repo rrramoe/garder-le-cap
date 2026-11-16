@@ -28,7 +28,7 @@ TITRE_ETAPES = "Étapes de l'analyse"
 DEPUIS_PRECEDENT = "Depuis l'analyse précédente"
 EN_DIRECT_AGENT = "Analyse en cours"
 DEJA_FAITE = "Analyse déjà faite pour cet ordre."
-TRACE = "Analyse n° {id} · trace conservée"
+TRACE = "Analyse n° {id} · trace conservée dans Amazon S3 et CloudWatch Logs"
 TRACE_AIDE = ("Chaque analyse laisse une trace : l'ordre, chaque calcul demandé au moteur, les contrôles, la durée. "
               "Aucune donnée personnelle n'y figure.")
 DELAI_MAX_AGENT_S = 240  # au-delà, l'analyse du moteur reste seule affichée
@@ -60,23 +60,26 @@ LIBELLES_PHASES = {
 # technique, dit à voix basse. {nom}, {montant} et {titre} sont remplis avec l'ordre prêt d'un compte enregistré.
 INTRODUCTION = [
     ("ecart", "Les professionnels ont un département de risque. Le particulier n'a que son enthousiasme.",
-     [NOM + " vous donne le vôtre : à chaque ordre, il mesure l'écart avec votre politique de placement "
-      "et vos objectifs, avant que vous ne le passiez."],
+     [NOM + " vous donne le vôtre : un modèle de notation qui note chaque ordre face à votre politique de "
+      "placement, et une équipe d'agents d'IA qui l'analyse et l'explique, avant que vous ne le passiez."],
      SENS_DU_NOM),
     ("fiche", "Quelques réponses. Une politique de placement.",
      ["Votre objectif, votre horizon, la perte que vous pouvez absorber : votre fiche devient des limites claires, "
-      "chacune avec sa source."],
+      "chacune avec sa source. C'est la référence de chaque note."],
      ""),
     ("issues", "Avant de passer l'ordre, mettez-le à l'épreuve.",
-     ["Il respecte votre politique, il vous en fait sortir, ou il vous en rapproche : vous le savez avant d'acheter."],
-     ""),
-    ("resultat", "Cinq angles. Un verdict. Et le pourquoi.",
-     ["Objectif, risque, liquidité, diversification, préférences : l'angle le plus bas décide.",
-      "Deux agents expliquent le résultat et testent ce qui serait possible."],
-     "Chaque chiffre est calculé par le code, jamais par le modèle."),
+     [NOM + " mesure l'écart entre l'ordre et votre politique, et le note sur 100 : l'ordre la respecte, vous en "
+      "fait sortir, ou vous en rapproche. Vous le savez avant d'acheter."],
+     "Un modèle de notation, pas une opinion : chaque limite a sa source, chaque chiffre est calculé par le code."),
+    ("resultat", "Cinq angles notés. Une équipe d'agents pour le pourquoi.",
+     ["Objectif, risque, liquidité, diversification, préférences : chaque angle reçoit sa note, et la plus basse "
+      "décide.",
+      "Deux agents d'IA prennent le relais : l'un instruit le dossier et rédige l'explication, l'autre explore "
+      "ce qui serait possible et teste chaque piste."],
+     "Les agents raisonnent ; les chiffres viennent toujours du code."),
     ("billet", "{nom} veut {montant} de {titre}. Qu'en dit sa politique ?",
-     ["Choisissez un compte et tentez un ordre.",
-      "Le service renseigne, il ne conseille jamais ; c'est une simulation, sans transaction réelle."],
+     ["Choisissez un compte et tentez un ordre : l'équipe d'agents l'analyse sous vos yeux.",
+      NOM + " renseigne, il ne conseille jamais ; c'est une simulation, sans transaction réelle."],
      ""),
 ]
 INTRO_SUIVANT, INTRO_RETOUR, INTRO_FIN, INTRO_REPRENDRE = "Suivant", "Retour", "Choisir un compte", "Reprendre"
@@ -93,24 +96,32 @@ FONCTIONNEMENT = [
     ("Votre politique de placement", "Le service la tire de votre fiche : un profil, une répartition par classe "
                                      "d'actif, des limites. Chaque limite vient d'une source publiée, ou porte la "
                                      "marque « hypothèse »."),
-    ("Cinq angles", "Avant de passer un ordre, le service le note sous chaque angle : objectif, risque, liquidité, "
-                    "diversification, préférences. L'angle le plus bas décide du verdict."),
+    ("Un modèle de notation", "Avant de passer un ordre, le service le note sur 100 sous chaque angle : objectif, "
+                              "risque, liquidité, diversification, préférences. L'angle le plus bas décide du "
+                              "verdict."),
     ("Le code calcule", "Chaque note, chaque verdict et chaque piste testée vient du moteur de calcul. "
                         "Aucun chiffre ne vient d'un modèle de langage."),
-    ("Deux agents expliquent", "Le premier lit votre cas, dirige la recherche et rédige l'explication. "
-                               "Le second cherche et teste des pistes. Ils ne conseillent rien."),
-    ("Un garde-fou", "Il refuse le conseil personnalisé et les transactions réelles, et vérifie que "
-                     "l'explication s'appuie sur les calculs."),
+    ("Une équipe de deux agents d'IA", "Le premier instruit le dossier, dirige la recherche et rédige "
+                                       "l'explication. Le second explore ce qui serait possible et teste "
+                                       "chaque piste. Ils raisonnent ; ils ne conseillent rien."),
+    ("Un garde-fou", "Il refuse le conseil personnalisé et les transactions réelles. Chaque explication passe son "
+                     "contrôle d'ancrage (Amazon Bedrock Guardrails) avant d'être affichée ; le résultat se lit "
+                     "sur la ligne placée sous l'explication."),
 ]
 SERVICES_AWS = [
     ("Amazon Bedrock", "Le modèle de langage des deux agents."),
     ("Strands Agents", "Le kit qui donne aux agents leurs outils : les appels au moteur de calcul."),
     ("Amazon Bedrock Guardrails", "Le garde-fou : refus du conseil et des transactions, contrôle de l'explication."),
-    ("Amazon S3", "Un espace privé qui garde les fichiers de référence."),
+    ("Amazon S3", "Un espace privé qui garde les fichiers de référence et la trace de chaque analyse."),
+    ("Amazon CloudWatch Logs", "Une ligne par analyse : verdict, angle déterminant, durée."),
     ("Amazon EC2", "La machine qui sert cette application."),
     ("Amazon CloudFront", "L'adresse sécurisée (HTTPS) par laquelle on atteint l'application."),
+    ("AWS IAM", "Un rôle sans clé : chaque droit de la machine est écrit, l'écriture des traces est seule permise."),
+    ("AWS Systems Manager", "Les mises à jour de la machine, sans port SSH ouvert."),
 ]
-MISSION = f"Un placement est un moyen. Pas un objectif. {NOM} renseigne, il ne conseille pas."
+MISSION = (f"Les professionnels ont un département de risque. Le particulier n'a que son enthousiasme. "
+           f"{NOM} est le vôtre : il renseigne, il ne conseille pas.")
+EQUIPE = "une équipe de deux agents d'IA · des notes calculées par le code"
 
 # Clients enregistrés : les trois exemples de l'énoncé ont la même forme qu'un nouveau client.
 EXEMPLES_ENREGISTRES = [
@@ -197,7 +208,7 @@ DIRECTIONS_TEXTE = {
 # Où l'ordre mène, en quelques mots (introduction) ; un cas inconnu garde le libellé du moteur.
 ISSUES = {
     "reste_dans_la_politique": "Il reste dans la politique",
-    "fait_sortir_de_la_politique": "Il fait sortir de la politique",
+    "fait_sortir_de_la_politique": "Le portefeuille sortirait de la politique",
     "hors_politique_rapproche": "Il rapproche de la politique",
     "hors_politique_aggrave": "Il éloigne encore de la politique",
     "revient_dans_la_politique": "Il ramène dans la politique",
@@ -393,7 +404,7 @@ def phrase_angle_determinant(mes: str, m: dict) -> str | None:
     try:
         if mes == "pire_annee":
             return (f"L'angle déterminant : la pire année. Votre portefeuille aurait perdu {pct_frac(abs(v))} "
-                    f"en un an, pour une limite de {pct_frac(abs(lim))}.") if v < 0 else None
+                    f"en un an, pour une limite de {pct_frac(abs(lim), 2)}.") if v < 0 else None
         if mes == "fluctuations":
             return (f"L'angle déterminant : les fluctuations. Elles seraient de {pct_frac(v)} par an, "
                     f"pour une limite de {pct_frac(lim)}.")

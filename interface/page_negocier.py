@@ -16,7 +16,7 @@ from interface import composants as C
 from interface import etat, marche
 from interface.theme import BAISSE, BORD, ENCRE, FILET, GRIS, HAUSSE, POLICE, POSITIF, TENSION
 from interface.textes import (AIDE_ANGLES, ANGLES_DEFAUT, AVIS_SANS_AGENT, BOUTON_ACTION, BOUTON_PASSER, CORRECTION_TEXTE,
-                              DEJA_FAITE, DELAI_MAX_AGENT_S, DEPUIS_PRECEDENT, DIRECTIONS_TEXTE, EN_DIRECT_AGENT, LIBELLES_OUTILS,
+                              DEJA_FAITE, DELAI_MAX_AGENT_S, DEPUIS_PRECEDENT, DIRECTIONS_TEXTE, EN_DIRECT_AGENT, EQUIPE, LIBELLES_OUTILS,
                               LIBELLES_PHASES, LIMITE, MESURES, NOM, OPERATIONS, SOLIDITE_TEXTE, STATUTS_REGLE, THEMES, TITRE_ANALYSE, TRACE,
                               TITRE_ETAPES, TYPES_ORDRE, VERIFICATION_TEXTE, angles_du_bloc, decrire_mesure,
                               derniers_prix_cad, dollars, francais, instruments, libelle_mesure, libelle_option,
@@ -259,6 +259,16 @@ def graphique_courbe(taille: dict, valeur: float) -> alt.Chart:
                             tickColor=BORD, labelFontSize=12, titleFontSize=12, titleFontWeight="normal"))
 
 
+def _est_le_montant_reduit(piste: dict, ordre: dict, taille_pct: float) -> bool:
+    """Vrai si cette piste des agents est le même ordre, sur le même titre, au montant compatible du moteur."""
+    jambes = piste.get("ordres") or []
+    if piste.get("famille") == "montant_reduit" and len(jambes) <= 1:
+        return True
+    return (len(jambes) == 1 and jambes[0].get("ticker") == ordre["ticker"]
+            and jambes[0].get("sens", ordre["sens"]) == ordre["sens"]
+            and abs(float(jambes[0].get("pourcentage", 0)) - float(taille_pct)) < 0.26)
+
+
 def bloc_possible(rapport: dict, valeur: float) -> None:
     """« Ce qui est possible » : les pistes testées par le moteur, dans un seul tableau."""
     taille, agent = rapport.get("taille"), rapport.get("agent") or {}
@@ -279,8 +289,12 @@ def bloc_possible(rapport: dict, valeur: float) -> None:
             if cause.get("mesure") and cause.get("phrase"):
                 phrase += (f" La mesure qui décide : {libelle_mesure(cause.get('dimension'), cause['mesure'])} "
                            f"({francais(cause['phrase'])}).")
-            lignes.append(["<b>Montant réduit</b>", C.e(f"{nom_op} de {dollars(tc * valeur / 100)} de {o['ticker']}"),
-                           C.pastille("Compatible", "compatible"), ""])
+            # La même piste n'est montrée qu'une fois : si les agents ont testé ce montant réduit, leur ligne,
+            # qui porte la raison, suffit.
+            if not any(_est_le_montant_reduit(p, o, tc) for p in agent.get("pistes") or []):
+                lignes.append(["<b>Montant réduit</b>",
+                               C.e(f"{nom_op} de {dollars(tc * valeur / 100)} de {o['ticker']}"),
+                               C.pastille("Compatible", "compatible"), ""])
         else:
             phrase = (f"Aucun montant jusqu'à {dollars(taille['taille_demandee_pct'] * valeur / 100)} "
                       f"({pct(taille['taille_demandee_pct'])}) ne garde tous les angles à {LIMITE:g} ou plus.")
@@ -307,7 +321,13 @@ def bloc_possible(rapport: dict, valeur: float) -> None:
         corps += f'<p class="glc-sur" style="margin-bottom:10px">{C.e(explorateur["avis"])}</p>'
     if lignes:
         corps += C.tableau([("Piste testée", ""), ("Ordre", "nb"), ("Verdict", ""), ("Angle déterminant", "")], lignes)
-        corps += '<p class="glc-legende">Des pistes testées par le moteur, pas des recommandations.</p>'
+        if agent.get("pistes"):
+            corps += ('<p class="glc-legende">Pistes choisies par l\'agent explorateur sous le mandat du chef de '
+                      "dossier, puis calculées par le moteur. Ce ne sont pas des recommandations.</p>")
+        elif len(lignes) > 1:
+            corps += '<p class="glc-legende">Des pistes calculées par le moteur. Ce ne sont pas des recommandations.</p>'
+        else:
+            corps += '<p class="glc-legende">Une piste calculée par le moteur. Ce n\'est pas une recommandation.</p>'
     with st.container(key="carte_possible"):
         C.montrer(corps)
         if taille and taille.get("courbe") and taille.get("lancee", True):
@@ -700,7 +720,7 @@ def afficher(persona: str, fiche: dict) -> None:
         billet(persona, fiche)
     # L'analyse est ce que le service ajoute au courtage : sa zone porte la lueur, plus vive pendant qu'elle tourne.
     with droite, st.container(key="zone_sigma"):
-        C.montrer(C.etiquette_du_service(f"L'analyse {NOM}", "votre ordre face à votre politique de placement"))
+        C.montrer(C.etiquette_du_service(f"L'analyse {NOM}", EQUIPE))
         rapport = st.session_state.get(f"rapport_{persona}")
         if rapport is not None:
             analyse(persona, rapport, fiche)

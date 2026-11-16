@@ -103,6 +103,7 @@ def test_robert_tsla_en_tension(sans_agent):
     carte = _verdict(at)
     assert "En tension" in carte and "120 000 $" in carte and "15,0 %" in carte
     assert "L'angle déterminant : la pire année. Votre portefeuille aurait perdu" in carte
+    assert "pour une limite de 10,58 %" in carte  # la même précision que la politique de placement
     assert "pire année publiée" not in carte  # les chiffres complets restent dans les mesures repliées
     assert "sans objet" in texte
     assert "0,5 ans" not in texte and "du 30 sept." not in texte
@@ -394,7 +395,8 @@ def test_pistes_testees_et_correction(equipe_simulee):
     assert "Achat de 48 000 $ de TSLA" in ligne and "Achat de 32 000 $ de SPY" in ligne
     assert "Compatible" in ligne and "score" not in ligne
     assert "Garde une part de croissance" in ligne
-    assert "pas des recommandations" in texte and "Autre titre" not in texte
+    assert "Pistes choisies par l'agent explorateur sous le mandat du chef de dossier" in texte
+    assert "Ce ne sont pas des recommandations" in texte and "Autre titre" not in texte
     assert "L'agent a corrigé son texte après vérification." in texte
 
 
@@ -634,7 +636,8 @@ def test_nom_du_service_et_trace_de_l_analyse(monkeypatch):
     assert textes.SENS_DU_NOM in ouverture and "garder le cap" not in ouverture.split("</style>")[-1].lower()
     at = _demarrer()
     texte = _inspecter(at, "robert")
-    assert "Analyse n° a1b2c3 · trace conservée" in texte and "Analyse déjà faite" not in texte
+    assert "Analyse n° a1b2c3 · trace conservée dans Amazon S3 et CloudWatch Logs" in texte
+    assert "Analyse déjà faite" not in texte
     _aller(at, "aide")
     assert "Chaque analyse laisse une trace" in _textes(at) and textes.NOM in _textes(at)
 
@@ -658,3 +661,41 @@ def test_films_de_l_introduction_et_vues_fixes_en_secours(sans_agent, monkeypatc
         at.button(key="intro_suivant").click().run()
         assert not at.exception, at.exception
     assert "TSLA — Tesla" in _textes(at)
+
+
+def test_une_piste_n_est_montree_qu_une_fois(monkeypatch):
+    """Le montant réduit testé par les agents ne double pas la ligne du moteur ; sans lui, le moteur la montre."""
+    import agent.inspection
+
+    def inspecter(fiche, ticker, sens, pourcentage, **options):
+        return {"explication": "**Le verdict.** En tension.", "trace": TRACE_SIMULEE, "erreur": None,
+                "pistes": [{"famille": "montant_reduit", "libelle_famille": "Montant plus petit",
+                            "ordres": [{"ticker": ticker, "sens": sens, "pourcentage": 7.0}],
+                            "raison": "Réduire la taille pour ramener la pire année sous sa limite.",
+                            "verdict": {"code": "compatible", "libelle": "Compatible"}},
+                           {"famille": "autre_instrument", "libelle_famille": "Autre instrument",
+                            "ordres": [{"ticker": "AAPL", "sens": sens, "pourcentage": pourcentage}],
+                            "raison": "Un titre établi.", "verdict": {"code": "compatible", "libelle": "Compatible"}}]}
+
+    monkeypatch.setattr(agent.inspection, "inspecter", inspecter)
+    at = _demarrer()
+    texte = _inspecter(at, "robert")
+    tableau = next(m.value for m in at.markdown if "Piste testée" in m.value)
+    assert tableau.count("Achat de 56 000 $ de TSLA") == 1 and tableau.count("<tr>") == 3  # l'en-tête et deux pistes
+    assert "Montant plus petit" in tableau and "<b>Montant réduit</b>" not in tableau
+    assert "Pour devenir compatible : 56 000 $ ou moins" in texte
+
+
+def test_les_deux_atouts_dans_l_introduction_et_l_aide(sans_agent):
+    """L'équipe d'agents et le modèle de notation se lisent dès l'introduction, puis dans l'aide ; jamais « score »."""
+    from interface import textes
+    mots = " ".join(t + " " + " ".join(lignes) + " " + note for _, t, lignes, note in textes.INTRODUCTION).lower()
+    assert "équipe d'agents" in mots and "modèle de notation" in mots and "note sur 100" in mots
+    assert "score" not in mots and "garder le cap" not in mots
+    at = _demarrer()
+    _aller(at, "aide")
+    aide = _textes(at)
+    assert "Les professionnels ont un département de risque." in aide and "Une équipe de deux agents d'IA" in aide
+    for service in ("Amazon CloudWatch Logs", "AWS IAM", "AWS Systems Manager", "la trace de chaque analyse"):
+        assert service in aide
+    assert "contrôle d'ancrage (Amazon Bedrock Guardrails)" in aide

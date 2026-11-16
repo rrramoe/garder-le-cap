@@ -658,6 +658,7 @@ hr {{ border-color: var(--bord); }}
   .stApp .glc-sombre .note {{ position: static; display: block; margin: 0 0 6px 0; }}
   .st-key-page label[data-testid="stRadioOption"] {{ padding: 6px 10px; }}
   .stApp .glc-intro {{ height: auto; display: block; }}
+  div[class*="st-key-introduction"] div[data-testid="stHorizontalBlock"] {{ gap: 14px; }}
   .stApp .glc-intro h1 {{ font-size: var(--t4); }}
   .stApp .glc-vue, .stApp .glc-vue:has(.glc-billet) {{ height: auto; min-height: 220px; padding: 14px; }}
   .stApp .glc-vue.film {{ height: auto; aspect-ratio: 1.3; padding: 8px; }}
