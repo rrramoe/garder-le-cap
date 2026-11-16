@@ -403,7 +403,8 @@ def test_pistes_construites_depuis_les_resultats_des_outils():
     assert [p["etape"] for p in pistes] == [4, 6, 7, 8]
     taille = api.chercher_taille_compatible("robert", "TSLA", "achat", 15)
     assert pistes[0]["ordres"] == [{"ticker": "TSLA", "sens": "achat", "pourcentage": taille["taille_compatible_pct"]}]
-    assert pistes[0]["verdict"]["code"] == "compatible" and pistes[0]["score"] >= 50
+    from moteur import notation
+    assert pistes[0]["verdict"]["code"] == "compatible" and pistes[0]["score"] >= notation.SEUIL_COMPATIBLE
     assert pistes[0]["direction"]["cas"] == "reste_dans_la_politique"
     spy = api.simuler_ordre("robert", "SPY", "achat", 15)
     assert pistes[1]["score"] == spy["score"] and pistes[1]["verdict"]["code"] == spy["verdict"]["code"]

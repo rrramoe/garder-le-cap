@@ -99,7 +99,9 @@ def entete(client, ordre: dict, mission: str, simulation: dict, mode: str = "aju
     avancees = operations_avancees_permises(fiche)
     resultat = compacter_simulation(simulation)
     resultat["score_avant"] = (simulation.get("avant") or {}).get("score")
-    resultat["portefeuille_deja_hors_politique"] = resultat["score_avant"] is not None and resultat["score_avant"] < 50
+    avant = simulation.get("avant") or {}
+    resultat["portefeuille_deja_hors_politique"] = (not avant["dans_la_politique"]) if "dans_la_politique" in avant \
+        else None     # le seuil est celui du moteur, jamais écrit ici
     resultat["autres_mesures_sous_le_seuil"] = (simulation.get("cause") or {}).get("autres_mesures_sous_le_seuil")
     resultat.pop("portefeuille_apres_pct", None)
     resultat["points_attention"] = [p.get("texte") for p in simulation.get("points_attention") or []]

@@ -76,7 +76,7 @@ def creer_outils(client) -> list:
     def chercher_taille_compatible(client_id: str, ticker: str, sens: str, pourcentage: float,
                                    operation: str = "comptant") -> dict:
         """Cherche la plus grande taille d'ordre (pas de 0,5 %, jusqu'au montant demandé) dont le score
-        atteint 50, avec la courbe du score selon la taille. Ne se lance pas si une contrainte stricte est violée.
+        reste dans la politique (seuil du moteur), avec la courbe selon la taille. Ne se lance pas si une contrainte stricte est violée.
 
         Args:
             client_id: Identifiant du client de l'analyse.
@@ -358,7 +358,7 @@ def creer_outils_explorateur(client, limite_essais: int = LIMITE_ESSAIS, registr
     def chercher_taille_compatible(client_id: str, ticker: str, sens: str, pourcentage: float, raison: str,
                                    operation: str = "comptant") -> dict:
         """Teste la piste d'un montant plus petit : la plus grande taille (pas de 0,5 %, jusqu'au montant demandé)
-        dont le score atteint 50, avec la courbe. Compte dans la limite de six essais.
+        qui reste dans la politique (seuil du moteur), avec la courbe. Compte dans la limite de six essais.
 
         Args:
             client_id: Identifiant du client de l'analyse.

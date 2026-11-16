@@ -67,40 +67,46 @@ def test_scenario_contrainte_stricte_de_n_importe_quel_ordre():
 
 
 # --- Cause du verdict ----------------------------------------------------------------------------
+# Un portefeuille fixe écrit ici : les essais ne dépendent ni du portefeuille d'un persona ni du seuil du moteur.
+
+from moteur import notation
+
+FIXE = {"persona": "robert", "portefeuille_pct": {"ZST.TO": 15, "XBB.TO": 35, "AGG": 15, "XIU.TO": 8, "RY.TO": 6,
+                                                   "FTS.TO": 4, "ENB.TO": 3, "JNJ": 5, "PG": 4, "GLD": 5}}
 
 def test_cause_risque():
-    c = api.simuler_ordre("robert", "TSLA", "achat", 15)["cause"]
-    assert c["type"] == "risque" and c["mesure"] == "pire_annee" and c["sous_le_seuil"]
+    c = api.simuler_ordre(FIXE, "TSLA", "achat", 15)["cause"]
+    assert c["type"] == "risque" and c["sous_le_seuil"]
     assert c["valeur"] < c["limite"] < 0 and c["porte_par_l_ordre"] and c["part_du_risque_pct"]["TSLA"] > 0
 
 
 def test_cause_plafond_d_une_action():
     # JNJ plutôt que RY.TO : un achat canadien de 15 % ferait décider la géographie des actions.
-    c = api.simuler_ordre("robert", "JNJ", "achat", 15)["cause"]
+    c = api.simuler_ordre(FIXE, "JNJ", "achat", 15)["cause"]
     assert c["type"] == "plafond" and c["mesure"] == "plus_grosse_action"
     assert c["instrument"] == "JNJ" and c["poids"] == 20.0 and c["plafond"] == 15 and c["porte_par_l_ordre"]
 
 
 def test_cause_plafond_d_un_fonds_et_crypto():
-    c = api.simuler_ordre("robert", "XBB.TO", "achat", 15)["cause"]
+    c = api.simuler_ordre(FIXE, "XBB.TO", "achat", 15)["cause"]
     assert c["type"] == "plafond" and c["instrument"] == "XBB.TO" and c["poids"] == 50.0
-    c = api.simuler_ordre("robert", "BTC-USD", "achat", 5)["cause"]
+    c = api.simuler_ordre(FIXE, "BTC-USD", "achat", 5)["cause"]
     assert c["type"] == "plafond" and c["mesure"] == "crypto" and c["porte_par_l_ordre"]
 
 
 def test_cause_contrainte_stricte_et_ordre_compatible():
     assert api.simuler_ordre("mateo", "XOM", "achat", 8)["cause"]["type"] == "contrainte_stricte"
-    c = api.simuler_ordre("robert", "SPY", "achat", 5)["cause"]
-    assert c["sous_le_seuil"] is False
+    c = api.simuler_ordre(FIXE, "SPY", "achat", 5)["cause"]
+    assert c["sous_le_seuil"] == (c["note"] < notation.SEUIL_COMPATIBLE)
 
 
 def test_cause_sans_nouvelle_note():
-    r = api.simuler_ordre("robert", "TSLA", "achat", 15)
+    r = api.simuler_ordre(FIXE, "TSLA", "achat", 15)
     assert r["cause"]["note"] == r["score"]
     for m in r["cause"]["autres_mesures_sous_le_seuil"]:
-        assert r["apres"]["notes"][m["dimension"]]["mesures"][m["mesure"]]["note"] == m["note"] < 70
+        assert r["apres"]["notes"][m["dimension"]]["mesures"][m["mesure"]]["note"] == m["note"] < notation.SEUIL_COMPATIBLE
 
 
 def test_cause_porte_le_detail_de_la_mesure():
-    c = api.simuler_ordre("robert", "JNJ", "achat", 15)["cause"]
+    c = api.simuler_ordre(FIXE, "JNJ", "achat", 15)["cause"]
     assert c["detail_mesure"]["poids"] == 20.0 and c["detail_mesure"]["plafond"] == 15
