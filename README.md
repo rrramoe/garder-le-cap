@@ -108,7 +108,7 @@ Sans AWS, les tests qui appellent Bedrock, le garde-fou ou S3 sont sautés, de m
 
 1. **La fiche du client** : son objectif, son horizon, les fluctuations qu'il accepte et la perte que sa situation permet, son besoin de liquidités dans l'année, son expérience, ses réponses sur huit thèmes (exclure, éviter, neutre, rechercher, obligatoire) et son portefeuille.
 2. **La politique de placement déduite de la fiche** : un profil (le plus prudent entre ce que le client accepte et ce que sa situation permet), des fourchettes par classe d'actif, des plafonds de concentration, des contraintes strictes (thèmes « exclure » ou « obligatoire ») et des préférences souples (thèmes « éviter » ou « rechercher »).
-3. **Le modèle de notation** : les contraintes strictes d'abord, puis cinq angles, chacun noté de 0 à 100, avec 50 à la limite de la politique :
+3. **Le modèle de notation** : les contraintes strictes d'abord, puis cinq angles, chacun noté de 0 à 100 : 100 sur la cible, la note de passage exactement à la limite de la politique :
    - **Objectif** : l'ordre sert-il mon objectif ?
    - **Risque** : le risque reste-t-il dans ce que j'accepte ?
    - **Liquidité** : mon argent reste-t-il disponible ?
@@ -159,7 +159,7 @@ Chaque résultat du moteur porte ses sources, publiées ou hypothèses ; la list
 | Capacité à supporter une perte | ACVM, Instruction générale relative au Règlement 31-103, article 13.2 | 2026-01-01 |
 | Fourchettes des actions régionales | RBC Gestion mondiale d'actifs, « Global Investment Outlook » | 2025-01 |
 
-**Principales hypothèses** : les trois clients d'exemple, leur profil et leurs portefeuilles sont fictifs ; l'or et la crypto sont des titres alternatifs, `ZST.TO` tient lieu de liquidités ; un achat est payé par l'encaisse et une vente y est versée ; tout est calculé en dollars canadiens, à poids constants rééquilibrés chaque jour ; l'échelle 100 / 50 / 0 et la règle de la note la plus faible ; les plafonds d'une seule équipe de gestion sont appliqués à tous les profils.
+**Principales hypothèses** : les trois clients d'exemple, leur profil et leurs portefeuilles sont fictifs ; l'or et la crypto sont des titres alternatifs, `ZST.TO` tient lieu de liquidités ; un achat est payé par l'encaisse et une vente y est versée ; tout est calculé en dollars canadiens, à poids constants rééquilibrés chaque jour ; une échelle commune de 0 à 100, avec la note de passage à la limite de la politique, et la règle de la note la plus faible ; les plafonds d'une seule équipe de gestion sont appliqués à tous les profils.
 
 **Limites** : cinq ans de données, une seule grande baisse, et aucune prévision ; biais du survivant ; le contenu des fonds n'entre pas dans les notes, si bien que la concentration réelle peut être sous-estimée ; le statut ESG est indéterminé pour une partie des titres ; achat sur marge et vente à découvert sont simplifiés (ni coût d'emprunt au-delà des liquidités, ni appel de marge) ; les documents publiés ont pu être révisés depuis leur date.
 
