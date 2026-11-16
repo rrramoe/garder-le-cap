@@ -422,3 +422,18 @@ def test_fiche_d_un_nouveau_client_acceptee_par_le_moteur():
     assert "erreur" not in f and f["id"] == "nouveau"
     assert "erreur" not in api.etat_des_lieux(fiche)
     assert "erreur" not in api.simuler_ordre(fiche, "MSFT", "achat", 5)
+
+
+def test_explication_en_paragraphes(equipe_simulee, monkeypatch):
+    import agent.inspection
+    vrai = agent.inspection.inspecter
+
+    def inspecter(*args, **options):
+        r = vrai(*args, **options)
+        r["explication"] = ("**Le verdict.** L'ordre est en tension. **La raison.** La pire baisse dépasse sa limite.\n"
+                            "**Ce qui est possible.** Un montant plus petit serait compatible. **À savoir.** Données passées.")
+        return r
+    monkeypatch.setattr(agent.inspection, "inspecter", inspecter)
+    at = _demarrer()
+    texte = _inspecter(at, "robert")
+    assert "en tension.\n\n**La raison.**" in texte and "compatible.\n\n**À savoir.**" in texte

@@ -1203,7 +1203,10 @@ def section_agent(rapport: dict) -> None:
             st.caption(f"Raison : {agent['erreur']}.")
         return
     # Les titres éventuels du texte de l'agent deviennent du gras, pour rester sous le titre de la partie.
-    st.markdown(re.sub(r"(?m)^#{1,6}\s+(.+?)\s*$", r"\n**\1**\n", agent["explication"]))
+    texte = re.sub(r"(?m)^#{1,6}\s+(.+?)\s*$", r"\n**\1**\n", agent["explication"])
+    # Un paragraphe par point : chaque titre en gras ouvre un paragraphe, avec de l'air avant lui.
+    texte = re.sub(r"\s*(\*\*(?:Le verdict|La raison|Ce qui est possible|Votre objectif|À savoir)\.\*\*)", r"\n\n\1", texte)
+    st.markdown(texte.strip())
     details = []
     if agent.get("modele"):
         details.append(f"Modèle : {agent['modele']}")

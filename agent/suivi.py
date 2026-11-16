@@ -28,7 +28,7 @@ from strands.hooks import (AfterModelCallEvent, AfterToolCallEvent, BeforeModelC
                            HookProvider, HookRegistry)
 
 # Début du texte final de chaque agent : le rapport du chef de dossier, le compte rendu de l'explorateur.
-MARQUEURS_REDACTION = ("verdict", "finalité", "finalite", "intention")
+MARQUEURS_REDACTION = ("le verdict", "verdict", "finalité", "finalite", "intention", "pistes retenues")
 
 
 def _symbole(arguments: dict) -> str:
