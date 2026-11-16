@@ -19,7 +19,8 @@ pytestmark = pytest.mark.skipif(
 )
 
 CHAMPS = {"explication", "trace", "modele", "duree_s", "erreur", "garde_fou", "ancrage", "substitut", "pistes", "intention",
-          "agents", "correction"}
+          "agents", "correction",
+          "memoire"}
 CHAMPS_ETAPE = {"etape", "outil", "arguments", "resultat_resume", "resultat", "agent"}
 MOTS_INTERDITS = ("bonne idée", "mauvaise idée", "je recommande", "je conseille")
 

@@ -11,3 +11,4 @@ data/corporate_actions.csv
 data/macro_rates.csv
 data/profils_bruts/
 reference/profils_instruments.json
+.cache/

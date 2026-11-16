@@ -490,8 +490,62 @@ def message_erreur(e: Exception) -> str:
 
 # --- Point d'entrée -----------------------------------------------------------------------------
 
+# Mémoire des analyses : une analyse identique en cours est partagée, une analyse finie est rejouée.
+# GLC_MEMOIRE=0 revient au comportement d'avant (chaque appel refait l'analyse).
+MEMOIRE = os.environ.get("GLC_MEMOIRE", "1").strip() != "0"
+
+
+def cle_analyse(client, ticker, sens, pourcentage, operation, modele, equipe, chef) -> str | None:
+    """Ce qui rend deux demandes identiques : le contenu de la fiche tel que le moteur la lit, l'ordre, les réglages,
+    les consignes des agents et la version du garde-fou. None si la fiche est illisible."""
+    import hashlib
+
+    fiche = _api_moteur.lire_fiche_client(client)
+    if not isinstance(fiche, dict) or "erreur" in fiche:
+        return None
+    consignes = "".join(f.read_text(encoding="utf-8") for f in sorted(PROMPT_SYSTEME.parent.glob("*.md")))
+    config = _garde_fou.configuration_garde_fou() or {}
+    try:
+        montant = round(float(pourcentage), 4)
+    except (TypeError, ValueError):
+        montant = str(pourcentage)
+    contenu = {"client": {k: v for k, v in fiche.items() if k != "sources"},
+               "ordre": [str(ticker).strip().upper(), str(sens).strip().lower(), montant,
+                         str(operation or "comptant").strip().lower()],
+               "reglages": [nom_modele(modele), equipe, chef, EFFORT, EFFORT_EXPLORATEUR, config.get("version")],
+               "consignes": hashlib.sha256(consignes.encode("utf-8")).hexdigest()}
+    return hashlib.sha256(json.dumps(contenu, sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()
+
+
 def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptant", sur_etape=None,
-              equipe=None, modele_explorateur=None, chef=None) -> dict:
+              equipe=None, modele_explorateur=None, chef=None, relancer: bool = False, memoire=None) -> dict:
+    """Fait analyser l'ordre par les agents. Ne lève jamais d'exception.
+
+    Deux demandes identiques partagent l'analyse en cours ; une analyse finie et réussie est rejouée avec ses étapes
+    (`memoire.statut` = « deja_faite », « partagee » ou « nouvelle » ; None sans mémoire). `relancer=True` refait
+    l'analyse. La mémoire s'applique au vrai Bedrock (`memoire=None`), ou partout avec `memoire=True`.
+    Les autres arguments : voir `analyser`.
+    """
+    utiliser = MEMOIRE and (memoire if memoire is not None else (modele is None or isinstance(modele, str)))
+    cle = None
+    if utiliser:
+        try:
+            cle = cle_analyse(client, ticker, sens, pourcentage, operation, modele,
+                              EQUIPE if equipe is None else bool(equipe), chef if chef is not None else CHEF)
+        except Exception:
+            cle = None
+    if cle is None:
+        r = analyser(client, ticker, sens, pourcentage, modele, operation, sur_etape, equipe, modele_explorateur, chef)
+        r["memoire"] = None
+        return r
+    from . import memoire as _memoire
+    return _memoire.partager(cle, lambda diffuser: analyser(client, ticker, sens, pourcentage, modele, operation,
+                                                               diffuser, equipe, modele_explorateur, chef),
+                             sur_etape=sur_etape, relancer=relancer)
+
+
+def analyser(client, ticker, sens, pourcentage, modele=None, operation="comptant", sur_etape=None,
+             equipe=None, modele_explorateur=None, chef=None) -> dict:
     """Fait analyser l'ordre par les agents. Ne lève jamais d'exception.
 
     `equipe` (par défaut le réglage `EQUIPE`) : le chef de dossier, qui envoie l'explorateur pour un ordre en
