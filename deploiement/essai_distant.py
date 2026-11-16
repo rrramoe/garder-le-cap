@@ -70,7 +70,9 @@ async def principal(adresse: str) -> int:
         debut = time.monotonic()
         vus, _ = await executer(ws, [clic])
     texte = "\n".join(vus)
-    explication = next((t for t in vus if t.lstrip().startswith("**Verdict**")), "")
+    # Le paragraphe d'ouverture de l'explication des agents (« **Verdict** : », « **Le verdict.** », …).
+    explication = next((t for t in vus if t.lstrip().startswith("**") and "verdict" in t.lstrip()[:20].lower()
+                        and len(t.split()) >= 30), "")
     agent = bool(explication) and AVIS_SANS_AGENT not in texte
     print(f"Analyse affichée en {time.monotonic() - debut:.0f} s ; explication de l'agent : "
           + (f"oui (« {explication.splitlines()[0][:140]} »)" if agent else "non"))
