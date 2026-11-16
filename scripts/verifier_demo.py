@@ -68,7 +68,8 @@ def plus_faible(sim: dict) -> str:
 
 
 def notes_texte(bloc: dict) -> str:
-    return " ; ".join(f"{k} {nombre(v.get('note'), 0)}" for k, v in angles(bloc).items()) or "—"
+    return " ; ".join(f"{k} {'sans objet' if v.get('note') is None else nombre(v.get('note'), 0)}"
+                      for k, v in angles(bloc).items()) or "—"
 
 
 def pistes_texte(agent: dict, taille: dict | None) -> str:
