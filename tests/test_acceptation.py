@@ -30,13 +30,13 @@ def test_1_robert_tsla():
     assert "erreur" not in r
     assert r["contraintes_strictes"]["violee"] is False
     assert r["verdict"]["code"] == "en_tension"
-    # Modèle en cinq familles : la pire année (-17,7 % contre -10,58 % publiés) décide ; la pire baisse garde sa note.
-    assert r["score"] == pytest.approx(_publiee(16.15), abs=1)
+    # Modèle en cinq familles : la pire année décide ; la pire baisse garde sa note.
+    assert r["score"] == pytest.approx(21.4, abs=1)
     assert r["dimension_min"] == "risque"
     assert r["mesure_min"] == "pire_annee"
-    assert r["apres"]["notes"]["risque"]["mesures"]["ampleur"]["note"] == pytest.approx(_publiee(40), abs=1)
-    # Avant l'ordre, Robert a 9 % d'actions hors du Canada pour une cible de 21 % (limite 11 %) : déjà hors politique.
-    assert r["direction"]["cas"] == "hors_politique_aggrave"
+    assert r["apres"]["notes"]["risque"]["mesures"]["ampleur"]["note"] == pytest.approx(_publiee(39), abs=1)
+    # Robert part dans sa politique (portefeuille de départ fictif, 3 points de XIU.TO placés dans SPY) ; l'ordre l'en sort.
+    assert r["direction"]["cas"] == "fait_sortir_de_la_politique"
     t = api.chercher_taille_compatible("robert", "TSLA", "achat", 15)
     assert t["lancee"] is True
     assert t["taille_compatible_pct"] == 7.0
@@ -118,7 +118,7 @@ def test_5_personas(client, ordre, baisse, tsl):
 
 
 @pytest.mark.parametrize("client,ticker,pct,avant,apres", [
-    ("robert", "TSLA", 15, 68, 40),
+    ("robert", "TSLA", 15, 68, 39),
     ("mateo", "XOM", 8, 89, 94),
     ("amira", "NVDA", 7, 15, 2),
 ])

@@ -40,7 +40,7 @@
         "experience": "avancee",
         "themes": {"ecarte_esg": "neutre", "speculatif": "eviter", "crypto": "eviter", "techno": "neutre", "etablie": "rechercher"}
       },
-      "portefeuille_pct": {"ZST.TO": 15, "XBB.TO": 35, "AGG": 15, "XIU.TO": 8, "RY.TO": 6, "FTS.TO": 4, "ENB.TO": 3, "JNJ": 5, "PG": 4, "GLD": 5},
+      "portefeuille_pct": {"ZST.TO": 15, "XBB.TO": 35, "AGG": 15, "XIU.TO": 5, "SPY": 3, "RY.TO": 6, "FTS.TO": 4, "ENB.TO": 3, "JNJ": 5, "PG": 4, "GLD": 5},
       "ordre_demo": {"ticker": "TSLA", "sens": "achat", "pourcentage": 15}
     }
   }

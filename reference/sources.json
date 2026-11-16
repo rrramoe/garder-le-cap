@@ -43,7 +43,7 @@
     "limite": "Yahoo peut donner le début de son propre historique plutôt que la vraie date d'inscription (ex. plusieurs titres du TSX au 1995-01-12)."
   },
   "hypothese_personas": {
-    "libelle": "Association de chaque persona à un profil, réponses aux thèmes, portefeuilles de départ fictifs ; réponses neutres aux deux questions ajoutées (capacité à supporter une perte au même niveau que les fluctuations acceptées, aucun besoin de liquidités)",
+    "libelle": "Association de chaque persona à un profil, réponses aux thèmes, portefeuilles de départ fictifs ; réponses neutres aux deux questions ajoutées (capacité à supporter une perte au même niveau que les fluctuations acceptées, aucun besoin de liquidités) ; Robert : 3 points de son fonds d'actions canadiennes (XIU.TO) placés dans un fonds d'actions américaines (SPY), le plus petit déplacement entier qui le met dans sa politique sur tous les angles, choisi sur son portefeuille de départ seul",
     "source": "Hypothèse du projet, à partir du vocabulaire de l'énoncé",
     "date": "2026-11-15",
     "nature": "hypothese"

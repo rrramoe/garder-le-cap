@@ -42,9 +42,9 @@ def test_score_de_fenetre_est_le_minimum():
         assert f["score"] == pytest.approx(min([f["note_risque"]["note"], *autres]))
 
 
-def test_robert_tsla_15_solide_et_11_5_fragile():
+def test_robert_tsla_15_solide_et_11_fragile():
     assert _solidite("robert", "TSLA", 15)[1]["statut"] == "solide"   # en tension dans les deux fenêtres
-    assert _solidite("robert", "TSLA", 11.5)[1]["statut"] == "fragile"  # la taille compatible dépend de la fenêtre
+    assert _solidite("robert", "TSLA", 11)[1]["statut"] == "fragile"  # la taille compatible dépend de la fenêtre
 
 
 def test_fenetre_complete_retrouve_la_note_de_risque():
@@ -59,6 +59,6 @@ def test_api_simuler_ordre_et_solidite():
     r = api.simuler_ordre("robert", "TSLA", "achat", 15)
     assert r["solidite"]["statut"] == "solide" and set(r["solidite"]["fenetres"]) == {"defavorable", "favorable"}
     assert any(s["id"] == "hypothese_solidite" for s in r["sources"])
-    s = api.solidite("robert", "TSLA", "achat", 11.5)
+    s = api.solidite("robert", "TSLA", "achat", 11)
     assert s["statut"] == "fragile" and s["sources"]
     assert "erreur" in api.solidite("robert", "INCONNU", "achat", 5)

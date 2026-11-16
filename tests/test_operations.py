@@ -15,6 +15,8 @@ EMPREINTE = json.loads((Path(__file__).parent / "empreinte_comptant.json").read_
 MARGE = ("NVDA", "achat", 20, "marge")          # Amira a 8 % d'encaisse : 12 % empruntés
 DECOUVERT = ("TSLA", "vente", 5, "decouvert")   # aucun TSLA détenu : 5 % à découvert
 IDS = {"marge": "achat_sur_marge", "decouvert": "vente_a_decouvert"}
+ROBERT_AVANT_OPTION_B = {"ZST.TO": 15, "XBB.TO": 35, "AGG": 15, "XIU.TO": 8, "RY.TO": 6, "FTS.TO": 4, "ENB.TO": 3,
+                         "JNJ": 5, "PG": 4, "GLD": 5}
 
 
 
@@ -50,6 +52,8 @@ def test_defaut_identique_a_main(cas):
     """Les mesures d'avant le modèle en cinq familles gardent leurs valeurs ; le score est la plus faible des
     anciennes et des nouvelles mesures ; la taille compatible ne peut que baisser."""
     client, ticker, sens, pct = cas.split("|")
+    if client == "robert":  # l'empreinte a été prise sur son portefeuille de départ d'avant l'option B
+        client = {"persona": "robert", "portefeuille_pct": ROBERT_AVANT_OPTION_B}
     attendu = EMPREINTE["cas"][cas]
     r = api.simuler_ordre(client, ticker, sens, float(pct))
     assert r["portefeuille_apres_pct"] == attendu["portefeuille_apres_pct"]

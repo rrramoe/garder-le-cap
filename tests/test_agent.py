@@ -11,7 +11,7 @@ from strands.models.model import Model
 
 from agent import identifiants, inspection
 from agent.outils import NOMS_OUTILS, creer_outils
-from moteur import api, donnees, notation
+from moteur import api, donnees
 
 pytestmark = pytest.mark.skipif(
     not (donnees.dossier_donnees() / "prices_daily.csv").exists(),
@@ -78,12 +78,6 @@ SCENARIO_ROBERT = [
 # --- Outils -------------------------------------------------------------------------------------
 
 
-
-@pytest.fixture(autouse=True)
-def sans_geographie(monkeypatch):
-    """Ces essais supposent que Robert part dans sa politique ; sa répartition géographique de départ (9 % d'actions
-    hors du Canada pour une limite de 11 %) l'en sort. Mise de côté ici seulement ; testée dans test_familles."""
-    monkeypatch.setattr(notation, "mesure_geographie", lambda *a: {"note": None, "statut": "sans_objet"})
 
 def test_outils_noms_snake_case():
     outils = creer_outils("robert")
@@ -627,14 +621,14 @@ def test_redaction_annoncee_au_texte_final_seulement():
 # --- Correction de son texte après vérification --------------------------------------------------
 
 def test_correction_apres_un_chiffre_faux():
-    scenario = SCENARIO_ROBERT + ["**Verdict** : en tension ; l'angle le plus faible vaut 22,6."]
+    scenario = SCENARIO_ROBERT + ["**Verdict** : en tension ; l'angle le plus faible vaut 21,4."]
     scenario[4] = "**Verdict** : en tension ; l'angle le plus faible vaut 97,3."
     evenements = []
     r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(scenario), equipe=False,
                              sur_etape=evenements.append)
     assert r["correction"]["faite"] and r["correction"]["reussie"]
     assert r["correction"]["motifs"] == ["Le chiffre 97,3 ne figure dans aucun résultat d'outil."]
-    assert r["explication"] == "**Verdict** : en tension ; l'angle le plus faible vaut 22,6."
+    assert r["explication"] == "**Verdict** : en tension ; l'angle le plus faible vaut 21,4."
     assert r["ancrage"]["chiffres_non_sources"] == []
     assert r["trace"][-1]["outil"] == "corriger_le_texte" and r["trace"][-1]["agent"] == "principal"
     assert r["trace"][-1]["resultat_resume"] == "L'agent a corrigé son texte après vérification."
