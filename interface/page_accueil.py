@@ -11,7 +11,7 @@ import streamlit as st
 from moteur import api, references
 from interface import composants as C
 from interface import etat
-from interface.theme import ENCRE, GRIS, OR, SAUGE
+from interface.theme import BLANC, BLEU_CLAIR, ENCRE, GRIS, TENSION
 from interface.textes import (AIDE_ANGLES, BOUTON_ACTION, BOUTON_ESSAI, BOUTON_PASSER_INTRO, CHAMPS_Q, CLASSES,
                               INTRO_FIN, INTRO_REPRENDRE, INTRO_RETOUR, INTRO_SUIVANT, INTRODUCTION, ISSUE_REGLE,
                               ISSUES, LIMITE, OPERATIONS, QUESTIONNAIRE, TYPES_ORDRE, angles_du_bloc,
@@ -73,23 +73,23 @@ def _texte_ordre(sens: str, pourcentage: float, ticker: str, valeur: float) -> s
     return f"{str(sens).capitalize()} de {dollars(pourcentage * valeur / 100)} de {ticker}"
 
 
-def _vue_cap() -> str:
-    """Le cap : la zone de votre politique de placement, vos objectifs au bout, et l'écart qu'un ordre peut creuser."""
-    return (f'''<svg class="cap" viewBox="0 0 520 320" role="img" aria-label="Un ordre peut garder le cap ou s'en écarter">
-<rect x="16" y="150" width="444" height="64" rx="32" fill="{SAUGE}" opacity=".32"/>
+def _vue_ecart() -> str:
+    """La zone de votre politique de placement, vos objectifs au bout, et l'écart qu'un ordre peut creuser."""
+    return (f'''<svg class="ecart" viewBox="0 0 520 320" role="img" aria-label="Un ordre peut rester dans votre politique ou s'en écarter">
+<rect x="16" y="150" width="444" height="64" rx="32" fill="{BLEU_CLAIR}" opacity=".30"/>
 <text x="40" y="140">Votre politique de placement</text>
 <circle cx="476" cy="182" r="15" fill="none" stroke="{ENCRE}" stroke-width="2"/><circle cx="476" cy="182" r="5" fill="{ENCRE}"/>
 <text x="476" y="226" text-anchor="middle" class="fort">Vos objectifs</text>
 <path d="M40 190 C110 170 170 196 250 182" fill="none" stroke="{ENCRE}" stroke-width="3" stroke-linecap="round"/>
 <path d="M250 182 C320 172 390 186 458 182" fill="none" stroke="{ENCRE}" stroke-width="2" stroke-dasharray="2 7" stroke-linecap="round"/>
-<path d="M250 182 C310 160 360 110 418 62" fill="none" stroke="{OR}" stroke-width="3" stroke-linecap="round"/>
-<circle cx="418" cy="62" r="6" fill="{OR}"/>
+<path d="M250 182 C310 160 360 110 418 62" fill="none" stroke="{TENSION}" stroke-width="3" stroke-linecap="round"/>
+<circle cx="418" cy="62" r="6" fill="{TENSION}"/>
 <line x1="418" y1="74" x2="418" y2="146" stroke="{GRIS}" stroke-width="1.5" stroke-dasharray="3 4"/>
 <text x="428" y="112">l'écart, mesuré</text>
-<circle cx="250" cy="182" r="8" fill="{ENCRE}" stroke="#fff" stroke-width="3"/>
+<circle cx="250" cy="182" r="8" fill="{ENCRE}" stroke="{BLANC}" stroke-width="3"/>
 <text x="250" y="244" text-anchor="middle" class="fort">Un ordre</text>
 <text x="304" y="84" text-anchor="end">il vous en écarte</text>
-<text x="356" y="202" text-anchor="middle">il garde le cap</text>
+<text x="352" y="204" text-anchor="middle">il reste dans votre politique</text>
 </svg>''')
 
 
@@ -260,7 +260,7 @@ def _mots() -> dict:
             "titre": instruments().get(o["ticker"], {}).get("nom") or o["ticker"]}
 
 
-VUES = {"cap": _vue_cap, "fiche": _vue_fiche, "issues": _vue_issues, "resultat": _vue_resultat,
+VUES = {"ecart": _vue_ecart, "fiche": _vue_fiche, "issues": _vue_issues, "resultat": _vue_resultat,
         "billet": _vue_billet}
 
 

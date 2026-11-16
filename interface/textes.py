@@ -10,6 +10,11 @@ import streamlit as st
 
 from moteur import api, references
 
+# Le nom du service, son descripteur et le titre de l'onglet : en un seul endroit. Changer le nom = changer NOM.
+NOM = "Sigma"
+DESCRIPTEUR = "Gestion des risques"
+SENS_DU_NOM = "σ, sigma : le symbole du risque en finance."
+
 BANDEAU = ("Simulation à but éducatif. Aucune transaction réelle. "
            "Ceci n'est pas un conseil financier personnalisé.")
 AVIS_SANS_AGENT = ("Explication de l'agent indisponible : l'analyse ci-dessous vient "
@@ -23,6 +28,9 @@ TITRE_ETAPES = "Étapes de l'analyse"
 DEPUIS_PRECEDENT = "Depuis l'analyse précédente"
 EN_DIRECT_AGENT = "Analyse en cours"
 DEJA_FAITE = "Analyse déjà faite pour cet ordre."
+TRACE = "Analyse n° {id} · trace conservée"
+TRACE_AIDE = ("Chaque analyse laisse une trace : l'ordre, chaque calcul demandé au moteur, les contrôles, la durée. "
+              "Aucune donnée personnelle n'y figure.")
 DELAI_MAX_AGENT_S = 240  # au-delà, l'analyse du moteur reste seule affichée
 
 # Les destinations, dans l'ordre du parcours : la fiche et la politique, le portefeuille, l'ordre, l'aide.
@@ -51,10 +59,10 @@ LIBELLES_PHASES = {
 # Tous ses mots sont ici. Par panneau : la vue, le titre, une ou deux phrases, et au plus un essentiel
 # technique, dit à voix basse. {nom}, {montant} et {titre} sont remplis avec l'ordre prêt d'un compte enregistré.
 INTRODUCTION = [
-    ("cap", "Les professionnels ont un département de risque. Le particulier n'a que son enthousiasme.",
-     ["Garder le cap vous donne le vôtre : à chaque ordre, il mesure l'écart avec votre politique de placement "
+    ("ecart", "Les professionnels ont un département de risque. Le particulier n'a que son enthousiasme.",
+     [NOM + " vous donne le vôtre : à chaque ordre, il mesure l'écart avec votre politique de placement "
       "et vos objectifs, avant que vous ne le passiez."],
-     ""),
+     SENS_DU_NOM),
     ("fiche", "Quelques réponses. Une politique de placement.",
      ["Votre objectif, votre horizon, la perte que vous pouvez absorber : votre fiche devient des limites claires, "
       "chacune avec sa source."],
@@ -98,7 +106,7 @@ SERVICES_AWS = [
     ("Amazon EC2", "La machine qui sert cette application."),
     ("Amazon CloudFront", "L'adresse sécurisée (HTTPS) par laquelle on atteint l'application."),
 ]
-MISSION = "Un placement est un moyen. Pas un objectif. Garder le cap renseigne, il ne conseille pas."
+MISSION = f"Un placement est un moyen. Pas un objectif. {NOM} renseigne, il ne conseille pas."
 
 # Clients enregistrés : les trois exemples de l'énoncé ont la même forme qu'un nouveau client.
 EXEMPLES_ENREGISTRES = [

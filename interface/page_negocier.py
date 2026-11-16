@@ -14,10 +14,10 @@ import streamlit as st
 from moteur import api, references
 from interface import composants as C
 from interface import etat
-from interface.theme import ENCRE, GRIS, OR, POLICE, SAUGE
+from interface.theme import BORD, ENCRE, FILET, GRIS, POLICE, POSITIF, TENSION
 from interface.textes import (AIDE_ANGLES, ANGLES_DEFAUT, AVIS_SANS_AGENT, BOUTON_ACTION, BOUTON_PASSER, CORRECTION_TEXTE,
                               DEJA_FAITE, DELAI_MAX_AGENT_S, DEPUIS_PRECEDENT, DIRECTIONS_TEXTE, EN_DIRECT_AGENT, LIBELLES_OUTILS,
-                              LIBELLES_PHASES, LIMITE, MESURES, OPERATIONS, SOLIDITE_TEXTE, STATUTS_REGLE, THEMES, TITRE_ANALYSE,
+                              LIBELLES_PHASES, LIMITE, MESURES, OPERATIONS, SOLIDITE_TEXTE, STATUTS_REGLE, THEMES, TITRE_ANALYSE, TRACE,
                               TITRE_ETAPES, TYPES_ORDRE, VERIFICATION_TEXTE, angles_du_bloc, decrire_mesure,
                               derniers_prix_cad, dollars, francais, instruments, libelle_mesure, libelle_option,
                               libelle_theme_reponse, mesures_a_plat, nom_agent, nom_angle, nom_instrument, nombre,
@@ -243,18 +243,18 @@ def graphique_courbe(taille: dict, valeur: float) -> alt.Chart:
                  alt.Tooltip("taille_pct:Q", title="Part (%)", format=".1f"),
                  alt.Tooltip("score:Q", title="Note de l'angle déterminant", format=".0f"),
                  alt.Tooltip("mesure:N", title="Mesure")])
-    zone = alt.Chart(pd.DataFrame({"y": [0], "y2": [LIMITE]})).mark_rect(color=OR, opacity=0.14).encode(
+    zone = alt.Chart(pd.DataFrame({"y": [0], "y2": [LIMITE]})).mark_rect(color=TENSION, opacity=0.10).encode(
         y="y:Q", y2="y2:Q")
     ligne = base.mark_line(color=ENCRE, strokeWidth=2)
     passage = alt.Chart(pd.DataFrame({"y": [LIMITE]})).mark_rule(color=ENCRE, strokeDash=[4, 4]).encode(y="y:Q")
     couches = [zone, ligne, passage]
     if taille.get("taille_compatible_pct") is not None:
         x_tc = float(taille["taille_compatible_pct"]) * valeur / 100
-        couches.append(alt.Chart(pd.DataFrame({"x": [x_tc]})).mark_rule(color=SAUGE, strokeWidth=3).encode(x="x:Q"))
+        couches.append(alt.Chart(pd.DataFrame({"x": [x_tc]})).mark_rule(color=POSITIF, strokeWidth=3).encode(x="x:Q"))
     return (alt.layer(*couches).properties(height=220)
             .configure(font=POLICE).configure_view(stroke=None)
-            .configure_axis(labelColor=GRIS, titleColor=GRIS, gridColor="#EDEDED", domainColor="#DADADA",
-                            tickColor="#DADADA", labelFontSize=12, titleFontSize=12, titleFontWeight="normal"))
+            .configure_axis(labelColor=GRIS, titleColor=GRIS, gridColor=FILET, domainColor=BORD,
+                            tickColor=BORD, labelFontSize=12, titleFontSize=12, titleFontWeight="normal"))
 
 
 def bloc_possible(rapport: dict, valeur: float) -> None:
@@ -313,7 +313,7 @@ def bloc_possible(rapport: dict, valeur: float) -> None:
                 st.altair_chart(graphique_courbe(taille, valeur), width="stretch")
                 st.caption(f"Note de l'angle déterminant selon le montant de l'ordre. La zone colorée est sous la "
                            f"note de passage ({LIMITE:g})."
-                           + (" Le trait vert marque le montant compatible."
+                           + (" Le trait vertical marque le montant compatible."
                               if taille.get("taille_compatible_pct") is not None else ""))
 
 
@@ -620,15 +620,28 @@ def analyser_en_direct(rapport: dict) -> bool:
     return True
 
 
+def numero_de_trace(agent: dict) -> str | None:
+    """Le numéro de la trace gardée de cette analyse, s'il y en a une."""
+    trace = agent.get("trace_aws") if isinstance(agent, dict) else None
+    return str(trace["id"]) if isinstance(trace, dict) and trace.get("id") else None
+
+
 def bloc_deja_faite(persona: str, rapport: dict) -> None:
-    """Une ligne discrète quand les agents rendent une analyse déjà faite pour cet ordre, et de quoi la relancer."""
-    memoire = (rapport.get("agent") or {}).get("memoire") or {}
-    if memoire.get("statut") != "deja_faite":
+    """Une ligne discrète au-dessus du résultat : le numéro de la trace de l'analyse, et, quand les agents
+    rendent une analyse déjà faite pour cet ordre, de quoi la relancer."""
+    agent = rapport.get("agent") or {}
+    memoire = agent.get("memoire") or {}
+    numero = numero_de_trace(agent)
+    deja = memoire.get("statut") == "deja_faite"
+    if not deja and not numero:
         return
+    lignes = ([memoire.get("message") or DEJA_FAITE] if deja else []) + ([TRACE.format(id=numero)] if numero else [])
     with st.container(key="deja_faite"):
         gauche, droite = st.columns([5, 1], vertical_alignment="center")
-        gauche.caption(memoire.get("message") or DEJA_FAITE)
-        droite.button("Relancer", key="relancer", type="tertiary", on_click=etat.relancer_l_analyse, args=(persona,))
+        gauche.caption(" ".join(lignes))
+        if deja:
+            droite.button("Relancer", key="relancer", type="tertiary", on_click=etat.relancer_l_analyse,
+                          args=(persona,))
 
 
 # ---------------------------------------------------------------- l'analyse, de haut en bas

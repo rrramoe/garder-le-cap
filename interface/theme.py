@@ -1,37 +1,42 @@
-"""Identité visuelle de Garder le cap : couleurs, tailles et feuille de style, en un seul endroit.
+"""Identité visuelle du service : couleurs, tailles et feuille de style, en un seul endroit.
 
-Une seule famille de caractères (Manrope), quatre tailles, un rayon, un bord. Un seul accent (rouge),
-réservé à l'action principale et à la marque ; une couleur par verdict, jamais confondue avec l'accent.
+Une seule famille de caractères (Manrope), quatre tailles, un rayon, un bord. Un seul accent (un bleu franc),
+réservé à l'action principale, aux états actifs et à la marque ; un violet discret en seconde voix ; une couleur
+et une forme par verdict.
 """
 
 from __future__ import annotations
 
-# La palette vient de deux sources et de nulle part ailleurs : le site de courtage de la Banque Nationale
-# (captures du 15 novembre) et le Datathon (couleurs des diapositives remises aux participants).
-# Version claire : le blanc et le gris chaud mènent ; le noir sert au texte ; le rouge reste rare.
-BLANC = "#FFFFFF"        # Banque Nationale : fond des pages
-ENCRE = "#222222"        # Datathon : texte des diapositives (Banque Nationale : #333333)
-MARINE = "#152532"       # Datathon : bleu marine des diapositives ; un seul élément de structure, le bandeau
-GRIS = "#6E6E71"         # Datathon : gris du texte secondaire, et seulement lui
-BORD = "#DADADA"         # Banque Nationale : bord fin des cartes et de la barre
-FILET = "#E6E2DE"        # Datathon : gris chaud clair, pour les filets entre deux lignes
-VOILE = "#F6F4F0"        # Banque Nationale : gris chaud des sections
-PISTE = "#EDEDED"        # Banque Nationale : gris des panneaux, piste des jauges
-ACCENT = "#CC322B"       # Banque Nationale : le rouge, pour l'action principale et la marque
-ACCENT_VIF = "#DE161D"   # Datathon : le rouge des diapositives, au survol de l'action principale
-SAUGE = "#A8C1B8"        # Datathon : vert sauge
-OR = "#F6C45E"           # Datathon : or
-ARDOISE_PALE = "#DCE5EA" # Datathon : bleu ardoise pâle
-GRIS_CHAUD = "#D9D5D0"   # Datathon : gris chaud moyen
+# Une identité froide et nette. Les bleus, le violet et le vert d'eau sont ceux des feuilles de style publiques
+# du site de HEC Montréal (www.hec.ca, relevées le 15 novembre 2026) ; les valeurs « dérivées » en sont des
+# nuances plus sombres ou plus pâles, faites pour le texte et les fonds. Aucun logo, aucun nom repris.
+BLANC = "#FFFFFF"
+ENCRE = "#0F2742"         # dérivée : le bleu profond du texte et des surfaces sombres (bleu #1A61A9 assombri)
+MARINE = ENCRE            # un seul élément de structure : le bandeau de simulation
+GRIS = "#56657C"          # dérivée de l'ardoise #344054 du site : le texte secondaire, et seulement lui
+BORD = "#D3DEE9"          # site : bleu-gris des bords (primary-300)
+FILET = "#E4EBF3"         # dérivée : filets entre deux lignes
+VOILE = "#F0F5FA"         # site : bleu très pâle des surfaces calmes (primary-200)
+PISTE = "#E4EBF3"         # dérivée : piste des jauges
+FOND = "#F9FCFF"          # site : le fond de page, un blanc froid (primary-100)
+SURFACE = BLANC           # les cartes
+ACCENT = "#1A61A9"        # site : le bleu franc (primary-500), pour l'action principale, l'actif et la marque
+ACCENT_VIF = "#0069BF"    # site : le même bleu, au survol
+BLEU_CLAIR = "#88B0D9"    # site : bleu clair des données (primary-400)
+BLEU_PALE = "#E9F3FB"     # site : fond bleu pâle
+VIOLET = "#7F56D9"        # site : le violet, seconde voix (repères, angle déterminant, lien entre les agents)
+VIOLET_TEXTE = "#6941C6"  # dérivée : le violet assombri, pour un texte lisible sur fond pâle
+VIOLET_PALE = "#F2EEFC"   # dérivée : fond violet pâle
+POSITIF = "#00AD94"       # site : le vert d'eau (secondary-500), ce qui respecte la politique de placement
+POSITIF_PALE = "#E8FBF8"  # site : fond vert d'eau pâle (secondary-100)
+TENSION = VIOLET          # ce qui dépasse une limite
 
-FOND = BLANC
-SURFACE = BLANC
-
-# Une couleur par verdict, jamais le rouge de l'accent. Le mot du verdict reste écrit à l'encre :
-# la couleur le marque (point, filet, arc), le fond en est une version pâle.
-COULEURS_VERDICT = {"compatible": SAUGE, "en_tension": OR, "incompatible": MARINE}
-FONDS_VERDICT = {"compatible": "#E9F0ED", "en_tension": "#FDF3DC", "incompatible": ARDOISE_PALE}
-COULEURS_CLASSES = {"actions": MARINE, "revenu_fixe": GRIS, "liquidites": ARDOISE_PALE, "alternatifs": GRIS_CHAUD}
+# Un verdict ne se lit jamais par la couleur seule : son mot est écrit à l'encre (contraste de plus de 10 sur
+# son fond pâle), sa forme change (un point plein, un anneau, un carré) et sa place reste la même.
+COULEURS_VERDICT = {"compatible": POSITIF, "en_tension": TENSION, "incompatible": ENCRE}
+FONDS_VERDICT = {"compatible": POSITIF_PALE, "en_tension": VIOLET_PALE, "incompatible": BORD}
+FORMES_VERDICT = {"compatible": "point", "en_tension": "anneau", "incompatible": "carre"}
+COULEURS_CLASSES = {"actions": ENCRE, "revenu_fixe": ACCENT, "liquidites": BLEU_CLAIR, "alternatifs": BORD}
 COULEUR_AUTRE = PISTE
 
 POLICE = "Manrope"
@@ -42,6 +47,7 @@ CSS = f"""<style>
 :root {{
   --encre: {ENCRE}; --gris: {GRIS}; --bord: {BORD}; --fond: {FOND}; --surface: {SURFACE};
   --voile: {VOILE}; --accent: {ACCENT}; --filet: {FILET}; --piste: {PISTE}; --marine: {MARINE};
+  --violet: {VIOLET_TEXTE}; --ombre: 15, 39, 66;
   --t1: 13px; --t2: 15px; --t3: 18px; --t4: 26px;
   --t5: 36px;  /* la phrase d'ouverture de l'introduction, et elle seule */
   --rayon: 12px;
@@ -51,7 +57,8 @@ CSS = f"""<style>
 html, body, .stApp, .stApp * {{ font-family: '{POLICE}', -apple-system, 'Segoe UI', sans-serif; }}
 .stApp span[data-testid="stIconMaterial"], .stApp [class*="material-symbols"] {{
   font-family: 'Material Symbols Rounded' !important; }}
-.stApp {{ background: radial-gradient(1000px 360px at 92% -140px, rgba(222,22,29,0.05), transparent 70%), var(--fond); }}
+.stApp {{ background: radial-gradient(1000px 380px at 92% -140px, rgba(127,86,217,0.08), transparent 70%),
+          radial-gradient(900px 340px at 6% -160px, rgba(26,97,169,0.07), transparent 70%), var(--fond); }}
 header[data-testid="stHeader"], div[data-testid="stToolbar"], div[data-testid="stDecoration"] {{ display: none; }}
 section[data-testid="stSidebar"], div[data-testid="stSidebarCollapsedControl"] {{ display: none; }}
 .stMainBlockContainer {{ max-width: 1168px; padding: 0 24px 72px 24px; }}
@@ -89,7 +96,7 @@ div[data-testid="stCaptionContainer"] p, .stApp small {{ font-size: var(--t1); c
 .st-key-page label[data-testid="stRadioOption"] p {{ font-size: var(--t2); font-weight: 600; color: var(--gris); }}
 .st-key-page label[data-testid="stRadioOption"]:hover p {{ color: var(--encre); }}
 .st-key-page label[data-testid="stRadioOption"][data-selected="true"] {{ background: var(--surface);
-  box-shadow: 0 1px 2px rgba(34,34,34,0.12); }}
+  box-shadow: 0 1px 2px rgba(var(--ombre), 0.12); }}
 .st-key-page label[data-testid="stRadioOption"][data-selected="true"] p {{ color: var(--encre); }}
 
 /* compte */
@@ -101,7 +108,7 @@ div[class*="st-key-compte"] div[data-testid="stPopover"] > div > button p {{ fon
 
 /* le menu du compte : une liste de clients, le client choisi sur fond gris chaud */
 div[data-testid="stPopoverBody"] {{ border-radius: var(--rayon); border: 1px solid var(--bord); padding: 14px;
-  box-shadow: 0 8px 24px rgba(34,34,34,0.10); min-width: 300px; }}
+  box-shadow: 0 8px 24px rgba(var(--ombre), 0.10); min-width: 300px; }}
 div[data-testid="stPopoverBody"] div[role="radiogroup"] {{ gap: 2px; width: 100%; }}
 div[data-testid="stPopoverBody"] div[role="radiogroup"] > div {{ width: 100%; }}
 div[data-testid="stPopoverBody"] label[data-testid="stRadioOption"] {{ width: 100%; padding: 8px 10px;
@@ -155,15 +162,15 @@ div[class*="st-key-introduction"] {{ max-width: 1080px; margin: 16px auto 0 auto
   display: flex; flex-direction: column; justify-content: center; position: relative; }}
 .stApp .glc-vue.clip {{ padding: 18px; }}
 .stApp .glc-vue.clip video {{ width: 100%; height: 100%; object-fit: contain; display: block; border-radius: 10px; }}
-.stApp .glc-vue > .glc-carte, .stApp .glc-vue > .glc-paire > div {{ box-shadow: 0 10px 30px rgba(34,34,34,0.07); }}
+.stApp .glc-vue > .glc-carte, .stApp .glc-vue > .glc-paire > div {{ box-shadow: 0 10px 30px rgba(var(--ombre), 0.07); }}
 .stApp .glc-vue .glc-angles {{ grid-template-columns: repeat(5, 1fr); gap: 2px; }}
 .stApp .glc-vue .glc-angle {{ padding: 8px 0; }}
 .stApp .glc-vue .glc-angle svg {{ width: 62px; height: 62px; }}
 .stApp .glc-vue .glc-angle .tag {{ white-space: normal; line-height: 1.25; }}
 .stApp .glc-vue .glc-carte {{ padding: 20px 20px; }}
-.stApp .glc-vue svg.cap {{ width: 100%; height: auto; }}
-.stApp .glc-vue svg.cap text {{ font-family: inherit; font-size: 13px; fill: var(--gris); }}
-.stApp .glc-vue svg.cap text.fort {{ fill: var(--encre); font-weight: 600; }}
+.stApp .glc-vue svg.ecart {{ width: 100%; height: auto; }}
+.stApp .glc-vue svg.ecart text {{ font-family: inherit; font-size: 13px; fill: var(--gris); }}
+.stApp .glc-vue svg.ecart text.fort {{ fill: var(--encre); font-weight: 600; }}
 .stApp .glc-paire {{ display: grid; grid-template-columns: 1fr 22px 1fr; gap: 8px; align-items: center; }}
 .stApp .glc-paire > div {{ background: var(--surface); border: 1px solid var(--bord); border-radius: var(--rayon);
   padding: 18px 18px 8px 18px; }}
@@ -205,7 +212,10 @@ div[class*="st-key-carte_compte"] .glc-faits {{ margin: 14px 0 6px 0; }}
 /* ---------- pastilles ---------- */
 .stApp .glc-pastille {{ display: inline-flex; align-items: center; gap: 6px; font-size: var(--t1); font-weight: 600;
   padding: 3px 10px; border-radius: 999px; white-space: nowrap; }}
-.stApp .glc-pastille i {{ width: 7px; height: 7px; border-radius: 50%; background: currentColor; display: inline-block; }}
+.stApp .glc-pastille i {{ width: 8px; height: 8px; border-radius: 50%; background: currentColor; display: inline-block;
+  box-sizing: border-box; flex: none; }}
+.stApp i.anneau {{ background: transparent !important; border: 2.5px solid var(--teinte-forme, currentColor); }}
+.stApp i.carre {{ border-radius: 2px !important; }}
 .stApp .glc-marqueur {{ display: inline-block; font-size: var(--t1); font-weight: 600; color: var(--gris);
   border: 1px solid var(--bord); border-radius: 999px; padding: 0 7px; line-height: 1.5; vertical-align: 1px;
   margin-left: 6px; white-space: nowrap; }}
@@ -234,7 +244,7 @@ div[class*="st-key-deja_faite"] .stButton {{ display: flex; justify-content: fle
 .stApp .glc-angle .nom {{ font-size: var(--t1); font-weight: 600; color: var(--encre); margin-top: 6px; }}
 .stApp .glc-angle .avant {{ font-size: var(--t1); color: var(--gris); }}
 .stApp .glc-angle .avant:empty {{ display: none; }}
-.stApp .glc-angle .tag {{ display: block; font-size: var(--t1); font-weight: 600; color: var(--encre);
+.stApp .glc-angle .tag {{ display: block; font-size: var(--t1); font-weight: 600; color: var(--violet);
   white-space: nowrap; margin-top: 2px; }}
 .stApp .glc-legende {{ font-size: var(--t1); color: var(--gris); margin: 10px 0 0 0; }}
 
@@ -254,6 +264,7 @@ div[class*="st-key-deja_faite"] .stButton {{ display: flex; justify-content: fle
 .stApp .glc-table .s {{ color: var(--gris); font-size: var(--t1); }}
 .stApp .glc-table b {{ font-weight: 600; }}
 .stApp table.glc-table .nb {{ white-space: nowrap; }}
+.stApp table.glc-table th:first-child {{ min-width: 180px; }}
 .stApp table.glc-table .s {{ color: var(--gris); font-size: var(--t1); line-height: 1.45; display: inline-block; }}
 .stApp .glc-barre {{ display: inline-block; width: 72px; height: 6px; border-radius: 6px; background: var(--voile);
   vertical-align: middle; margin-right: 10px; overflow: hidden; }}
@@ -268,11 +279,11 @@ div[class*="st-key-deja_faite"] .stButton {{ display: flex; justify-content: fle
 .stApp .glc-zone .v {{ text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }}
 .stApp .glc-zone .piste {{ position: relative; height: 6px; border-radius: 6px; background: var(--voile);
   margin: 0 8px; }}
-.stApp .glc-zone .permis {{ position: absolute; top: 0; bottom: 0; border-radius: 6px; background: {SAUGE}; opacity: .55; }}
+.stApp .glc-zone .permis {{ position: absolute; top: 0; bottom: 0; border-radius: 6px; background: {POSITIF}; opacity: .55; }}
 .stApp .glc-zone .cible {{ position: absolute; top: -3px; width: 2px; height: 12px; background: {GRIS}; opacity: .6; }}
 .stApp .glc-zone .ici {{ position: absolute; top: -4px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%;
-  background: var(--encre); border: 2.5px solid var(--surface); box-shadow: 0 0 0 1px rgba(34,34,34,.25); }}
-.stApp .glc-zone .ici.hors {{ background: {OR}; box-shadow: 0 0 0 1px {ENCRE}; }}
+  background: var(--encre); border: 2.5px solid var(--surface); box-shadow: 0 0 0 1px rgba(var(--ombre), .25); }}
+.stApp .glc-zone .ici.hors {{ background: {TENSION}; box-shadow: 0 0 0 1px {ENCRE}; }}
 
 /* ---------- politique de placement (document) ---------- */
 .stApp .glc-doc {{ background: var(--surface); border: 1px solid var(--bord); border-radius: var(--rayon);
@@ -317,15 +328,15 @@ div[class*="st-key-deja_faite"] .stButton {{ display: flex; justify-content: fle
 .stApp .glc-etapes {{ list-style: none; margin: 0; padding: 0; }}
 .stApp .glc-etapes li {{ display: grid; grid-template-columns: 18px 1fr; gap: 10px; padding: 7px 0; font-size: var(--t2);
   color: var(--encre); }}
-.stApp .glc-etapes li .pt {{ width: 8px; height: 8px; border-radius: 50%; background: {GRIS_CHAUD}; margin: 7px 0 0 4px; }}
-.stApp .glc-etapes li.fini .pt {{ background: {SAUGE}; }}
+.stApp .glc-etapes li .pt {{ width: 8px; height: 8px; border-radius: 50%; background: {BORD}; margin: 7px 0 0 4px; }}
+.stApp .glc-etapes li.fini .pt {{ background: {POSITIF}; }}
 .stApp .glc-etapes li.cours .pt {{ background: var(--encre); animation: glc-pouls 1.2s ease-in-out infinite; }}
 .stApp .glc-etapes li.cours .quoi {{ font-weight: 600; }}
 .stApp .glc-etapes li .qui {{ font-size: var(--t1); color: var(--gris); margin-left: 8px; white-space: nowrap; }}
 .stApp .glc-etapes li .res {{ display: block; font-size: var(--t1); color: var(--gris); margin-top: 1px; }}
 .stApp .glc-etapes h5 {{ font-size: var(--t1); font-weight: 600; color: var(--gris); margin: 10px 0 2px 0; }}
-@keyframes glc-pouls {{ 0%, 100% {{ box-shadow: 0 0 0 0 rgba(34,34,34,.30); }}
-  50% {{ box-shadow: 0 0 0 6px rgba(34,34,34,0); }} }}
+@keyframes glc-pouls {{ 0%, 100% {{ box-shadow: 0 0 0 0 rgba(var(--ombre), .30); }}
+  50% {{ box-shadow: 0 0 0 6px rgba(var(--ombre), 0); }} }}
 .stApp .glc-direct {{ display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }}
 .stApp .glc-direct .rond {{ width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--piste);
   border-top-color: var(--encre); animation: glc-tourne .9s linear infinite; }}
@@ -390,7 +401,7 @@ div[class*="st-key-o_"] label[data-testid="stRadioOption"] p, div[class*="st-key
   font-size: var(--t1); font-weight: 600; color: var(--gris); white-space: nowrap; }}
 div[class*="st-key-o_"] label[data-testid="stRadioOption"][data-selected="true"],
 div[class*="st-key-q_"] label[data-testid="stRadioOption"][data-selected="true"] {{ background: var(--surface);
-  box-shadow: 0 1px 2px rgba(34,34,34,0.12); }}
+  box-shadow: 0 1px 2px rgba(var(--ombre), 0.12); }}
 div[class*="st-key-o_"] label[data-testid="stRadioOption"][data-selected="true"] p,
 div[class*="st-key-q_"] label[data-testid="stRadioOption"][data-selected="true"] p {{ color: var(--encre); }}
 div[class*="st-key-o_"][class*="_operation"], div[class*="st-key-o_"][class*="_operation"] div[data-testid="stRadio"] {{

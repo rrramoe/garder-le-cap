@@ -6,7 +6,7 @@ import streamlit as st
 
 from interface import composants as C
 from interface import etat
-from interface.textes import (AIDE_ANGLES, ANGLES_DEFAUT, FONCTIONNEMENT, LIMITE, MISSION, SERVICES_AWS,
+from interface.textes import (AIDE_ANGLES, ANGLES_DEFAUT, FONCTIONNEMENT, LIMITE, MISSION, SERVICES_AWS, TRACE_AIDE,
                               VERDICTS_AIDE, nom_angle)
 
 
@@ -45,7 +45,8 @@ def comprendre() -> None:
 def fonctionnement() -> None:
     gauche, droite = st.columns(2, gap="large")
     with gauche, st.container(key="carte_fonctionnement"):
-        C.montrer(C.h2("Comment ça marche") + C.pas(FONCTIONNEMENT))
+        C.montrer(C.h2("Comment ça marche") + C.pas(FONCTIONNEMENT)
+                  + f'<p class="glc-legende">{C.e(TRACE_AIDE)}</p>')
     with droite, st.container(key="carte_services"):
         C.montrer(C.h2("Les services AWS", "Le rôle de chacun, en une ligne.")
                   + C.definitions([(C.e(nom), role) for nom, role in SERVICES_AWS]))

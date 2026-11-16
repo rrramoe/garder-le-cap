@@ -610,3 +610,24 @@ def test_ordre_d_exemple_et_adresse_directe(sans_agent):
     direct.run()
     assert not direct.exception, direct.exception
     assert direct.session_state["etape"] == "service" and [b for b in direct.button if b.key == "inspecter"]
+
+
+def test_nom_du_service_et_trace_de_l_analyse(monkeypatch):
+    """Le nom se lit dans une seule constante ; une analyse qui a laissé une trace montre son numéro."""
+    import agent.inspection
+    from interface import textes
+
+    def inspecter(fiche, ticker, sens, pourcentage, **options):
+        return {"explication": "**Le verdict.** En tension.", "trace": TRACE_SIMULEE, "erreur": None,
+                "trace_aws": {"id": "a1b2c3"}}
+
+    monkeypatch.setattr(agent.inspection, "inspecter", inspecter)
+    at = _ouvrir()
+    ouverture = _textes(at)
+    assert f'class="nom">{textes.NOM}<' in ouverture and textes.INTRODUCTION[0][2][0].startswith(textes.NOM)
+    assert textes.SENS_DU_NOM in ouverture and "garder le cap" not in ouverture.split("</style>")[-1].lower()
+    at = _demarrer()
+    texte = _inspecter(at, "robert")
+    assert "Analyse n° a1b2c3 · trace conservée" in texte and "Analyse déjà faite" not in texte
+    _aller(at, "aide")
+    assert "Chaque analyse laisse une trace" in _textes(at) and textes.NOM in _textes(at)

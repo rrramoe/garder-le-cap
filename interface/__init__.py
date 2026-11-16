@@ -1,1 +1,1 @@
-"""Interface de Garder le cap : thème, composants, état de session et pages."""
+"""Interface du service : thème, composants, état de session et pages."""

@@ -1,4 +1,4 @@
-"""Garder le cap : interface (Streamlit), prototype de service de gestion des risques.
+"""L'interface (Streamlit) du prototype de service de gestion des risques ; son nom : interface.textes.NOM.
 
 Lancement : streamlit run app.py --server.address localhost
 
@@ -17,7 +17,7 @@ import streamlit as st
 from moteur import api
 from interface import composants as C
 from interface import etat, page_accueil, page_aide, page_negocier, page_portefeuille, page_profil
-from interface.textes import BANDEAU, PAGES
+from interface.textes import BANDEAU, NOM, PAGES
 from interface.theme import CSS
 
 
@@ -45,7 +45,7 @@ def entete(service: bool) -> str:
 
 
 def main() -> None:
-    st.set_page_config(page_title="Garder le cap", page_icon="🧭", layout="wide",
+    st.set_page_config(page_title=NOM, page_icon=C.icone_onglet(), layout="wide",
                        initial_sidebar_state="collapsed")
     C.montrer(CSS)
     etat.garder_les_choix()

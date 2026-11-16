@@ -5,8 +5,8 @@ from __future__ import annotations
 import html
 import math
 
-from interface.theme import (ACCENT, BORD, COULEUR_AUTRE, COULEURS_VERDICT, ENCRE, FONDS_VERDICT, GRIS, OR, PISTE,
-                             SAUGE, VOILE)
+from interface.theme import (ACCENT, BLANC, BORD, COULEUR_AUTRE, COULEURS_VERDICT, ENCRE, FONDS_VERDICT,
+                             FORMES_VERDICT, GRIS, PISTE, POSITIF, TENSION, VOILE)
 
 
 def e(texte) -> str:
@@ -15,16 +15,28 @@ def e(texte) -> str:
 
 
 def marque(taille: int = 26) -> str:
-    """La marque : une boussole, l'aiguille rouge tenue vers le cap."""
+    """La marque : la lettre σ, tracée (aucune police requise), au bleu d'accent."""
     return (f'<svg width="{taille}" height="{taille}" viewBox="0 0 32 32" fill="none" aria-hidden="true">'
-            f'<circle cx="16" cy="16" r="14.5" stroke="{ENCRE}" stroke-width="2"/>'
-            f'<path d="M21.6 7.2 18.2 18.2 13.8 13.8Z" fill="{ACCENT}"/>'
-            f'<path d="M10.4 24.8 13.8 13.8 18.2 18.2Z" fill="{ENCRE}"/></svg>')
+            f'<circle cx="14" cy="18.5" r="8.6" stroke="{ACCENT}" stroke-width="3.6"/>'
+            f'<path d="M14 9.9H28" stroke="{ACCENT}" stroke-width="3.6" stroke-linecap="round"/></svg>')
+
+
+def icone_onglet():
+    """La marque en image, pour l'onglet du navigateur : σ en blanc sur un carré arrondi au bleu d'accent."""
+    from PIL import Image, ImageDraw
+    n = 128
+    image = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    dessin = ImageDraw.Draw(image)
+    dessin.rounded_rectangle([0, 0, n - 1, n - 1], radius=34, fill=ACCENT)
+    dessin.ellipse([24, 44, 84, 104], outline=BLANC, width=13)
+    dessin.rounded_rectangle([54, 44, 106, 57], radius=6, fill=BLANC)
+    return image
 
 
 def entete_marque() -> str:
-    return (f'<div class="glc-marque">{marque()}<span class="nom">Garder le cap</span>'
-            '<span class="sous">Courtage</span></div>')
+    from interface.textes import DESCRIPTEUR, NOM
+    return (f'<div class="glc-marque">{marque()}<span class="nom">{e(NOM)}</span>'
+            f'<span class="sous">{e(DESCRIPTEUR)}</span></div>')
 
 
 def bandeau(texte: str) -> str:
@@ -39,10 +51,16 @@ def h2(titre: str, sur: str = "") -> str:
     return f'<p class="glc-h2">{e(titre)}</p>' + (f'<p class="glc-sur">{e(sur)}</p>' if sur else "")
 
 
+def forme(code: str | None, couleur: str, classe: str = "") -> str:
+    """Le signe d'un verdict : un point plein, un anneau ou un carré, pour ne jamais dépendre de la couleur seule."""
+    signe = FORMES_VERDICT.get(code, "point")
+    return f'<i class="{(classe + " " + signe).strip()}" style="background:{couleur};--teinte-forme:{couleur}"></i>'
+
+
 def pastille(libelle: str, code: str | None) -> str:
     couleur, fond = COULEURS_VERDICT.get(code, GRIS), FONDS_VERDICT.get(code, VOILE)
     return (f'<span class="glc-pastille" style="color:{ENCRE};background:{fond}">'
-            f'<i style="background:{couleur}"></i>{e(libelle)}</span>')
+            f'{forme(code, couleur)}{e(libelle)}</span>')
 
 
 def marqueur(texte: str) -> str:
@@ -64,13 +82,13 @@ def cadran(note: float | None, passage: float, taille: int = 84) -> str:
         return (f'<svg width="{taille}" height="{taille}" viewBox="0 0 88 88" role="img" aria-label="sans objet">{piste}'
                 f'<text x="{c}" y="{c + 5}" text-anchor="middle" font-size="15" font-weight="600" fill="{GRIS}">—</text></svg>')
     n = max(0.0, min(100.0, float(note)))
-    couleur = SAUGE if note >= passage else OR
+    couleur = POSITIF if note >= passage else TENSION
     valeur = (f'<circle cx="{c}" cy="{c}" r="{r}" fill="none" stroke="{couleur}" stroke-width="7" stroke-linecap="round" '
               f'stroke-dasharray="{max(arc * n / 100, 0.1):.1f} {tour:.1f}" transform="rotate(135 {c} {c})"/>')
     a = math.radians(135 + 270 * max(0.0, min(100.0, passage)) / 100)
     x1, y1 = c + (r - 7) * math.cos(a), c + (r - 7) * math.sin(a)
     x2, y2 = c + (r + 7) * math.cos(a), c + (r + 7) * math.sin(a)
-    trait = (f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="#fff" stroke-width="5"/>'
+    trait = (f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="{BLANC}" stroke-width="5"/>'
              f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="{ENCRE}" stroke-width="2" '
              'stroke-linecap="round"/>')
     return (f'<svg width="{taille}" height="{taille}" viewBox="0 0 88 88" role="img" aria-label="note {round(n)} sur 100">'
@@ -101,7 +119,7 @@ def angles(lignes: list[dict], passage: float, legende: str = "") -> str:
 def carte_verdict(ordre: str, libelle: str, code: str, raison: str, suite: str = "") -> str:
     couleur = COULEURS_VERDICT.get(code, ENCRE)
     return (f'<div class="glc-verdict" style="--teinte:{couleur}"><p class="ordre">{e(ordre)}</p>'
-            f'<p class="mot"><i class="pt" style="background:{couleur}"></i>{e(libelle)}</p><p class="raison">{e(raison)}</p>'
+            f'<p class="mot">{forme(code, couleur, "pt")}{e(libelle)}</p><p class="raison">{e(raison)}</p>'
             + (f'<p class="suite">{e(suite)}</p>' if suite else "") + "</div>")
 
 
@@ -203,7 +221,7 @@ def pas(lignes: list[tuple[str, str]]) -> str:
 
 
 def coche(texte: str, ok: bool = True) -> str:
-    couleur = SAUGE if ok else OR
+    couleur = POSITIF if ok else TENSION
     trace = "M4.4 8.2 7 10.8 11.6 5.6" if ok else "M8 4.5v4.2M8 11.2v.3"
     return (f'<p class="glc-note-bas"><svg width="16" height="16" viewBox="0 0 16 16" fill="none">'
             f'<circle cx="8" cy="8" r="8" fill="{couleur}"/>'

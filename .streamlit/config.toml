@@ -1,9 +1,9 @@
 [theme]
-# Les couleurs viennent de interface/theme.py (site de courtage de la Banque Nationale et Datathon, version claire).
-primaryColor = "#CC322B"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F6F4F0"
-textColor = "#222222"
+# Les couleurs viennent de interface/theme.py : une identité froide, un bleu d'accent, un violet en seconde voix.
+primaryColor = "#1A61A9"
+backgroundColor = "#F9FCFF"
+secondaryBackgroundColor = "#F0F5FA"
+textColor = "#0F2742"
 baseFontSize = 15
 
 [client]
