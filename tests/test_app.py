@@ -556,13 +556,16 @@ def test_introduction_puis_choix_du_compte(sans_agent):
         texte = _textes(at)
         assert f"{n + 1} / {len(INTRODUCTION)}" in texte and lignes[0] in texte and note in texte
         assert "{" not in texte.split("</style>")[-1]  # les titres qui nomment un ordre sont remplis
-        vue = next(m.value for m in at.markdown if 'class="glc-vue"' in m.value)
-        assert len(vue.split('class="glc-vue">', 1)[1]) > 200  # chaque panneau montre une vraie vue du service
+        vue = next(m.value for m in at.markdown if 'class="glc-vue' in m.value)
+        assert len(vue) > 400  # chaque panneau montre une vraie vue du service, fixe ou filmée
+        if "<video" in vue:  # un clip joue seul, muet, en boucle, sans commandes, avec son affiche
+            assert all(mot in vue for mot in ("autoplay", "muted", "loop", "playsinline", 'poster="data:image/jpeg'))
+            assert "controls" not in vue
         assert "inspect" not in texte.lower()  # le mot du produit est « analyser »
         at.button(key="intro_suivant").click().run()
         assert not at.exception, at.exception
         if n == len(INTRODUCTION) - 1:  # le dernier panneau nomme le vrai ordre prêt d'un compte enregistré
-            assert "Robert veut 120 000 $ de Tesla." in texte and "TSLA — Tesla" in texte
+            assert "Robert veut 120 000 $ de Tesla." in texte
     # Après le dernier panneau : le choix d'un compte, les comptes prêts d'abord, puis le nouveau compte.
     assert at.session_state["etape"] == "comptes"
     assert [b.key for b in at.button][:4] == ["compte_robert", "compte_mateo", "compte_amira", "compte_nouveau"]
@@ -631,3 +634,25 @@ def test_nom_du_service_et_trace_de_l_analyse(monkeypatch):
     assert "Analyse n° a1b2c3 · trace conservée" in texte and "Analyse déjà faite" not in texte
     _aller(at, "aide")
     assert "Chaque analyse laisse une trace" in _textes(at) and textes.NOM in _textes(at)
+
+
+def test_clips_de_l_introduction_legers_et_vues_fixes_en_secours(sans_agent, monkeypatch, tmp_path):
+    """Chaque clip pèse moins de 700 Ko et a son affiche ; sans clip, le panneau montre sa vue fixe."""
+    from interface import page_accueil
+    from interface.textes import INTRODUCTION
+    clips = sorted(page_accueil.ASSETS.glob("intro_*.mp4"))
+    assert {c.stem.removeprefix("intro_") for c in clips} <= {cle for cle, *_ in INTRODUCTION}
+    for clip in clips:
+        assert clip.stat().st_size < 700_000, clip.name
+        assert clip.with_suffix(".jpg").exists(), clip.name
+    # Sans aucun clip : les vues fixes, faites des vrais composants, et le vrai billet d'ordre au dernier panneau.
+    monkeypatch.setattr(page_accueil, "ASSETS", tmp_path)
+    page_accueil._clip.cache_clear()
+    try:
+        at = _ouvrir()
+        for _ in range(len(INTRODUCTION) - 1):
+            assert "<video" not in _textes(at)
+            at.button(key="intro_suivant").click().run()
+        assert "<video" not in _textes(at) and "TSLA — Tesla" in _textes(at)
+    finally:
+        page_accueil._clip.cache_clear()

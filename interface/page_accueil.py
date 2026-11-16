@@ -80,9 +80,9 @@ def _vue_ecart() -> str:
 <text x="40" y="140">Votre politique de placement</text>
 <circle cx="476" cy="182" r="15" fill="none" stroke="{ENCRE}" stroke-width="2"/><circle cx="476" cy="182" r="5" fill="{ENCRE}"/>
 <text x="476" y="226" text-anchor="middle" class="fort">Vos objectifs</text>
-<path d="M40 190 C110 170 170 196 250 182" fill="none" stroke="{ENCRE}" stroke-width="3" stroke-linecap="round"/>
+<path class="trait" style="--long:240" d="M40 190 C110 170 170 196 250 182" fill="none" stroke="{ENCRE}" stroke-width="3" stroke-linecap="round"/>
 <path d="M250 182 C320 172 390 186 458 182" fill="none" stroke="{ENCRE}" stroke-width="2" stroke-dasharray="2 7" stroke-linecap="round"/>
-<path d="M250 182 C310 160 360 110 418 62" fill="none" stroke="{TENSION}" stroke-width="3" stroke-linecap="round"/>
+<path class="trait tard" style="--long:240" d="M250 182 C310 160 360 110 418 62" fill="none" stroke="{TENSION}" stroke-width="3" stroke-linecap="round"/>
 <circle cx="418" cy="62" r="6" fill="{TENSION}"/>
 <line x1="418" y1="74" x2="418" y2="146" stroke="{GRIS}" stroke-width="1.5" stroke-dasharray="3 4"/>
 <text x="428" y="112">l'écart, mesuré</text>

@@ -248,6 +248,8 @@ div[class*="st-key-carte_compte"] .glc-faits {{ margin: 14px 0 6px 0; }}
 .stApp .glc-verdict, .stApp .glc-carte, .stApp .glc-doc, .stApp .glc-sombre, .stApp .glc-vue > *,
 .stApp .glc-etapes li {{ animation: glc-arrive .22s ease-out both; }}
 .stApp .glc-angle circle.arc {{ animation: glc-arc .7s cubic-bezier(.2, .7, .2, 1) both; }}
+.stApp svg.ecart path.trait {{ stroke-dasharray: var(--long, 240); animation: glc-trace .8s ease-out both; }}
+.stApp svg.ecart path.trait.tard {{ animation-delay: .7s; }}
 .stApp svg.glc-courbe path.trait {{ stroke-dasharray: var(--long, 600); animation: glc-trace .9s ease-out both; }}
 .stApp table.glc-table tbody tr {{ transition: background .15s ease; }}
 .stApp table.glc-table tbody tr:hover {{ background: var(--voile); }}
