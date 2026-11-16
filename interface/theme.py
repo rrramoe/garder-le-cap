@@ -398,6 +398,8 @@ hr {{ border-color: var(--bord); }}
 
 @media (max-width: 640px) {{
   .stApp .glc-barre {{ display: none; }}
+  .stApp .glc-intro {{ min-height: 0; padding-top: 4px; }}
+  .stApp .glc-vue {{ height: auto; min-height: 220px; padding: 16px; }}
   .stMainBlockContainer {{ padding: 0 14px 56px 14px; }}
   .glc-marque .sous {{ display: none; }}
   .st-key-page div[role="radiogroup"] {{ margin: 0; overflow-x: auto; max-width: 100%; }}
