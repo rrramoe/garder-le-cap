@@ -166,7 +166,7 @@ def _pistes_pour_le_chef(pistes: list) -> list:
     return [{"famille": p["libelle_famille"], "piste": p["description"], "raison": p.get("raison"),
              "ordres": p.get("ordres"),
              "verdict": (p.get("verdict") or {}).get("libelle"),
-             "angle_le_plus_faible": (p.get("angle_le_plus_faible") or {}).get("libelle"),
+             "angle_determinant": (p.get("angle_le_plus_faible") or {}).get("libelle"),
              "direction": (p.get("direction") or {}).get("libelle")} for p in pistes]
 
 

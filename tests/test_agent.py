@@ -642,14 +642,14 @@ def test_redaction_annoncee_au_texte_final_seulement():
 # --- Correction de son texte après vérification --------------------------------------------------
 
 def test_correction_apres_un_chiffre_faux():
-    scenario = SCENARIO_ROBERT + ["**Verdict** : en tension ; l'angle le plus faible vaut 21,4."]
-    scenario[4] = "**Verdict** : en tension ; l'angle le plus faible vaut 97,3."
+    scenario = SCENARIO_ROBERT + ["**Verdict** : en tension ; l'angle déterminant vaut 21,4."]
+    scenario[4] = "**Verdict** : en tension ; l'angle déterminant vaut 97,3."
     evenements = []
     r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(scenario), equipe=False,
                              sur_etape=evenements.append)
     assert r["correction"]["faite"] and r["correction"]["reussie"]
     assert r["correction"]["motifs"] == ["Le chiffre 97,3 ne figure dans aucun résultat d'outil."]
-    assert r["explication"] == "**Verdict** : en tension ; l'angle le plus faible vaut 21,4."
+    assert r["explication"] == "**Verdict** : en tension ; l'angle déterminant vaut 21,4."
     assert r["ancrage"]["chiffres_non_sources"] == []
     assert r["trace"][-1]["outil"] == "corriger_le_texte" and r["trace"][-1]["agent"] == "principal"
     assert r["trace"][-1]["resultat_resume"] == "L'agent a corrigé son texte après vérification."
@@ -791,12 +791,12 @@ def test_resume_d_une_famille_inconnue():
     r = api.simuler_ordre("robert", "TSLA", "achat", 15)
     r = {**r, "dimension_min": "nouvelle_famille", "mesure_min": "nouvelle_mesure"}
     texte = inspection.resumer("simuler_ordre", r)
-    assert "nouvelle famille / nouvelle mesure" in texte and "_" not in texte.split("angle le plus faible")[1].split(";")[0]
+    assert "nouvelle famille / nouvelle mesure" in texte and "_" not in texte.split("angle déterminant")[1].split(";")[0]
 
 
 def test_resumes_sans_note_globale_ni_identifiant():
     texte = inspection.resumer("simuler_ordre", api.simuler_ordre("robert", "TSLA", "achat", 15))
-    assert "angle le plus faible" in texte and "score" not in texte.lower()
+    assert "angle déterminant" in texte and "score" not in texte.lower()
     fiche = inspection.resumer("lire_fiche_instrument", api.lire_fiche_instrument("SPY"))
     assert "_" not in fiche
 
@@ -956,3 +956,15 @@ def test_correction_date_direction_et_longueur():
     assert not motifs_de_correction(ok, "Hors politique et aggrave : l'écart grandit.", aggrave)
     texte_181 = " ".join(["mot"] * 179 + ["**Le", "verdict.**"])      # 181 morceaux séparés par des espaces
     assert any("181 mots" in m for m in motifs_de_correction(ok, texte_181))
+
+
+def test_vocabulaire_interdit_dans_l_explication():
+    from agent.inspection import motifs_de_correction
+    ok = {"statut": "appuyee"}
+    for texte in ("Le maillon le plus faible décide.", "Une chaîne n'est jamais plus solide.", "Le score baisse.",
+                  "La dimension du risque."):
+        assert any("« l'angle déterminant »" in m for m in motifs_de_correction(ok, texte)), texte
+    assert not motifs_de_correction(ok, "L'angle déterminant est le risque : la mesure dépasse sa limite.")
+    for nom in ("principal_chef.md", "principal.md"):
+        texte = (inspection.PROMPT_PRINCIPAL.parent / nom).read_text(encoding="utf-8")
+        assert "l'angle déterminant" in texte and "plus faible, qui décide" not in texte

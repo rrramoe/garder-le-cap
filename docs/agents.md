@@ -10,7 +10,7 @@ Une équipe de deux agents Strands sur Amazon Bedrock, et du code autour. **Le c
 - **Outils** : `lire_fiche_client`, `lire_fiche_instrument`, `decrire_apport`, `simuler_ordre`, `envoyer_explorateur`, `juger_pistes`.
 - **Ce qu'il comprend, lui seul** : le cas des deux côtés. Le client : sa fiche, sa politique, son portefeuille et où il se tient déjà face à ses limites. L'ordre : l'instrument, son profil financier, ce qu'il ajouterait à ce portefeuille. Il en tire la **finalité supposée** de l'ordre (une hypothèse, montrée comme telle dans le rapport) et juge la **cohérence** de l'ordre avec l'objectif, l'horizon et l'expérience déclarés.
 - **Ses deux décisions de chef** : 1. **le tri** : faut-il chercher, et avec quel mandat (finalité à préserver, cause à traiter, ce que les pistes doivent respecter, pistes à explorer d'abord) ; pour un ordre incompatible, un mandat étroit, remplacer l'instrument sans violer la règle, ou ne rien chercher s'il juge que rien ne peut servir le même but. 2. **le jugement** des pistes : répondent-elles à la cause, gardent-elles la finalité, respectent-elles les préférences et l'expérience ? Si le travail est faible, il le renvoie une fois avec une critique précise ; un bon travail n'est pas renvoyé.
-- **Comment il parle** : des angles sous lesquels le moteur a évalué l'ordre (les familles qu'il renvoie), jamais d'une note globale ; le plus faible décide, comme le maillon le plus faible d'une chaîne. Il réécrit une fois quand les contrôles signalent son texte.
+- **Comment il parle** : des angles sous lesquels le moteur a évalué l'ordre (ceux qu'il renvoie), jamais d'une note globale ; l'angle dont la note est la plus basse décide du verdict et s'appelle « l'angle déterminant ». Un mot pour une chose : angle, note, note de passage, mesure, limite, cible, verdict, piste testée, analyse ; le code fait réécrire un texte qui dit « score », « maillon », « chaîne » ou « dimension ».
 - **Ce qu'il ne fait pas** : aucun calcul, aucun verdict ni note à lui, aucune recommandation ; il ne teste aucune piste lui-même.
 - **Ce qu'il rend** : l'explication en quatre parties (Verdict, Pourquoi, Ce qui est possible, Hypothèses et limites), 180 mots au plus.
 - **Pourquoi le code seul ne suffit pas** : le code sait qu'une mesure dépasse sa limite ; il ne sait pas ce que ce client cherchait en passant cet ordre, ni si les pistes trouvées le gardent, ni le dire avec les mots d'un débutant.
@@ -32,7 +32,7 @@ Le contrôle des chiffres (code) et le garde-fou Bedrock (refus du conseil et de
 
 ## Ce que fait le code
 
-- Les trois premières lectures et la simulation de l'ordre passent par le moteur (`moteur/api.py`) ; chaque note, score, verdict et direction en vient.
+- Les trois premières lectures et la simulation de l'ordre passent par le moteur (`moteur/api.py`) ; chaque note, verdict et direction en vient.
 - La **cause** du verdict (`cause` dans le résultat de la simulation) : la mesure qui décide et ce qui la fait, lue dans les notes déjà calculées.
 - L'**envoi de l'explorateur** : refusé pour un ordre compatible ; une seule fois par analyse. Pour un ordre incompatible, mandat « remplacer » : les outils n'acceptent que les pistes qui remplacent l'instrument (seules, ou payées par une vente), et refusent toute piste qui viole une règle stricte, quel que soit le mandat. Le verdict de l'ordre ne change pas.
 - Le **jugement** : `juger_pistes` après le retour de l'explorateur ; « a_completer » relance l'explorateur pour un tour de trois essais au plus, une seule fois (le code refuse le second renvoi).

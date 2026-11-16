@@ -231,7 +231,7 @@ def resumer(outil: str, r) -> str:
             dim, mes = r.get("dimension_min"), r.get("mesure_min")
             m = ((((r.get("apres") or {}).get("notes") or {}).get(dim) or {}).get("mesures") or {}).get(mes) or {}
             phrase = f" ({m['phrase']})" if isinstance(m.get("phrase"), str) else ""
-            texte += (f"Verdict : {v.get('libelle')} ; angle le plus faible : {libelle_famille(r, dim)} / "
+            texte += (f"Verdict : {v.get('libelle')} ; angle déterminant : {libelle_famille(r, dim)} / "
                       f"{_mesure(mes)}{phrase} ; {r.get('direction', {}).get('libelle')}.")
             so = r.get("solidite") or {}
             if so.get("libelle"):
@@ -672,9 +672,11 @@ def motifs_de_correction(ancrage: dict, explication: str | None = None, directio
                                  flags=re.IGNORECASE):
         motifs.append("Le texte dit qu'une opération est exclue à cause de l'expérience : c'est faux, l'expérience ne "
                       "change pas le verdict, seules les pistes de l'explorateur restent au comptant.")
-    if explication and re.search(r"\bscores?\b", explication, flags=re.IGNORECASE):
-        motifs.append("Le texte parle d'un score : parle plutôt des angles évalués par le moteur et nomme le plus "
-                      "faible, celui qui décide, avec sa mesure et sa limite.")
+    interdits = sorted({m.group(0).lower() for m in re.finditer(r"\b(scores?|maillons?|cha[iî]nes?|dimensions?)\b",
+                                                                 explication or "", flags=re.IGNORECASE)})
+    if interdits:
+        motifs.append("Le texte emploie " + ", ".join(f"« {m} »" for m in interdits) + " : dis « angle », « note », "
+                      "et « l'angle déterminant » pour celui dont la note est la plus basse.")
     if explication and re.search(r"\b(19|20)\d{2}\b", explication):
         motifs.append("Le texte cite une année ou une date : n'en écris aucune ; dis « dans sa pire année », « sur "
                       "cinq ans de données ».")
