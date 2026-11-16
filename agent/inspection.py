@@ -528,7 +528,8 @@ def cle_analyse(client, ticker, sens, pourcentage, operation, modele, equipe, ch
 
 
 def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptant", sur_etape=None,
-              equipe=None, modele_explorateur=None, chef=None, relancer: bool = False, memoire=None) -> dict:
+              equipe=None, modele_explorateur=None, chef=None, relancer: bool = False, memoire=None,
+              tracer=None) -> dict:
     """Fait analyser l'ordre par les agents. Ne lève jamais d'exception.
 
     Deux demandes identiques partagent l'analyse en cours ; une analyse finie et réussie est rejouée avec ses étapes
@@ -536,7 +537,32 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
     l'analyse. La mémoire s'applique au vrai Bedrock (`memoire=None`), ou partout avec `memoire=True`.
     Les autres arguments : voir `analyser`.
     """
-    utiliser = MEMOIRE and (memoire if memoire is not None else (modele is None or isinstance(modele, str)))
+    reel = modele is None or isinstance(modele, str)
+    utiliser = MEMOIRE and (memoire if memoire is not None else reel)
+    tracer = reel if tracer is None else bool(tracer)
+
+    def faire(diffuser):
+        """L'analyse, puis sa trace (identifiant dans le résultat, écriture en fond) : jamais d'effet sur l'analyse."""
+        r = analyser(client, ticker, sens, pourcentage, modele, operation, diffuser, equipe, modele_explorateur, chef)
+        r["trace_aws"] = None
+        if tracer:
+            try:
+                from . import traces as _traces
+                fiche = _api_moteur.lire_fiche_client(client)
+                ordre = {"ticker": str(ticker).strip().upper(), "sens": str(sens).strip().lower(),
+                         "pourcentage": pourcentage, "operation": str(operation or "comptant").strip().lower()}
+                reglages = {"modeles": {"principal": r.get("modele"),
+                                        "explorateur": nom_modele(modele_explorateur if modele_explorateur is not None
+                                                                  else modele)},
+                            "equipe": EQUIPE if equipe is None else bool(equipe),
+                            "chef": CHEF if chef is None else bool(chef), "effort": EFFORT,
+                            "effort_explorateur": EFFORT_EXPLORATEUR, "memoire": MEMOIRE}
+                identifiant = _traces.preparer(r, fiche if isinstance(fiche, dict) else {}, ordre, reglages)
+                r["trace_aws"] = {"id": identifiant} if identifiant else None
+            except Exception:
+                r["trace_aws"] = None
+        return r
+
     cle = None
     if utiliser:
         try:
@@ -545,13 +571,11 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
         except Exception:
             cle = None
     if cle is None:
-        r = analyser(client, ticker, sens, pourcentage, modele, operation, sur_etape, equipe, modele_explorateur, chef)
+        r = faire(sur_etape)
         r["memoire"] = None
         return r
     from . import memoire as _memoire
-    return _memoire.partager(cle, lambda diffuser: analyser(client, ticker, sens, pourcentage, modele, operation,
-                                                               diffuser, equipe, modele_explorateur, chef),
-                             sur_etape=sur_etape, relancer=relancer)
+    return _memoire.partager(cle, faire, sur_etape=sur_etape, relancer=relancer)
 
 
 def analyser(client, ticker, sens, pourcentage, modele=None, operation="comptant", sur_etape=None,
