@@ -220,7 +220,8 @@ div[class*="st-key-introduction"] {{ max-width: 1168px; margin: 4px auto 0 auto;
 .stApp .glc-billet .bouton {{ margin-top: 16px; background: var(--accent); color: #fff; border-radius: 999px;
   text-align: center; font-size: var(--t2); font-weight: 600; padding: 10px 0; opacity: .55; }}
 .stApp .glc-vue:has(.glc-billet) {{ padding: 28px 84px; }}
-div[class*="st-key-introduction"] .stButton > button[kind="tertiary"] {{ float: right; }}
+div[class*="st-key-compte_intro"] .stButton > button {{ min-height: 38px; padding: 4px 16px; color: var(--gris); }}
+div[class*="st-key-compte_intro"] .stButton > button:hover {{ color: var(--encre); }}
 div[class*="st-key-carte_compte"] .glc-faits {{ margin: 10px 0 4px 0; }}
 div[class*="st-key-carte_compte"] .allure {{ margin: 10px 0 0 0; }}
 div[class*="st-key-carte_compte"] .allure svg {{ width: 100%; height: 54px; display: block; }}

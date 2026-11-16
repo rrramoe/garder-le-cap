@@ -8,7 +8,7 @@ from moteur import api, references
 from interface import composants as C
 from interface import etat, films, marche
 from interface.theme import ACCENT, BLANC, BLEU_CLAIR, ENCRE, GRIS, TENSION
-from interface.textes import (AIDE_ANGLES, BOUTON_ACTION, BOUTON_ESSAI, BOUTON_PASSER_INTRO, CHAMPS_Q, CHEMIN, CLASSES,
+from interface.textes import (AIDE_ANGLES, BOUTON_ACTION, BOUTON_ESSAI, CHAMPS_Q, CHEMIN, CLASSES,
                               INTRO_FIN, INTRO_REPRENDRE, INTRO_RETOUR, INTRO_SUIVANT, INTRODUCTION, ISSUE_REGLE,
                               ISSUES, LIMITE, OPERATIONS, QUESTIONNAIRE, TYPES_ORDRE, angles_du_bloc,
                               charger_reference, dollars, francais, instruments, libelle_option, nom_angle, nombre, pct)
@@ -322,11 +322,9 @@ def introduction() -> None:
     if "{" in titre:
         titre = titre.format(**_mots())
     with st.container(key="introduction"):
-        haut_gauche, haut_droite = st.columns([3, 1], vertical_alignment="center")
-        with haut_gauche:
-            points = "".join(f'<i class="{"ici" if i == n else ""}"></i>' for i in range(dernier + 1))
-            C.montrer(f'<div class="glc-pas-intro"><span>{n + 1} / {dernier + 1}</span>{points}</div>')
-        haut_droite.button(BOUTON_PASSER_INTRO, key="passer_intro", type="tertiary", on_click=etat.finir_introduction)
+        # Les repères d'avancement, au-dessus du groupe de texte ; « Passer l'introduction » est dans la barre.
+        points = "".join(f'<i class="{"ici" if i == n else ""}"></i>' for i in range(dernier + 1))
+        C.montrer(f'<div class="glc-pas-intro"><span>{n + 1} / {dernier + 1}</span>{points}</div>')
         # Le texte et ses boutons forment un seul groupe, à la même place sur tous les panneaux ; le dessin
         # prend la hauteur de l'écran qui reste, centré sur ce groupe.
         gauche, droite = st.columns([1, 1.32], gap="large", vertical_alignment="center")

@@ -17,7 +17,7 @@ import streamlit as st
 from moteur import api
 from interface import composants as C
 from interface import etat, page_accueil, page_aide, page_negocier, page_portefeuille, page_profil
-from interface.textes import BANDEAU, NOM, PAGES
+from interface.textes import BANDEAU, BOUTON_PASSER_INTRO, NOM, PAGES
 from interface.theme import CSS
 
 
@@ -33,6 +33,11 @@ def entete(service: bool) -> str:
             with gauche:
                 C.montrer(C.entete_marque())
             if not service:
+                # Pendant l'introduction, la place du compte porte le moyen de la passer : toujours au même
+                # endroit, sur les cinq panneaux comme sur un téléphone.
+                if st.session_state.get("etape") == "introduction":
+                    with droite.container(key="compte_intro"):
+                        st.button(BOUTON_PASSER_INTRO, key="passer_intro", on_click=etat.finir_introduction)
                 return st.session_state["persona"]
             milieu.radio("Navigation", list(PAGES), key="page", horizontal=True, label_visibility="collapsed",
                          format_func=PAGES.get)
