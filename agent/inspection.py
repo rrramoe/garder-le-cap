@@ -253,6 +253,15 @@ def resumer(outil: str, r) -> str:
                     f"{_nombre(r.get('taille_demandee_pct'))} % demandés ({ISSUES.get(r.get('issue'), r.get('issue'))}).")
         if outil == "lister_instruments":
             return f"{r.get('nombre')} instruments (classe : {CLASSES.get(r.get('classe'), r.get('classe'))})."
+        if outil == "decrire_apport":
+            ap = r.get("apres_ordre") or {}
+            corr = (r.get("correlation_portefeuille") or {}).get("valeur")
+            texte = f"Apport de {r.get('ticker')} au portefeuille"
+            if corr is not None:
+                texte += f" : corrélation {_nombre(corr, 2)} avec le portefeuille"
+            if ap.get("part_du_risque_pct") is not None:
+                texte += f", part du risque après l'ordre {_nombre(ap['part_du_risque_pct'])} %"
+            return texte + f" ; {len(r.get('candidats') or [])} instruments proches de la même classe."
         if outil == "juger_pistes":
             if r.get("decision") == "suffisant":
                 return "Pistes jugées suffisantes."
@@ -339,7 +348,16 @@ def extraire_substitut(trace: list, ticker_ordre: str) -> dict | None:
 
 FAMILLES = {"montant_reduit": "Montant plus petit", "autre_instrument": "Autre instrument",
             "achat_partage": "Achat partagé avec un fonds diversifié",
-            "vente_pour_financer": "Achat payé par une vente", "combinaison": "Combinaison"}
+            "vente_pour_financer": "Achat payé par une vente", "combinaison": "Combinaison",
+            "achat_reparti": "Achat réparti sur plusieurs titres", "autre_operation": "Autre opération"}
+
+
+def _est_fonds(ticker) -> bool:
+    try:
+        from moteur import instruments
+        return bool(instruments.est_fonds(str(ticker).strip().upper()))
+    except Exception:
+        return False
 
 
 def _ordre(ticker, sens, pourcentage, operation=None) -> dict:
@@ -377,6 +395,9 @@ def _piste_simulation(r: dict, ordre_demande: dict, etape) -> dict | None:
                 return None
             return _piste("montant_reduit", f"{s0.capitalize()} de {_taille(j['pourcentage'])} % au lieu de "
                           f"{_taille(p0)} % ({t0})", lisibles, r, etape)
+        if j["sens"] != s0:   # une vente proposée pour un achat demandé, ou l'inverse : une autre opération
+            return _piste("autre_operation", f"{j['sens'].capitalize()} de {_taille(j['pourcentage'])} % de "
+                          f"{j['ticker']} au lieu de : {s0} de {_taille(p0)} % de {t0}", lisibles, r, etape)
         return _piste("autre_instrument", f"{j['sens'].capitalize()} de {_taille(j['pourcentage'])} % de "
                       f"{j['ticker']} à la place de {t0}", lisibles, r, etape)
     if ventes and achats:
@@ -390,7 +411,9 @@ def _piste_simulation(r: dict, ordre_demande: dict, etape) -> dict | None:
     if len(achats) >= 2 and t0 in [j["ticker"] for j in achats] and sum(j["pourcentage"] for j in achats) < p0 - EPS:
         return _piste("combinaison", "Montant plus petit avec un complément : " + ", ".join(
             f"{_taille(j['pourcentage'])} % de {j['ticker']}" for j in lisibles), lisibles, r, etape)
-    return _piste("achat_partage", "Achat partagé : " + ", ".join(
+    autres = [j for j in achats if j["ticker"] != t0]
+    famille = "achat_partage" if autres and all(_est_fonds(j["ticker"]) for j in autres) else "achat_reparti"
+    return _piste(famille, ("Achat partagé : " if famille == "achat_partage" else "Achat réparti : ") + ", ".join(
         f"{_taille(j['pourcentage'])} % de {j['ticker']}" for j in lisibles), lisibles, r, etape)
 
 
@@ -423,13 +446,18 @@ def extraire_pistes(trace: list, ticker, sens, pourcentage, operation="comptant"
             v = notation.verdict(r.get("contraintes_strictes") or {"violee": False, "themes_violes": []}, point["score"])
             d = notation.direction(score_avant, point["score"]) if score_avant is not None else {}
             t = str(r.get("ticker") or demande["ticker"]).strip().upper()
-            if taille is not None:
-                description = (f"{demande['sens'].capitalize()} de {_taille(taille)} % au lieu de "
+            sens = str(r.get("sens") or demande["sens"]).strip().lower()
+            meme = t == demande["ticker"] and sens == demande["sens"]
+            if taille is not None and meme:
+                description = (f"{sens.capitalize()} de {_taille(taille)} % au lieu de "
                                f"{_taille(r.get('taille_demandee_pct'))} % ({t})")
+            elif taille is not None:   # la taille cherchée sur un autre instrument : c'est un autre instrument
+                description = f"{sens.capitalize()} de {_taille(taille)} % de {t} à la place de {demande['ticker']}"
             else:
                 description = f"Aucun montant compatible jusqu'à {_taille(r.get('taille_demandee_pct'))} % ({t})"
-            pistes.append(_piste("montant_reduit", description,
-                                 [_ordre(t, demande["sens"], point["taille_pct"], r.get("operation"))],
+            famille = "montant_reduit" if meme else ("autre_instrument" if sens == demande["sens"] else "autre_operation")
+            pistes.append(_piste(famille, description,
+                                 [_ordre(t, sens, point["taille_pct"], r.get("operation"))],
                                  {"verdict": v, "score": point["score"], "direction": d,
                                   "dimension_min": point.get("dimension_min"), "mesure_min": point.get("mesure_min")},
                                  e.get("etape")))

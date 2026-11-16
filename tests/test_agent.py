@@ -904,3 +904,42 @@ def test_pistes_permises_dites_d_avance():
     assert "au comptant" in pistes_permises({"operation": "decouvert"}, False, "ajuster")
     assert "autre instrument" in pistes_permises({"operation": "comptant"}, True, "remplacer")
     assert pistes_permises({"operation": "comptant"}, True, "ajuster") == "toutes les familles"
+
+
+# --- Étiquettes des pistes tirées des jambes et du type des instruments ----------------------------
+
+def _trace_piste(ordre_client, outil, resultat, arguments=None):
+    return [{"etape": 1, "outil": "simuler_ordre", "arguments": {}, "resultat": api.simuler_ordre(*ordre_client)},
+            {"etape": 2, "outil": outil, "arguments": arguments or {}, "resultat": resultat}]
+
+
+def test_etiquette_taille_cherchee_sur_un_autre_instrument():
+    trace = _trace_piste(("robert", "TSLA", "achat", 5), "chercher_taille_compatible",
+                         api.chercher_taille_compatible("robert", "XIU.TO", "achat", 10))
+    p = inspection.extraire_pistes(trace, "TSLA", "achat", 5)[0]
+    assert p["famille"] != "montant_reduit"
+    assert p["famille"] == "autre_instrument" or p["description"].startswith("Aucun montant")
+
+
+def test_etiquette_achat_reparti_quand_l_autre_jambe_est_une_action():
+    ordres = [{"ticker": "TSLA", "sens": "achat", "pourcentage": 7.5}, {"ticker": "RY.TO", "sens": "achat", "pourcentage": 7.5}]
+    trace = _trace_piste(("robert", "TSLA", "achat", 15), "simuler_scenario", api.simuler_scenario("robert", ordres))
+    p = inspection.extraire_pistes(trace, "TSLA", "achat", 15)[0]
+    assert p["famille"] == "achat_reparti" and p["libelle_famille"] == "Achat réparti sur plusieurs titres"
+    fonds = [{"ticker": "TSLA", "sens": "achat", "pourcentage": 7.5}, {"ticker": "XIU.TO", "sens": "achat", "pourcentage": 7.5}]
+    trace = _trace_piste(("robert", "TSLA", "achat", 15), "simuler_scenario", api.simuler_scenario("robert", fonds))
+    assert inspection.extraire_pistes(trace, "TSLA", "achat", 15)[0]["famille"] == "achat_partage"
+
+
+def test_etiquette_autre_operation_pour_une_vente_a_decouvert():
+    fiche = {"persona": "robert", "questionnaire": {"experience": "debutante"}}
+    trace = [{"etape": 1, "outil": "simuler_ordre", "arguments": {},
+              "resultat": api.simuler_ordre(fiche, "TSLA", "vente", 5, "decouvert")},
+             {"etape": 2, "outil": "simuler_ordre", "arguments": {}, "resultat": api.simuler_ordre(fiche, "XIU.TO", "achat", 5)}]
+    p = inspection.extraire_pistes(trace, "TSLA", "vente", 5)[0]
+    assert p["famille"] == "autre_operation" and p["libelle_famille"] == "Autre opération"
+
+
+def test_resume_de_decrire_apport():
+    texte = inspection.resumer("decrire_apport", api.decrire_apport("robert", "TSLA", 15))
+    assert texte.startswith("Apport de TSLA au portefeuille") and texte != "Résultat reçu."
