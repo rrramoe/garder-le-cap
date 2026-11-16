@@ -5,7 +5,7 @@
 Garder le cap est le prototype d'un service de gestion des risques pour l'investisseur particulier, débutant ou avancé. Les institutions ont un département de risque ; le particulier n'a souvent que son enthousiasme.
 Sur un écran de courtage simulé, le client prépare un ordre et clique sur « Analyser l'ordre ». Un moteur de calcul et une équipe de deux agents sur Amazon Bedrock lui disent si l'ordre est compatible avec sa politique de placement, pourquoi, et ce qui est possible.
 L'outil renseigne, il ne conseille pas : le client propose, l'outil met l'idée à l'épreuve de ses propres objectifs. Un placement n'est pas une fin en soi, mais un moyen.
-Le verdict suit la règle du maillon le plus faible : une chaîne n'est qu'aussi solide que son maillon le plus faible.
+Rien ne se compense : chaque angle de l'analyse reçoit une note, et l'angle déterminant, le plus faible, décide du verdict.
 Projet réalisé par Rami Houheche pour le Datathon PolyFinances 2026, défi AlphaForge AI.
 
 **Application en ligne :** http://ec2-18-211-136-210.compute-1.amazonaws.com/
@@ -89,7 +89,7 @@ Quand `GLC_BUCKET` est configuré, les fichiers de référence sont lus dans le 
 .venv/bin/streamlit run app.py --server.address localhost
 ```
 
-L'application s'ouvre sur http://localhost:8501. Choisissez un client dans la barre latérale (Robert, Mateo, Amira, ou un nouveau client), puis l'onglet « Ordre », et cliquez sur « Analyser l'ordre ».
+L'application s'ouvre sur http://localhost:8501. Choisissez un client (Robert, Mateo, Amira, ou un nouveau client), préparez un ordre (instrument, achat ou vente, montant, opération), puis cliquez sur « Analyser l'ordre ». L'analyse donne le verdict, la note de chaque angle et l'angle déterminant, l'explication et les pistes testées.
 
 ### Tests
 
@@ -115,15 +115,15 @@ Sans AWS, les tests qui appellent Bedrock, le garde-fou ou S3 sont sautés, de m
    - **Diversification** : mon portefeuille reste-t-il bien réparti ?
    - **Préférences** : l'ordre respecte-t-il mes préférences ?
 
-   Chaque angle prend sa mesure la plus faible, et le verdict suit l'angle le plus faible : **compatible**, **en tension** ou **incompatible**. Rien ne se compense.
+   Chaque angle prend la note de sa mesure la plus faible. L'angle déterminant, celui dont la note est la plus faible, décide du verdict : **compatible**, **en tension** ou **incompatible**. Rien ne se compense.
 4. **Deux agents** (Strands Agents sur Amazon Bedrock) : le chef de dossier comprend et dirige, l'explorateur cherche. Le **chef de dossier** lit le cas des deux côtés (le client et l'ordre) et décide s'il faut chercher, et sous quel mandat. Quand l'ordre n'est pas compatible, il peut envoyer l'**explorateur**, qui cherche et teste des pistes sous ce mandat : un montant plus petit, un autre instrument, un achat partagé avec un fonds diversifié, un achat payé par une vente. Le chef de dossier juge ensuite les pistes et rédige l'explication pour ce client.
-5. **Ce que le code garde pour lui** : chaque note, chaque score, chaque verdict et chaque piste vient du moteur (`moteur/api.py`), jamais d'un agent. Le code refuse aussi d'envoyer l'explorateur pour un ordre compatible, borne ses essais et vérifie que chaque chiffre de l'explication vient d'un outil. Le détail est dans [`docs/agents.md`](docs/agents.md), l'interface du moteur dans [`docs/api_moteur.md`](docs/api_moteur.md).
+5. **Ce que le code garde pour lui** : chaque note, chaque verdict et chaque piste testée vient du moteur (`moteur/api.py`), jamais d'un agent. Le code refuse aussi d'envoyer l'explorateur pour un ordre compatible, borne ses essais et vérifie que chaque chiffre de l'explication vient d'un outil. Le détail est dans [`docs/agents.md`](docs/agents.md), l'interface du moteur dans [`docs/api_moteur.md`](docs/api_moteur.md).
 
 ```mermaid
 flowchart LR
     F["Fiche du client"] --> P["Politique déduite"]
     O["Ordre"] --> M
-    P --> M["Moteur : contraintes strictes, cinq angles, maillon le plus faible"]
+    P --> M["Moteur : contraintes strictes, cinq angles, angle déterminant"]
     M --> V{"Verdict"}
     V --> C["Chef de dossier : comprend le cas, fixe le mandat"]
     C -->|"ordre non compatible"| E["Explorateur : pistes testées par le moteur"]
@@ -137,11 +137,31 @@ flowchart LR
 
 | Service | Rôle |
 |---|---|
-| **Amazon Bedrock** | Le modèle de langage des deux agents (`global.anthropic.claude-sonnet-5`, région `us-east-1`). |
+| **Amazon Bedrock** | Le modèle de langage des deux agents, le chef de dossier et l'explorateur (`global.anthropic.claude-sonnet-5`, profil d'inférence global, région `us-east-1`). Le rôle de l'instance autorise deux modèles : celui-ci et Amazon Nova 2 Lite. |
 | **Strands Agents** | Le kit qui fait des deux agents des agents à outils : appels au moteur, envoi de l'explorateur, suivi des étapes en direct dans l'interface. |
-| **Amazon Bedrock Guardrails** | Le garde-fou refuse le conseil financier personnalisé et les demandes de transaction réelle, et mesure l'ancrage de l'explication dans les résultats des outils (vérification d'ancrage contextuel). Sa configuration publiée est dans `docs/configuration/guardrail-config.json`, identifiants masqués. |
-| **Amazon S3** | Un bucket privé garde les fichiers de référence (`reference/*.json`) : accès public bloqué, chiffrement par défaut, accès refusé hors TLS. L'application les y lit, et revient au dossier local si S3 ne répond pas. |
-| **Amazon EC2** | L'application publique (lien en haut de page) est servie par une instance EC2. |
+| **Amazon Bedrock Guardrails** | Le garde-fou, appelé dans sa version publiée, refuse le conseil financier personnalisé et les demandes de transaction réelle, et mesure l'ancrage de l'explication dans les résultats des outils (vérification d'ancrage contextuel). Sa configuration est dans `docs/configuration/guardrail-config.json`, identifiants masqués. |
+| **Amazon S3** | Un bucket privé (accès public bloqué, chiffrement par défaut, accès refusé hors TLS) garde les fichiers de référence (`reference/*.json`), que l'application lit et qui reviennent au dossier local si S3 ne répond pas ; et, sous le préfixe `deploiement/`, les objets du déploiement : l'archive du code de chaque commit déployé, les données non publiées et la configuration. |
+| **Amazon EC2** | L'application publique tourne sur une petite instance Graviton (Amazon Linux 2023), Streamlit en service systemd sur le port 80, le seul port ouvert. Une IP élastique garde la même adresse d'une mise à jour à l'autre. |
+| **AWS IAM** | Un rôle propre à l'instance donne ses droits : appel des deux modèles et du garde-fou, lecture du bucket privé, Systems Manager. Aucune clé n'est posée sur la machine. |
+| **AWS Systems Manager** | Run Command amorce l'instance et y passe les mises à jour et les vérifications ; aucun port SSH n'est ouvert. |
+
+Le déploiement est décrit dans [`deploiement/README.md`](deploiement/README.md) et piloté par `deploiement/glc_deploiement.py` : à chaque mise à jour, le code du commit choisi est déposé dans le bucket, l'instance le récupère par Systems Manager, et les fichiers `reference/*.json` de ce commit sont recopiés dans le bucket.
+
+```mermaid
+flowchart LR
+    N["Navigateur"] -->|"HTTP, port 80"| A
+    subgraph EC2["Amazon EC2 (IP élastique)"]
+        A["Application Streamlit : interface, moteur, deux agents (Strands)"]
+    end
+    R["Rôle IAM de l'instance, sans clé"] -.-> A
+    A -->|"agents : chef de dossier, explorateur"| B["Amazon Bedrock : modèle"]
+    A -->|"explication et phrases de l'explorateur"| G["Bedrock Guardrails : version publiée"]
+    A -->|"fichiers de référence"| S["Amazon S3 : bucket privé"]
+    D["Poste de déploiement : glc_deploiement.py"] -->|"archive du commit, données, configuration"| S
+    D -->|"mise à jour"| M["AWS Systems Manager : Run Command"]
+    M --> A
+    S -->|"code déployé"| A
+```
 
 ## Sources, hypothèses et limites
 
