@@ -29,7 +29,7 @@ api.simuler_ordre("robert", "TSLA", "achat", 15)
 
 **Capacité à supporter une perte** (`capacite_perte`). Même échelle que `fluctuations` (`faibles` … `elevees`), chaque niveau décrit par une situation. Le profil retenu est le plus prudent des deux : ce que le client accepte (`fluctuations`) et ce que sa situation permet (`capacite_perte`). Tout ce qui suit le profil suit le profil retenu : fourchettes et cibles, portefeuilles étalons de la note de risque, plafond des cryptoactifs, cohérence avec l'objectif. `deduit.profil` ajoute `accepte`, `permis` (`{valeur, libelle}`), `decide_par` (`fluctuations`, `capacite` ou `les_deux`) et `phrase`. Sans réponse, `capacite_perte` prend la valeur de `fluctuations` : rien ne change. Règle : `acvm_capacite_perte` ; formulation des situations : `hypothese_capacite_libelles`.
 
-**Besoin de liquidités dans les 12 prochains mois** (`besoin_liquidite` : `aucun`, `jusqu_10`, `10_25`, `25_40`). La borne haute de la tranche (0, 10, 25 ou 40 %) relève d'autant le minimum, la cible et le maximum de la classe `liquidites` (maximum plafonné à 100) ; les autres classes gardent leur fourchette et la formule de classe s'applique telle quelle à la fourchette relevée. `deduit.besoin_liquidite_pct` : `{valeur, origine, phrase, source}`, par exemple « Vous gardez au moins 10 % en liquidités pour vos besoins de l'année. ». Sans réponse : `aucun`, rien ne change. Règle du décalage : `hypothese_besoin_liquidite` (listée dans `sources` seulement quand un besoin est déclaré).
+**Besoin de liquidités dans les 12 prochains mois** (`besoin_liquidite` : `aucun`, `jusqu_10`, `10_25`, `25_40`). La borne haute de la tranche (0, 10, 25 ou 40 %) est le besoin ; la famille `liquidite` le compare aux liquidités après l'ordre (voir « Modèle de notation en cinq familles »). Les fourchettes de la diversification restent celles du profil. `deduit.besoin_liquidite_pct` : `{valeur, origine, phrase, source}`, par exemple « Vous gardez au moins 10 % en liquidités pour vos besoins de l'année. ». Sans réponse : `aucun`, la famille est sans objet. Règle : `hypothese_besoin_liquidite`.
 
 ## `lire_fiche_instrument(ticker, montant_cad=None)`
 
@@ -55,6 +55,22 @@ Sources : `donnees_marche`, `donnees_dividendes`, `donnees_taux`, conventions `h
 ## `lister_instruments(classe=None)`
 
 `classe` : `liquidites`, `revenu_fixe`, `actions`, `alternatifs`, ou rien pour tout. Renvoie `classe`, `nombre`, `instruments` (liste de `{symbole, nom, classe_politique, classe_actif, secteur, devise, etiquettes, volatilite_annualisee, pire_baisse}`).
+
+## Modèle de notation en cinq familles
+
+Les contraintes strictes d'abord ; puis chaque famille prend sa mesure la plus faible ; le verdict suit la famille la plus faible (« une chaîne n'est qu'aussi solide que son maillon le plus faible »). Échelle commune : 100 sur la cible, 50 exactement à la limite, droite prolongée au-delà, plancher 0, plafond 100 (`notation.note_lineaire`). Une mesure ou une famille qui ne peut pas être calculée vaut `note: null` avec `statut` (`indetermine` ou `sans_objet`) et ne décide pas. Le champ `score` reste la note la plus faible ; l'interface ne l'affiche pas comme un chiffre global.
+
+`notes` : une entrée par famille, dans l'ordre de `familles`, chacune `{note, mesure_min, mesures, question}` (+ `sans_objet`). Chaque mesure porte `note`, `libelle`, et selon le cas `valeur`, `cible`, `limite`, `unite`, `phrase`, `source`, `hypothese`. Une famille ou une mesure ajoutée apparaît sans changement côté agents ou interface.
+
+| Famille (`question`) | Mesures |
+|---|---|
+| `objectif` (« L'ordre sert-il mon objectif ? ») | Une seule, selon l'objectif : `capital_preserve` (pire rendement cumulé sur une fenêtre de la durée de l'horizon, de 1 à 3 ans ; limite 0 %, 100 à +pire année publiée du profil, 0 à -pire année), `revenu` (rendement en revenu du portefeuille sur 12 mois ; cible = celui de l'étalon de référence du profil, limite = celui de l'étalon le plus audacieux, ou la moitié de la cible s'il n'est pas plus bas), `actions` (poids des actions : formule de classe pour « croissance équilibrée », côté bas seulement pour « croissance à long terme »). Hypothèse `hypothese_objectif` |
+| `risque` (« Le risque reste-t-il dans ce que j'accepte ? ») | `ampleur`, `duree` (inchangées) ; `fluctuations` : écart-type annualisé des rendements mensuels, cible = borne basse, limite = borne haute du niveau des régulateurs associé au profil (Revenu faible 0-6, Conservateur faible à moyen 6-11, Équilibré moyen 11-16, Croissance moyen à élevé 16-20, Croissance maximale élevé ≥ 20 : `sans_objet`, pas de plafond publié ; source `acvm_81_102_annexe_f`) ; `pire_annee` : pire rendement sur 252 séances, cible 0 %, limite = pire année publiée par la banque (`fbngp_pire_annee_2024`) |
+| `liquidite` (« Mon argent reste-t-il disponible ? ») | `liquidites_besoin` : liquidités après l'ordre, limite = le besoin déclaré, cible = besoin + cible de liquidités du profil ; famille `sans_objet` sans besoin. La fourchette des liquidités de la diversification reste celle du profil |
+| `diversification` (« Mon portefeuille reste-t-il bien réparti ? ») | Les cinq mesures d'avant ; `geographie_actions` : part des actions canadiennes dans les actions (instruments en CAD), cible 40 % (`fbngp_repartition_actions_2024`), limites 30 et 50 % (écart de 10 points de `rbcgam_fourchettes_regionales_2025`, hypothèse `hypothese_geographie`) |
+| `preferences` (« L'ordre respecte-t-il mes préférences ? ») | Inchangée, tous les thèmes de la fiche |
+
+Limites publiées et bandes : `reference/limites_risque.json`. La solidité recalcule seulement la pire baisse et la durée sur ses deux fenêtres ; les autres familles y gardent leur note de la période complète.
 
 ## `etat_des_lieux(client)`
 

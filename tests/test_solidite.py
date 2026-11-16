@@ -9,6 +9,12 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+
+@pytest.fixture(autouse=True)
+def sans_geographie(monkeypatch):
+    """Ces essais portent sur une autre règle : la mesure géographique (testée dans test_familles) est mise de côté."""
+    monkeypatch.setattr(notation, "mesure_geographie", lambda ex: {"note": None, "statut": "sans_objet"})
+
 def _solidite(persona, ticker, pct):
     f = client.construire_fiche(persona)
     r = notation.simuler(f, ticker, "achat", pct)

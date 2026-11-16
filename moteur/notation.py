@@ -331,9 +331,28 @@ def note_diversification(port: dict, fiche: dict) -> dict:
     else:
         mesures["plus_gros_fonds"] = {"note": 100.0, "ticker": None, "poids": 0.0,
                                       "plafond": plafonds["fonds_negocie_en_bourse"], "libelle": "Plus gros fonds négocié en bourse"}
-    mesure_min = min(mesures, key=lambda k: mesures[k]["note"])
-    return {"note": mesures[mesure_min]["note"], "mesure_min": mesure_min, "mesures": mesures,
-            "poids_par_classe": classes}
+    mesures["geographie_actions"] = mesure_geographie(ex)
+    return {**_noter(mesures), "poids_par_classe": classes}
+
+
+def mesure_geographie(ex: dict) -> dict:
+    """Part des actions canadiennes dans les actions, face à la répartition de référence de la banque."""
+    g = references.charger("limites_risque")["geographie_actions"]
+    actions = {t: w for t, w in ex.items() if w > EPS and references.classe_politique(t) == "actions"}
+    total = sum(actions.values())
+    m = {"libelle": "Part des actions canadiennes dans les actions", "cible": g["cible_canada_pct"],
+         "limite_basse": g["cible_canada_pct"] - g["ecart_limite_points"],
+         "limite_haute": g["cible_canada_pct"] + g["ecart_limite_points"], "unite": "%",
+         "source": g["source_cible"], "source_limite": g["source_ecart"], "hypothese": "hypothese_geographie"}
+    if total <= EPS:
+        m.update(note=None, statut="sans_objet", phrase="aucune action")
+        return m
+    canada = sum(w for t, w in actions.items() if instruments.fiche(t)["devise"] == "CAD") / total * 100
+    m.update(valeur=canada, hors_canada=100 - canada,
+             note=note_lineaire(abs(canada - g["cible_canada_pct"]), 0.0, float(g["ecart_limite_points"])),
+             phrase=f"Canada {_fr(canada, 0)} % des actions, ailleurs {_fr(100 - canada, 0)} % ; "
+                    f"référence 40 / 60, limite {m['limite_basse']} à {m['limite_haute']} % au Canada")
+    return m
 
 
 # ---------------------------------------------------------------- préférences souples

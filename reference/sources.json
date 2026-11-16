@@ -207,5 +207,23 @@
     "source": "Hypothèse du projet",
     "date": "2026-11-15",
     "nature": "hypothese"
+  },
+  "fbngp_repartition_actions_2024": {
+    "libelle": "Répartition des actions de l'indice de référence de chaque profil : 40 % actions canadiennes, 40 % américaines, 20 % étrangères (60 % hors du Canada)",
+    "source": "Financière Banque Nationale – Gestion de patrimoine, documents « Profil d'investisseur » (fbngp.ca)",
+    "date": "2024-09",
+    "nature": "publie"
+  },
+  "rbcgam_fourchettes_regionales_2025": {
+    "libelle": "Fourchettes des classes d'actions régionales : poids de référence plus ou moins 10 points (par exemple actions canadiennes 15 %, fourchette 5 à 25 %, profil équilibré)",
+    "source": "RBC Gestion mondiale d'actifs, « Global Investment Outlook », New Year 2025, répartition recommandée (rbcgam.com)",
+    "date": "2025-01",
+    "nature": "publie"
+  },
+  "hypothese_geographie": {
+    "libelle": "Part des actions canadiennes dans les actions (titres et fonds en CAD = Canada) face à 40 %, limite à 10 points de part et d'autre : l'écart de RBC, publié pour le poids d'une région dans le portefeuille, est appliqué ici à la part du Canada dans les actions",
+    "source": "Hypothèse du projet",
+    "date": "2026-11-15",
+    "nature": "hypothese"
   }
 }

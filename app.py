@@ -133,6 +133,7 @@ MESURES = {
     "fluctuations": "fluctuations (échelle des régulateurs)",
     "pire_annee": "pire année",
     "liquidites_besoin": "liquidités face à votre besoin",
+    "geographie_actions": "répartition des actions, Canada et ailleurs",
     "ampleur": "pire baisse",
     "duree": "temps pour se remettre d'une baisse",
     "classe_liquidites": "part des liquidités",
@@ -497,7 +498,7 @@ def resume_appel(outil: str, r: dict) -> str:
                 f"volatilité {pct_frac(r['statistiques_cad']['volatilite_annualisee'])} ; "
                 f"thèmes : {', '.join(vraies) if vraies else 'aucun'}.")
     if outil == "simuler_ordre":
-        return (f"« {r['verdict']['libelle']} », score {note_txt(r['avant']['score'])} → "
+        return (f"« {r['verdict']['libelle']} », note la plus faible {note_txt(r['avant']['score'])} → "
                 f"{note_txt(r['apres']['score'])}, donné par {libelle_mesure(r['dimension_min'], r['mesure_min'])}.")
     if outil == "chercher_taille_compatible":
         if not r.get("lancee", True):
@@ -637,10 +638,10 @@ def graphique_courbe(taille: dict, valeur: float) -> alt.Chart:
     base = alt.Chart(df).encode(
         x=alt.X("taille_pct:Q", title="Taille de l'ordre (% du portefeuille)",
                 scale=alt.Scale(domainMin=0), axis=alt.Axis(tickMinStep=1, format="d")),
-        y=alt.Y("score:Q", title="Score après l'ordre", scale=alt.Scale(domain=[0, haut])),
+        y=alt.Y("score:Q", title="Note la plus faible après l'ordre", scale=alt.Scale(domain=[0, haut])),
         tooltip=[alt.Tooltip("montant:N", title="Montant"),
                  alt.Tooltip("taille_pct:Q", title="Part (%)", format=".1f"),
-                 alt.Tooltip("score:Q", title="Score", format=".0f"),
+                 alt.Tooltip("score:Q", title="Note la plus faible", format=".0f"),
                  alt.Tooltip("mesure:N", title="Donné par")])
     zone = alt.Chart(pd.DataFrame({"y": [0], "y2": [LIMITE]})).mark_rect(
         color=COULEURS_VERDICT["en_tension"], opacity=0.07).encode(y="y:Q", y2="y2:Q")
@@ -879,10 +880,9 @@ def onglet_portefeuille(persona: str, fiche: dict, fiche_client: dict) -> None:
         dans = e["dans_la_politique"]
         couleur = COULEURS_VERDICT["compatible"] if dans else COULEURS_VERDICT["en_tension"]
         statut = "Dans votre politique" if dans else "Hors de votre politique"
-        st.markdown(f'<div style="font-size:1.15rem;"><b>Score : {note_txt(e["score"])} / 100</b> · '
-                    f'<span style="color:{couleur};font-weight:600;">{statut}</span></div>',
+        st.markdown(f'<div style="font-size:1.15rem;"><span style="color:{couleur};font-weight:600;">{statut}</span>'
+                    f' · le maillon le plus faible : {DIMENSIONS.get(e["dimension_min"], e["dimension_min"]).lower()}</div>',
                     unsafe_allow_html=True)
-        st.markdown(jauge(e["score"], hauteur=12), unsafe_allow_html=True)
         for dim in familles(e):
             n = e["notes"][dim]
             with st.container():
@@ -927,6 +927,24 @@ def onglet_portefeuille(persona: str, fiche: dict, fiche_client: dict) -> None:
 
 # ---------------------------------------------------------------- rendu : rapport
 
+CHAINE = "Une chaîne n'est qu'aussi solide que son maillon le plus faible."
+
+
+def angles(sim: dict) -> None:
+    """Les cinq angles, chacun avec sa note ; le plus faible est marqué : c'est lui qui décide."""
+    apres, avant = sim["apres"], sim.get("avant", {})
+    for dim in familles(apres):
+        n1, n0 = apres["notes"][dim], avant.get("notes", {}).get(dim, {})
+        titre = titre_famille(dim, n1)
+        if dim == apres.get("dimension_min"):
+            titre += " · maillon le plus faible"
+        if n1.get("sans_objet") or n1.get("note") is None:
+            ligne_note(titre, None)
+        else:
+            ligne_note(titre, n1["note"], n0.get("note"), aide=AIDE_DIMENSIONS.get(dim, ""))
+    st.caption(f"{CHAINE} À partir de 50, chaque angle respecte votre politique.")
+
+
 def bloc_verdict(sim: dict, rapport: dict, valeur: float) -> None:
     v = sim["verdict"]
     code = v["code"]
@@ -943,12 +961,10 @@ def bloc_verdict(sim: dict, rapport: dict, valeur: float) -> None:
 </div>""", unsafe_allow_html=True)
     c1, c2 = st.columns([1, 1.2])
     with c1:
-        ligne_note("Score après l'ordre", sim["score"], sim["avant"]["score"],
-                   aide="De 0 à 100. À partir de 50, l'ordre respecte votre politique.")
-        legende_jauge(avec_avant=True)
+        angles(sim)
     with c2:
         if code == "incompatible":
-            st.markdown(f"**Notes seules : {d['libelle'].lower()}.** Une règle stricte passe avant le score.")
+            st.markdown(f"**Notes seules : {d['libelle'].lower()}.** Une règle stricte passe avant les notes.")
         else:
             st.markdown(f"**{d['libelle']}.** {DIRECTIONS_TEXTE.get(d['cas'], '')}")
             phrase_solidite(sim.get("solidite"))
@@ -1012,8 +1028,8 @@ def section_solidite(solidite: dict | None) -> None:
         return
     for f in solidite["fenetres"].values():
         cote = "respecte la politique" if f["dans_la_politique"] else "sous la limite de 50"
-        st.markdown(f"- {f['libelle']} : score {note_txt(f['score'])}, {cote}.")
-    st.caption(f"{solidite['explication']} Le score affiché plus haut reste celui de toute la période.")
+        st.markdown(f"- {f['libelle']} : note la plus faible {note_txt(f['score'])}, {cote}.")
+    st.caption(f"{solidite['explication']} Les notes affichées plus haut restent celles de toute la période.")
 
 
 def section_substitut(rapport: dict, valeur: float) -> None:
@@ -1026,7 +1042,7 @@ def section_substitut(rapport: dict, valeur: float) -> None:
     pourcentage = s.get("pourcentage") or rapport["ordre"]["pourcentage"]
     st.markdown(f"L'agent a aussi testé un autre titre : le même montant ({dollars(pourcentage * valeur / 100)}) "
                 f"en {nom_instrument(s['ticker'])} serait <b style=\"color:{couleur}\">{s['verdict']['libelle'].lower()}</b> "
-                f"(score {note_txt(s.get('score'))}).", unsafe_allow_html=True)
+                f"(note la plus faible {note_txt(s.get('score'))}).", unsafe_allow_html=True)
     st.caption("Une possibilité testée, pas une recommandation.")
 
 
@@ -1051,7 +1067,7 @@ def section_possible(taille: dict | None, valeur: float) -> None:
                     f"({pct(taille['taille_demandee_pct'])}) ne garde le score à {LIMITE} ou plus.")
     if taille.get("courbe"):
         st.altair_chart(graphique_courbe(taille, valeur), width="stretch")
-        st.caption("Score selon le montant. La zone ombrée est sous la limite de 50.")
+        st.caption("Note la plus faible selon le montant. La zone ombrée est sous la limite de 50.")
 
 
 def bloc_changements(rapport: dict, precedent: dict | None) -> None:
@@ -1080,7 +1096,7 @@ def bloc_changements(rapport: dict, precedent: dict | None) -> None:
     with st.container(border=True):
         st.markdown(f"**{DEPUIS_PRECEDENT}**")
         st.markdown("Changé : " + " ; ".join(changements) + ".")
-        st.markdown(f"{s0['verdict']['libelle']} → **{s1['verdict']['libelle']}** · score "
+        st.markdown(f"{s0['verdict']['libelle']} → **{s1['verdict']['libelle']}** · note la plus faible "
                     f"{note_txt(s0['score'])} → **{note_txt(s1['score'])}**")
         if lignes:
             st.dataframe(pd.DataFrame(lignes), hide_index=True, width="stretch")
@@ -1109,8 +1125,8 @@ def section_contraintes(sim: dict) -> None:
 
 
 def section_notes(sim: dict, niveau: str) -> None:
-    st.caption("Chaque famille répond à une question, de 0 à 100 ; 50 est la limite de votre politique. "
-               "Le score est la plus faible des familles.")
+    st.caption("Chaque angle répond à une question, de 0 à 100 ; 50 est la limite de votre politique. "
+               "Le plus faible décide.")
     for dim in familles(sim["apres"]):
         n0, n1 = sim["avant"]["notes"].get(dim, {}), sim["apres"]["notes"][dim]
         titre = titre_famille(dim, n1)
@@ -1170,7 +1186,7 @@ def section_pistes(rapport: dict, valeur: float) -> None:
         couleur = COULEURS_VERDICT.get(code, MARINE)
         jambes = " ; ".join(jambe_txt(o, valeur) for o in p.get("ordres") or [])
         ligne = (f"- **{p.get('libelle_famille', '')}** : {jambes} → <b style=\"color:{couleur}\">"
-                 f"{(p.get('verdict') or {}).get('libelle', '').lower()}</b> (score {note_txt(p.get('score'))})")
+                 f"{(p.get('verdict') or {}).get('libelle', '').lower()}</b> (note la plus faible {note_txt(p.get('score'))})")
         if p.get("raison"):
             ligne += f"<br><span style=\"color:#6E6E71\">{p['raison']}</span>"
         lignes.append(ligne)
@@ -1481,72 +1497,6 @@ def phrase_execution(type_ordre: str, prix: float | None) -> str:
     return f"Le rapport suppose que l'ordre est exécuté à {dollars(prix, 2)}."
 
 
-def _fait(x, rendu) -> str:
-    return "inconnu" if x is None or x == "indetermine" else rendu(x)
-
-
-def _milliards(v, devise: str) -> str:
-    return _fait(v, lambda x: f"{nombre(x / 1e9, 1)} G$ {devise}".strip())
-
-
-def fiche_du_titre(ticker: str, montant: float) -> None:
-    """Ce que l'outil sait du titre : identité, chiffres clés du passé, étiquettes, sources (repliée)."""
-    f = api.lire_fiche_instrument(ticker, montant)
-    with st.expander(f"Fiche du titre : {ticker}", expanded=False):
-        if "erreur" in f:
-            st.error(f["erreur"])
-            return
-        st.markdown(f"**{f['nom']}** · {secteur_fr(f['secteur'])} · {f['marche']} · cotée en {f['devise']} · "
-                    f"classe « {CLASSES.get(f['classe_politique'], f['classe_politique'])} »")
-        fm = f.get("faits_marche") or {}
-        if fm:
-            perf, risq, mar = fm["performance"], fm["risque"], fm["marches"]
-            rev, liq, taux = fm["revenu"], fm["liquidite"], fm["taux"]
-            pire = perf.get("pire_annee")
-            lignes = [
-                f"Sur cinq ans, en dollars canadiens, dividendes compris : {_fait(perf.get('rendement_total'), pct_frac)}."
-                + (f" Pire année complète : {pire['annee']} ({pct_frac(pire['rendement'])})." if isinstance(pire, dict) else ""),
-                f"Aujourd'hui {_fait(perf.get('ecart_au_plus_haut'), pct_frac)} sous son plus haut. "
-                f"Pire jour : {_fait((risq.get('pire_jour') or {}).get('rendement'), pct_frac)}. "
-                f"Baisses de plus de 20 % : {risq.get('baisses_de_plus_de_20_pct', 'inconnu')}.",
-                f"Quand les actions canadiennes (XIU.TO) bougent de 1 %, il a bougé en moyenne de "
-                f"{_fait(mar['actions_canada']['beta'], lambda b: nombre(b, 2))} % ; les actions américaines (SPY) : "
-                f"{_fait(mar['actions_etats_unis']['beta'], lambda b: nombre(b, 2))} %.",
-                f"Dividendes des 12 derniers mois : {_fait(rev.get('rendement_dividende'), pct_frac)} du dernier cours.",
-                f"Valeur échangée par séance (3 derniers mois) : "
-                f"{_fait(liq.get('valeur_echangee_moyenne_par_jour_cad'), dollars)}. Votre montant en représente "
-                f"{_fait(liq.get('jours_de_volume_ordre'), lambda j: pct(100 * j, 3))}.",
-                f"Lien avec le taux à 10 ans ({taux.get('serie', '?')}) : corrélation "
-                f"{_fait(taux.get('correlation_avec_taux_10_ans'), lambda c: nombre(c, 2))}.",
-            ]
-            for l in lignes:
-                st.markdown(f"- {l}")
-        pr = f.get("profil") or {}
-        if pr.get("type") == "entreprise":
-            dev = pr.get("devise_des_etats_financiers", "")
-            st.markdown(f"**L'entreprise.** {pr['description']}")
-            st.markdown(f"- Valeur en bourse : {_milliards(pr.get('capitalisation'), pr.get('devise_capitalisation', ''))}. "
-                        f"Chiffre d'affaires : {_milliards(pr.get('chiffre_affaires'), dev)} ; "
-                        f"bénéfice net : {_milliards(pr.get('benefice_net'), dev)}.")
-            flux = ", ".join(f"{k} {v}" for k, v in (pr.get("flux_tresorerie_signes") or {}).items())
-            st.markdown(f"- Dette : {_milliards(pr.get('dette'), dev)} ; encaisse : {_milliards(pr.get('encaisse'), dev)}. "
-                        f"Flux de trésorerie du dernier exercice : {flux.replace('negatif', 'négatif')}.")
-        elif pr.get("type") == "fonds":
-            st.markdown(f"**Le fonds.** {pr['description']} Frais : "
-                        f"{_fait(pr.get('ratio_frais_pct'), lambda v: nombre(v, 2) + ' % par an')}.")
-            pos = pr.get("dix_plus_grandes_positions")
-            if isinstance(pos, list) and pos:
-                st.markdown("- Plus grandes positions : " + ", ".join(
-                    f"{h['nom']} ({pct_frac(h['poids'])})" for h in pos[:5]) + ".")
-        elif pr.get("type") == "cryptoactif":
-            st.markdown(f"**L'actif.** {pr['description']}")
-        vraies = [THEMES.get(k, k) for k, e in f["etiquettes"].items() if e.get("valeur") is True]
-        st.markdown("**Étiquettes** : " + (", ".join(vraies) if vraies else "aucune"))
-        st.caption("Le passé ne dit pas l'avenir. Sources : " + " ; ".join(
-            f"{s['libelle']} ({s['source']})" if s["nature"] == "publie" else f"Hypothèse : {s['libelle']}"
-            for s in f.get("sources", [])))
-
-
 def onglet_ordre(persona: str, fiche: dict) -> None:
     univers = instruments()
     prix = derniers_prix_cad()
@@ -1591,8 +1541,6 @@ def onglet_ordre(persona: str, fiche: dict) -> None:
                    f"disponibles. {deja}")
     else:
         st.caption(f"Une vente est versée dans vos liquidités. {deja}")
-
-    fiche_du_titre(ticker, montant)
 
     b1, b2, _ = st.columns([1, 1.4, 2])
     inspecter = b1.button(BOUTON_ACTION, type="primary", key="inspecter", width="stretch")

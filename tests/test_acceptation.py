@@ -30,10 +30,12 @@ def test_1_robert_tsla():
     assert r["dimension_min"] == "risque"
     assert r["mesure_min"] == "pire_annee"
     assert r["apres"]["notes"]["risque"]["mesures"]["ampleur"]["note"] == pytest.approx(40, abs=1)
-    assert r["direction"]["cas"] == "fait_sortir_de_la_politique"
+    # Avant l'ordre, la répartition géographique de Robert (70 % des actions au Canada) est déjà hors limite :
+    # l'achat d'un titre américain l'en rapproche, mais aucun montant ne ramène toutes les notes à 50.
+    assert r["direction"]["cas"] == "hors_politique_rapproche"
     t = api.chercher_taille_compatible("robert", "TSLA", "achat", 15)
     assert t["lancee"] is True
-    assert 6 <= t["taille_compatible_pct"] <= 8
+    assert t["taille_compatible_pct"] is None
     assert len(t["courbe"]) == 30
 
 
@@ -44,7 +46,7 @@ def test_2_mateo_xom():
     assert r["contraintes_strictes"]["violee"] is True
     assert r["contraintes_strictes"]["themes_violes"] == ["ecarte_esg"]
     assert r["verdict"]["code"] == "incompatible"
-    for dim in ("risque", "diversification", "preferences"):
+    for dim in ("objectif", "risque", "preferences"):
         assert _note(r["apres"], dim) >= 50
     t = api.chercher_taille_compatible("mateo", "XOM", "achat", 8)
     assert t["lancee"] is False

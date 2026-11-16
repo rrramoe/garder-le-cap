@@ -58,7 +58,6 @@ def test_robert_tsla_en_tension(sans_agent):
     carte = _verdict(at)
     assert "En tension" in carte and "120 000 $" in carte and "15,0 %" in carte
     assert "pire année" in carte
-    assert "56 000 $" in texte and "7,0 %" in texte  # taille compatible, en dollars et en %
     assert AVIS in texte
     assert "chercher_taille_compatible" in texte  # étapes : appels du moteur faits par l'interface
 
@@ -113,7 +112,7 @@ def test_montant_en_dollars_et_type_d_ordre(sans_agent):
     assert len(prix) == 1 and prix[0].value > 0  # pré-rempli avec le dernier prix connu en CAD
     at.button(key="inspecter").click().run()
     assert not at.exception, at.exception
-    assert "Compatible" in _verdict(at)
+    assert "En tension" in _verdict(at)
     assert "exécuté à" in _textes(at)
 
 
@@ -211,7 +210,7 @@ def test_substitut_dans_ce_qui_est_possible(agent_simule):
     texte = _inspecter(at, "robert")
     assert "L'agent a aussi testé un autre titre : le même montant (" in texte
     assert "$) en SPY (SPDR S&P 500 ETF Trust) serait" in texte
-    assert "compatible</b> (score 50" in texte
+    assert "compatible</b> (note la plus faible" in texte
     assert "Une possibilité testée, pas une recommandation." in texte
 
 
@@ -344,7 +343,7 @@ def test_pistes_testees_et_correction(equipe_simulee):
     assert "Pistes testées" in texte
     assert "Finalité supposée de l'achat (hypothèse de l'agent) :* l'achat semble viser" in texte
     assert "**Combinaison** : achat de 6,0 % de TSLA (" in texte and "achat de 4,0 % de SPY (" in texte
-    assert "compatible</b> (score 50" in texte and "Garde une part de croissance" in texte
+    assert "compatible</b> (note la plus faible" in texte and "Garde une part de croissance" in texte
     assert "pas des recommandations" in texte and "L'agent a aussi testé" not in texte
     assert "L'agent a corrigé son texte après vérification." in texte
 

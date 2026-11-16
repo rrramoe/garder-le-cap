@@ -122,3 +122,15 @@ def test_pire_annee_face_a_la_banque():
     assert m["valeur"] == pytest.approx(pire, abs=1e-6)
     assert m["note"] == pytest.approx(_lin(pire, 0.0, lim), abs=1e-6)
     assert r["dimension_min"] == "risque" and r["mesure_min"] == "pire_annee"
+
+
+def test_geographie_des_actions():
+    r = api.etat_des_lieux("robert")
+    m = r["notes"]["diversification"]["mesures"]["geographie_actions"]
+    port = references.charger("personas")["personas"]["robert"]["portefeuille_pct"]
+    u = pd.read_csv(D / "assets_universe.csv").set_index("ticker")
+    act = {t: w for t, w in port.items() if t in CLASSES["actions"]["instruments"]}
+    canada = sum(w for t, w in act.items() if u.loc[t, "currency"] == "CAD") / sum(act.values()) * 100
+    assert m["valeur"] == pytest.approx(canada, abs=1e-6)
+    assert m["note"] == pytest.approx(max(0, 100 - 50 * abs(canada - 40) / 10), abs=1e-6)
+    assert (m["limite_basse"], m["cible"], m["limite_haute"]) == (30, 40, 50)

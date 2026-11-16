@@ -1,13 +1,19 @@
 """Scénario de plusieurs ordres et cause du verdict (moteur), sans nouvelle note."""
 import pytest
 
-from moteur import api, donnees
+from moteur import notation, api, donnees
 
 pytestmark = pytest.mark.skipif(
     not (donnees.dossier_donnees() / "prices_daily.csv").exists(),
     reason="data/prices_daily.csv absent : régénérez-le avec data/build_dataset.py",
 )
 
+
+
+@pytest.fixture(autouse=True)
+def sans_geographie(monkeypatch):
+    """Ces essais portent sur une autre règle : la mesure géographique (testée dans test_familles) est mise de côté."""
+    monkeypatch.setattr(notation, "mesure_geographie", lambda ex: {"note": None, "statut": "sans_objet"})
 
 def _jambe(ticker, sens, pct, **extra):
     return {"ticker": ticker, "sens": sens, "pourcentage": pct, **extra}

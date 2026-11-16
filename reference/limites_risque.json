@@ -39,5 +39,11 @@
         "max": null
       }
     }
+  },
+  "geographie_actions": {
+    "cible_canada_pct": 40,
+    "ecart_limite_points": 10,
+    "source_cible": "fbngp_repartition_actions_2024",
+    "source_ecart": "rbcgam_fourchettes_regionales_2025"
   }
 }
