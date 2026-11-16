@@ -775,7 +775,14 @@ def test_resume_d_une_famille_inconnue():
     r = api.simuler_ordre("robert", "TSLA", "achat", 15)
     r = {**r, "dimension_min": "nouvelle_famille", "mesure_min": "nouvelle_mesure"}
     texte = inspection.resumer("simuler_ordre", r)
-    assert "nouvelle famille / nouvelle mesure" in texte and "_" not in texte.split("note la plus basse")[1].split(";")[0]
+    assert "nouvelle famille / nouvelle mesure" in texte and "_" not in texte.split("angle le plus faible")[1].split(";")[0]
+
+
+def test_resumes_sans_note_globale_ni_identifiant():
+    texte = inspection.resumer("simuler_ordre", api.simuler_ordre("robert", "TSLA", "achat", 15))
+    assert "angle le plus faible" in texte and "score" not in texte.lower()
+    fiche = inspection.resumer("lire_fiche_instrument", api.lire_fiche_instrument("SPY"))
+    assert "_" not in fiche
 
 
 

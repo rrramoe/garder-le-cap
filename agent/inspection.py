@@ -153,7 +153,13 @@ def _pct(fraction) -> str:
 
 
 ETIQUETTES = {"speculatif": "spéculatif", "etablie": "établie", "crypto": "cryptoactif", "techno": "technologie",
-              "ecarte_esg": "écarté ESG"}
+              "ecarte_esg": "écarté ESG", "devise_etrangere": "devise étrangère",
+              "action_individuelle": "action individuelle", "dividende": "dividende"}
+
+
+def _etiquette(e) -> str:
+    """Nom lisible d'une étiquette ou d'un thème, quel qu'il soit (jamais l'identifiant avec un tiret bas)."""
+    return ETIQUETTES.get(e, str(e).replace("_", " "))
 NIVEAUX = {"essentiel": "essentiel", "standard": "standard", "detaille": "détaillé"}
 DIMENSIONS = {"risque": "risque", "diversification": "diversification", "preferences": "préférences",
               "objectif": "objectif", "liquidite": "liquidité", "liquidites": "liquidité"}
@@ -161,7 +167,10 @@ MESURES = {"ampleur": "ampleur de la pire baisse", "duree": "durée sous l'eau",
            "classe_revenu_fixe": "poids du revenu fixe", "classe_actions": "poids des actions",
            "classe_alternatifs": "poids des titres alternatifs", "crypto": "poids des cryptoactifs",
            "plus_grosse_action": "plus grosse action", "plus_gros_fonds": "plus gros fonds",
-           "plus_gros_secteur": "plus gros secteur", "fluctuations": "fluctuations", "pire_annee": "pire année"}
+           "plus_gros_secteur": "plus gros secteur", "fluctuations": "fluctuations", "pire_annee": "pire année",
+           "capital_preserve": "capital préservé sur l'horizon", "revenu": "revenu du portefeuille",
+           "actions": "poids des actions", "liquidites_besoin": "liquidités face au besoin",
+           "geographie_actions": "répartition géographique des actions"}
 ISSUES = {"compatible_tel_quel": "compatible tel quel", "compatible_avec_ajustement": "compatible avec ajustement",
           "aucune_taille": "aucune taille"}
 CLASSES = {"liquidites": "liquidités", "revenu_fixe": "revenu fixe", "actions": "actions",
@@ -179,7 +188,7 @@ def libelle_famille(r: dict, d) -> str:
 def _mesure(m) -> str:
     if isinstance(m, str) and m.startswith("theme_"):
         return f"thème « {ETIQUETTES.get(m[len('theme_'):], m[len('theme_'):])} »"
-    return MESURES.get(m, ETIQUETTES.get(m, str(m).replace("_", " ")))
+    return MESURES.get(m, _etiquette(m))
 
 
 def resumer(outil: str, r) -> str:
@@ -194,7 +203,7 @@ def resumer(outil: str, r) -> str:
         if outil == "lire_fiche_client":
             d = r.get("deduit", {})
             contraintes = d.get("contraintes_strictes", {}).get("valeur") or []
-            noms = ", ".join(ETIQUETTES.get(n, n) for n in (c.get("theme", str(c)) if isinstance(c, dict) else str(c)
+            noms = ", ".join(_etiquette(n) for n in (c.get("theme", str(c)) if isinstance(c, dict) else str(c)
                                                             for c in contraintes))
             return (f"{r.get('nom')} : profil {d.get('profil', {}).get('libelle') or d.get('profil', {}).get('valeur')}, "
                     f"horizon {d.get('horizon_annees', {}).get('valeur')} ans, "
@@ -203,8 +212,8 @@ def resumer(outil: str, r) -> str:
         if outil == "lire_fiche_instrument":
             s = r.get("statistiques_cad", {})
             et = r.get("etiquettes", {})
-            vraies = [ETIQUETTES.get(k, k) for k, v in et.items() if v.get("valeur") is True]
-            indet = [ETIQUETTES.get(k, k) for k, v in et.items() if v.get("valeur") == "indetermine"]
+            vraies = [_etiquette(k) for k, v in et.items() if v.get("valeur") is True]
+            indet = [_etiquette(k) for k, v in et.items() if v.get("valeur") == "indetermine"]
             texte = (f"{r.get('nom')} ({CLASSES.get(r.get('classe_politique'), r.get('classe_politique'))}, "
                      f"{r.get('devise')}) : volatilité "
                      f"{_pct(s.get('volatilite_annualisee'))}, pire baisse {_pct(s.get('pire_baisse'))} ; "
@@ -213,16 +222,18 @@ def resumer(outil: str, r) -> str:
         if outil in ("simuler_ordre", "simuler_scenario"):
             v = r.get("verdict", {})
             texte = f"Scénario : {decrire_ordres(r.get('ordres') or [])}. " if outil == "simuler_scenario" else ""
-            texte += (f"Verdict : {v.get('libelle')} ; score {_nombre(r.get('score'))} "
-                     f"(avant {_nombre(r.get('avant', {}).get('score'))}) ; note la plus basse : "
-                     f"{libelle_famille(r, r.get('dimension_min'))} / {_mesure(r.get('mesure_min'))} ; "
-                     f"{r.get('direction', {}).get('libelle')}.")
+            # Pas de note globale : l'angle le plus faible décide, avec la phrase du moteur s'il en donne une.
+            dim, mes = r.get("dimension_min"), r.get("mesure_min")
+            m = ((((r.get("apres") or {}).get("notes") or {}).get(dim) or {}).get("mesures") or {}).get(mes) or {}
+            phrase = f" ({m['phrase']})" if isinstance(m.get("phrase"), str) else ""
+            texte += (f"Verdict : {v.get('libelle')} ; angle le plus faible : {libelle_famille(r, dim)} / "
+                      f"{_mesure(mes)}{phrase} ; {r.get('direction', {}).get('libelle')}.")
             so = r.get("solidite") or {}
             if so.get("libelle"):
                 texte += f" Solidité : {so['libelle'].lower()}."
             cs = r.get("contraintes_strictes", {})
             if cs.get("violee"):
-                texte += f" Contrainte stricte violée : {', '.join(ETIQUETTES.get(t, t) for t in cs.get('themes_violes') or [])}."
+                texte += f" Contrainte stricte violée : {', '.join(_etiquette(t) for t in cs.get('themes_violes') or [])}."
             op = r.get("operation") or {}
             if op.get("code") not in (None, "comptant"):
                 texte += (f" {op.get('libelle')} : levier {_nombre(op.get('levier_apres'), 2)}, contrôle d'expérience "
