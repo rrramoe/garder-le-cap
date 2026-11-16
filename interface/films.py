@@ -253,6 +253,19 @@ def pointeur(x: float, y: float, classe: str = "") -> str:
             f'stroke="{BLANC}" stroke-width="1.8" stroke-linejoin="round"/></g>')
 
 
+def jeton(x: float, y: float, genre: str, classe: str = "") -> str:
+    """Un agent : un nœud violet, marqué. Le principal : un point dans son anneau. L'explorateur : trois points reliés."""
+    if genre == "principal":
+        marque = (f'<circle cx="{x}" cy="{y}" r="5.6" fill="none" stroke="{BLANC}" stroke-width="1.8"/>'
+                  f'<circle cx="{x}" cy="{y}" r="2.1" fill="{BLANC}"/>')
+    else:
+        sommets = [(x - 5, y + 3.8), (x, y - 5), (x + 5, y + 3.8)]
+        marque = (f'<path d="M{sommets[0][0]} {sommets[0][1]} L{sommets[1][0]} {sommets[1][1]} L{sommets[2][0]} {sommets[2][1]}" fill="none" '
+                  f'stroke="{BLANC}" stroke-width="1.4" stroke-linejoin="round"/>'
+                  + "".join(f'<circle cx="{a}" cy="{b}" r="2.2" fill="{BLANC}"/>' for a, b in sommets))
+    return f'<g class="{classe}"><circle class="fo" cx="{x}" cy="{y}" r="13" fill="{VIOLET}"/>{marque}</g>'
+
+
 def zone(x: float, y: float, l: float, h: float, classe: str = "") -> str:
     """La zone de la politique de placement : une bande claire, sur l'encre."""
     return (f'<rect class="{classe}" x="{x}" y="{y}" width="{l}" height="{h}" rx="{h / 2}" fill="{BLEU_CLAIR}" fill-opacity=".20" '
@@ -359,17 +372,28 @@ def epreuve(ticker: str, montant: str) -> tuple[str, str]:
               + bouton(40, 290, 172, "Analyser l'ordre", f.appuie(2.3), f.passe(2.45, d - 0.9, 0.3))
               + f.fin(pointeur(184, 320, f.cle([(0, loin), (1.55, loin), (2.15, "opacity: 1; transform: none;"),
                                                 (d, "opacity: 1; transform: none;")], courbe=ALLER))))
-    issues = [("Il y reste", "compatible", MENTHE, "plein", [(0, 0), (58, -13), (118, 13), (190, 0)]),
-              ("Il en sort", "en_tension", AMBRE, "anneau", [(0, 0), (70, 0), (120, -8), (190, -46)]),
-              ("Il s'en rapproche", "", CIEL, "plein", [(0, 46), (70, 46), (120, 40), (190, 20)])]
+    # Chaque issue : sa zone, la course du point, et, à droite, sa note : un cadran sans chiffre qui se remplit à son niveau.
+    issues = [("Il y reste", "compatible", MENTHE, "plein", [(0, 0), (46, -13), (94, 13), (150, 0)], 0.88),
+              ("Il en sort", "en_tension", AMBRE, "anneau", [(0, 0), (56, 0), (96, -8), (150, -46)], 0.32),
+              ("Il s'en rapproche", "", CIEL, "plein", [(0, 46), (56, 46), (96, 40), (150, 20)], 0.6)]
+    rj = 13.0
+    tourj = 2 * math.pi * rj
+    arcj = 0.75 * tourj
     droite = ""
-    for i, (legende, code, couleur, tete, pts) in enumerate(issues):
+    for i, (legende, code, couleur, tete, pts, niveau) in enumerate(issues):
         y, t = 60 + i * 116, 3.0 + i * 0.85
         m = y + 50
         marque = (signe(269, y + 8, code, 5, couleur) if code else
                   f'<path d="M264 {y + 12} l5 -8 l5 8" fill="none" stroke="{couleur}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>')
+        lj = arcj * niveau
+        vide, pleine = "stroke-dasharray: 0.1 999;", f"stroke-dasharray: {lj:.1f} 999;"
+        note = (f'<circle cx="476" cy="{m}" r="{rj}" fill="none" stroke="{BLANC}" stroke-opacity=".16" stroke-width="5" stroke-linecap="round" '
+                f'stroke-dasharray="{arcj:.1f} {tourj:.1f}" transform="rotate(135 476 {m})"/>'
+                f'<g transform="rotate(135 476 {m})"><circle class="{f.cle([(0, vide), (t + 0.6, vide), (t + 1.3, pleine), (d, pleine)])}" '
+                f'cx="476" cy="{m}" r="{rj}" fill="none" stroke="{couleur}" stroke-width="5" stroke-linecap="round" stroke-dasharray="{lj:.1f} 999"/></g>'
+                + texte(476, m + 33, "note", 12.5, CLAIR, True, "middle"))
         droite += (f'<g class="{f.apparait(t)}">{marque}' + texte(282, y + 12.5, legende, 13, BLANC, True)
-                   + zone(262, m - 20, 238, 40)
+                   + zone(262, m - 20, 190, 40) + note
                    + f'<circle cx="{282 + pts[0][0]}" cy="{m + pts[0][1]}" r="3.5" fill="none" stroke="{CLAIR}" stroke-width="1.6"/></g>'
                    + f.course([(282 + dx, m + dy) for dx, dy in pts], t + 0.25, t + 1.1, couleur, tete))
     regards = ["transform: translate(134px, 44px) scale(1.24);", "transform: translate(134px, 6px) scale(1.24);",
@@ -386,7 +410,7 @@ def epreuve(ticker: str, montant: str) -> tuple[str, str]:
 def resultat(angles: list[dict], verdict: dict, passage: float) -> tuple[str, str]:
     """Les cadrans se remplissent un à un, le plus bas s'allume : l'angle déterminant. Le verdict tombe,
     l'explication s'écrit, deux pistes testées paraissent. angles : {nom, note, decide}."""
-    f = Film("fd", 7.6)
+    f = Film("fd", 8.6)
     d = f.duree
     n = max(len(angles), 1)
     pas = 480 / n
@@ -395,8 +419,8 @@ def resultat(angles: list[dict], verdict: dict, passage: float) -> tuple[str, st
     arc = 0.75 * tour
     decor, c, fond = "", "", ""
     # Quand l'angle déterminant s'allume, les autres cadrans s'effacent un instant : un seul regard à la fois.
-    retrait = (f.cle([(0, "opacity: 1;"), (1.8, "opacity: 1;"), (2.15, "opacity: .38;"), (2.7, "opacity: .38;"),
-                      (3.2, "opacity: 1;"), (d, "opacity: 1;")], courbe=ALLER)
+    retrait = (f.cle([(0, "opacity: 1;"), (1.8, "opacity: 1;"), (2.15, "opacity: .38;"), (2.55, "opacity: .38;"),
+                      (3.05, "opacity: 1;"), (d, "opacity: 1;")], courbe=ALLER)
                if any(a.get("decide") for a in angles) else "")
     for i, a in enumerate(angles):
         x, y, t = 20 + pas * (i + 0.5), 88, 0.1 + i * 0.22
@@ -423,33 +447,64 @@ def resultat(angles: list[dict], verdict: dict, passage: float) -> tuple[str, st
         seul = "" if a.get("decide") else retrait
         decor += f'<g class="{seul}">{pose}</g>'
         c += f'<g class="{seul}">{joue}</g>'
-    decor = f.fin(fond) + decor
+    # Les cadrans jouent d'abord au centre de la scène, un peu plus grands ; ils montent à leur place quand le verdict tombe.
+    au_centre = "transform: translate(0px, 112px) scale(1.1);"
+    regard = f.cle([(0, au_centre), (2.3, au_centre), (2.95, "transform: none;"), (d - 0.36, "transform: none;"), (d, au_centre)],
+                   extra="transform-box: view-box; transform-origin: 260px 100px;", courbe=ALLER)
+    cadrans = f'<g class="{regard}">{f.fin(fond)}{decor}{f.fin(c)}</g>'
+    c = ""
     code = verdict.get("code", "")
     teinte = SIGNES.get(code, (GRIS, VOILE))[0]
-    tombe = f.cle([(0, "opacity: 0; transform: scale(1.4);"), (2.4, "opacity: 0; transform: scale(1.4);"),
-                   (2.8, "opacity: 1; transform: none;"), (d, "opacity: 1; transform: none;")])
+    tombe = f.cle([(0, "opacity: 0; transform: scale(1.4);"), (2.75, "opacity: 0; transform: scale(1.4);"),
+                   (3.15, "opacity: 1; transform: none;"), (d, "opacity: 1; transform: none;")])
     c += (f'<defs><radialGradient id="fd-v"><stop offset="0" stop-color="{teinte}" stop-opacity=".55"/>'
           f'<stop offset="1" stop-color="{teinte}" stop-opacity="0"/></radialGradient></defs>'
-          f'<ellipse class="{f.apparait(2.45, dy=0, duree=0.7)}" cx="260" cy="222" rx="150" ry="44" fill="url(#fd-v)"/>'
-          + f.anneau(260, 222, 2.7, 26, teinte)
+          f'<ellipse class="{f.apparait(2.8, dy=0, duree=0.7)}" cx="260" cy="222" rx="150" ry="44" fill="url(#fd-v)"/>'
+          + f.anneau(260, 222, 3.05, 26, teinte)
           + pastille(260, 222, verdict.get("libelle", ""), code, tombe, "middle", 16))
-    bas = carte(20, 262, 480, 158) + texte(40, 291, "Explication", 13, ENCRE, True)
-    for k, largeur in enumerate((440, 412, 286)):
-        t0, t1 = 3.3 + k * 0.5, 3.85 + k * 0.5
+    # L'équipe d'agents. L'agent principal écrit l'explication : les lignes partent de lui. Il passe le mandat à
+    # l'agent explorateur, qui lance des essais : certains sont refusés, deux sont gardés (les pistes testées), puis il rend compte.
+    bas = (carte(20, 262, 480, 158)
+           + f.anneau(46, 290, 3.5, 15, VIOLET) + jeton(46, 290, "principal", f.apparait(3.4, dy=0, echelle=0.5, duree=0.3))
+           + texte(68, 288.5, "Agent principal", 12.5, VIOLET_TEXTE, True, classe=f.apparait(3.5, dx=-6, dy=0))
+           + texte(480, 288.5, "Explication", 12.5, ENCRE, True, "end", f.apparait(3.6, dy=0)))
+    for k, largeur in enumerate((412, 384, 262)):
+        t0, t1 = 3.7 + k * 0.45, 4.2 + k * 0.45
         plume = f.cle([(0, f"opacity: 0; transform: translate({-largeur}px, 0px);"), (t0 - 0.02, f"opacity: 0; transform: translate({-largeur}px, 0px);"),
                        (t0, f"opacity: 1; transform: translate({-largeur}px, 0px);"), (t1, "opacity: 1; transform: none;"),
                        (t1 + 0.15, "opacity: 0; transform: none;"), (d, "opacity: 0; transform: none;")],
                       extra="opacity: 0;", courbe="linear")
-        bas += (f'<rect class="{f.grandit(t0, t1, "linear")}" x="40" y="{303 + k * 15}" width="{largeur}" height="7" rx="3.5" fill="{BORD}"/>'
-                f'<rect class="{plume}" x="{40 + largeur}" y="{300 + k * 15}" width="2.4" height="13" rx="1.2" fill="{ACCENT}"/>')
-    bas += texte(40, 368, "Pistes testées", 13, ENCRE, True, classe=f.apparait(4.8))
-    for k in range(2):
-        x = 40 + k * 176
-        bas += (f'<g class="{f.apparait(5.0 + k * 0.3, dx=-8, dy=0)}"><rect x="{x}" y="378" width="164" height="28" rx="14" fill="{VOILE}" stroke="{FILET}" stroke-width="1"/>'
-                f'<circle cx="{x + 16}" cy="392" r="4.5" fill="{ACCENT}"/>'
-                f'<rect x="{x + 28}" y="388.5" width="{112 - k * 24}" height="7" rx="3.5" fill="{BORD}"/></g>')
-    c += f'<g class="{f.apparait(2.9, dy=16, duree=0.5)}">{bas}</g>'
-    return f.scene(decor + f.fin(c), titre="Cinq angles notés, l'angle déterminant, le verdict, l'explication et les pistes testées")
+        bas += (f'<rect class="{f.grandit(t0, t1, "linear")}" x="68" y="{297 + k * 13}" width="{largeur}" height="6" rx="3" fill="{BORD}"/>'
+                f'<rect class="{plume}" x="{68 + largeur}" y="{294 + k * 13}" width="2.4" height="12" rx="1.2" fill="{VIOLET}"/>')
+    haut, en_bas = "transform: translate(0px, -40px);", "transform: none;"
+    passage = f.cle([(0, f"opacity: 0; {haut}"), (4.98, f"opacity: 0; {haut}"), (5.0, f"opacity: 1; {haut}"), (5.4, f"opacity: 1; {en_bas}"),
+                     (5.55, f"opacity: 0; {en_bas}"), (6.98, f"opacity: 0; {en_bas}"), (7.0, f"opacity: 1; {en_bas}"),
+                     (7.4, f"opacity: 1; {haut}"), (7.55, f"opacity: 0; {haut}"), (d, f"opacity: 0; {haut}")],
+                    extra="opacity: 0;", courbe=ALLER)
+    bas += (f'<line class="{f.apparait(4.9, dy=0, duree=0.3)}" x1="46" y1="306" x2="46" y2="348" stroke="{VIOLET}" stroke-opacity=".55" '
+            f'stroke-width="1.6" stroke-dasharray="2 4" stroke-linecap="round"/>'
+            f'<circle class="{passage}" cx="46" cy="347" r="3.4" fill="{VIOLET}"/>'
+            + f.anneau(46, 364, 5.4, 15, VIOLET) + jeton(46, 364, "explorateur", f.apparait(5.3, dy=0, echelle=0.5, duree=0.3))
+            + texte(68, 362.5, "Agent explorateur", 12.5, VIOLET_TEXTE, True, classe=f.apparait(5.4, dx=-6, dy=0))
+            + texte(480, 362.5, "Pistes testées", 12.5, ENCRE, True, "end", f.apparait(6.4, dy=0)))
+    for k in range(4):
+        x, y, ts, tr = 68 + k * 104, 372, 5.55 + k * 0.15, 6.2 + k * 0.2
+        essai = (f'<rect x="{x}" y="{y}" width="96" height="26" rx="13" fill="{VOILE}" stroke="{FILET}" stroke-width="1"/>'
+                 f'<circle cx="{x + 15}" cy="{y + 13}" r="3.6" fill="none" stroke="{BORD}" stroke-width="1.6"/>'
+                 f'<rect x="{x + 28}" y="{y + 10}" width="{54 - (k % 2) * 10}" height="6" rx="3" fill="{BORD}"/>')
+        if k in (1, 3):  # gardé : il devient une piste testée
+            essai += (f'<g class="{f.apparait(tr, dy=0, duree=0.3)}"><rect x="{x}" y="{y}" width="96" height="26" rx="13" fill="{POSITIF_PALE}" '
+                      f'stroke="{POSITIF}" stroke-opacity=".55" stroke-width="1.2"/>'
+                      f'<path d="M{x + 10} {y + 13} l4 4 l7 -8" fill="none" stroke="{POSITIF}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'
+                      f'<rect x="{x + 28}" y="{y + 10}" width="{54 - (k % 2) * 10}" height="6" rx="3" fill="{POSITIF}" fill-opacity=".38"/></g>')
+            enveloppe = ""
+        else:  # refusé : il s'efface, marqué d'une croix
+            essai += (f'<g class="{f.apparait(tr, dy=0, duree=0.3)}"><circle cx="{x + 15}" cy="{y + 13}" r="6" fill="{VOILE}"/>'
+                      f'<path d="M{x + 11} {y + 9} l8 8 M{x + 19} {y + 9} l-8 8" fill="none" stroke="{ARRET}" stroke-width="2" stroke-linecap="round"/></g>')
+            enveloppe = f.cle([(0, "opacity: 1;"), (tr + 0.1, "opacity: 1;"), (tr + 0.5, "opacity: .5;"), (d, "opacity: .5;")], extra="opacity: .5;")
+        bas += f'<g class="{enveloppe}"><g class="{f.apparait(ts, dx=-(26 + k * 14), dy=0, echelle=0.85, duree=0.35)}">{essai}</g></g>'
+    c += f'<g class="{f.apparait(3.1, dy=16, duree=0.5)}">{bas}</g>'
+    return f.scene(cadrans + f.fin(c), titre="Cinq angles notés, l'angle déterminant, le verdict, l'explication et les pistes testées")
 
 
 # ---------------------------------------------------------------- 5. à vous
