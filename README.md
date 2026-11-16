@@ -80,7 +80,7 @@ Les deux scripts de création peuvent être relancés sans risque : ils réutili
 
 Quand `GLC_BUCKET` est configuré, les fichiers de référence sont lus dans le bucket, pas dans `reference/` : après une modification de `reference/`, relancez `scripts/creer_bucket.py` pour que le bucket et le dépôt restent identiques.
 
-**Sans AWS**, l'application fonctionne : la fiche du client, la politique déduite, le portefeuille, le verdict, les cinq angles et le rapport du moteur s'affichent, avec l'avis « Explication de l'agent indisponible ». Les fichiers de référence sont lus dans `reference/`.
+**Sans AWS**, l'application fonctionne : la fiche du client, la politique déduite, le portefeuille, le verdict, la note de chaque angle et l'analyse du moteur s'affichent, avec l'avis « Explication de l'agent indisponible ». Les fichiers de référence sont lus dans `reference/`.
 **Il faut AWS** pour l'explication rédigée par les agents, les pistes de l'explorateur, le contrôle du garde-fou et la lecture des références dans S3.
 
 ### Lancement
@@ -89,7 +89,11 @@ Quand `GLC_BUCKET` est configuré, les fichiers de référence sont lus dans le 
 .venv/bin/streamlit run app.py --server.address localhost
 ```
 
-L'application s'ouvre sur http://localhost:8501, par une courte introduction qu'on peut passer d'un clic, puis par le choix d'un compte : Robert, Mateo, Amira, ou un nouveau compte. Un compte s'ouvre sur son profil (la fiche, puis la politique de placement qui en découle) ; la barre du haut mène ensuite au portefeuille, à « Négocier » et à l'aide. Dans « Négocier », préparez un ordre (instrument, achat ou vente, montant, opération), puis cliquez sur « Analyser l'ordre ». L'analyse donne le verdict, la note de chaque angle et l'angle déterminant, l'explication et les pistes testées.
+L'application s'ouvre sur http://localhost:8501, par une courte introduction qu'on peut passer d'un clic (« Passer l'introduction »), puis par le choix d'un compte : trois comptes prêts, Robert, Mateo et Amira, ou « Nouveau compte », dont la fiche se remplit d'abord (six questions). « Analyser tout de suite un ordre d'exemple » mène directement à un ordre déjà rempli.
+
+Un compte s'ouvre sur son profil (la fiche, puis la politique de placement qui en découle) ; la barre du haut mène ensuite au portefeuille, à « Négocier » et à l'aide, et le menu du compte permet d'en changer. Dans « Négocier », préparez un ordre (instrument, achat ou vente, montant, opération), puis cliquez sur « Analyser l'ordre ». L'analyse donne le verdict, la note de chaque angle et l'angle déterminant, l'explication et les pistes testées.
+
+**Mémoire des analyses.** Une analyse identique (même fiche, même portefeuille, même ordre, mêmes réglages) n'est pas refaite : une analyse en cours est partagée, une analyse finie et réussie est rejouée avec ses étapes, sous la ligne « Analyse déjà faite pour cet ordre ». « Relancer » en demande une nouvelle aux agents. Les analyses gardées vont dans `.cache/analyses.json` (ignoré par git ; `GLC_MEMOIRE_FICHIER` pour un autre chemin) ; `GLC_MEMOIRE=0` désactive la mémoire. `scripts/rechauffer_analyses.py` analyse une fois l'ordre prérempli de chaque compte prêt.
 
 ### Tests
 
@@ -130,7 +134,7 @@ flowchart LR
     E -->|"pistes"| J["Chef de dossier : juge les pistes, rédige l'explication"]
     C --> J
     J --> G["Contrôles : chiffres et garde-fou Bedrock"]
-    G --> R["Rapport au client"]
+    G --> R["Analyse présentée au client"]
 ```
 
 ## Rôle des services AWS
