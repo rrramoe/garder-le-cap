@@ -1,4 +1,4 @@
-# Les agents de Garder le cap
+# Les agents de Sigma
 
 Une équipe de deux agents Strands sur Amazon Bedrock, et du code autour. **Le code fait tout ce qu'une règle peut faire ; un agent fait seulement ce qui demande du jugement.** Aucun chiffre ne vient d'un agent : chaque verdict, note et piste testée vient d'un appel au moteur. Le partage est net : **le chef de dossier comprend et dirige, l'explorateur cherche.**
 

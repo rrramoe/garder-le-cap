@@ -1,8 +1,10 @@
-# Garder le cap
+# Sigma
+
+σ, sigma : le symbole du risque en finance.
 
 > Simulation à but éducatif. Aucune transaction réelle. Ceci n'est pas un conseil financier personnalisé.
 
-Garder le cap est le prototype d'un service de gestion des risques pour l'investisseur particulier, débutant ou avancé. Les institutions ont un département de risque ; le particulier n'a souvent que son enthousiasme.
+Les professionnels ont un département de risque. Le particulier n'a que son enthousiasme. Sigma est le prototype d'un service de gestion des risques pour l'investisseur particulier, débutant ou avancé.
 Sur un écran de courtage simulé, le client prépare un ordre et clique sur « Analyser l'ordre ». Un moteur de calcul et une équipe de deux agents sur Amazon Bedrock lui disent si l'ordre est compatible avec sa politique de placement, pourquoi, et ce qui est possible.
 L'outil renseigne, il ne conseille pas : le client propose, l'outil met l'idée à l'épreuve de ses propres objectifs. Un placement n'est pas une fin en soi, mais un moyen.
 Rien ne se compense : chaque angle de l'analyse reçoit une note, et l'angle déterminant, le plus faible, décide du verdict.
@@ -22,8 +24,8 @@ Projet réalisé par Rami Houheche pour le Datathon PolyFinances 2026, défi Alp
 ### Installation
 
 ```bash
-git clone https://github.com/rrramoe/garder-le-cap.git garder-le-cap
-cd garder-le-cap
+git clone https://github.com/rrramoe/sigma.git sigma
+cd sigma
 uv venv --python 3.13 .venv
 uv pip install -r requirements.txt
 ```
@@ -144,10 +146,11 @@ flowchart LR
 | **Amazon Bedrock** | Le modèle de langage des deux agents, le chef de dossier et l'explorateur (`global.anthropic.claude-sonnet-5`, profil d'inférence global, région `us-east-1`). Le rôle de l'instance autorise deux modèles : celui-ci et Amazon Nova 2 Lite. |
 | **Strands Agents** | Le kit qui fait des deux agents des agents à outils : appels au moteur, envoi de l'explorateur, suivi des étapes en direct dans l'interface. |
 | **Amazon Bedrock Guardrails** | Le garde-fou, appelé dans sa version publiée, refuse le conseil financier personnalisé et les demandes de transaction réelle, et mesure l'ancrage de l'explication dans les résultats des outils (vérification d'ancrage contextuel). Sa configuration est dans `docs/configuration/guardrail-config.json`, identifiants masqués. |
-| **Amazon S3** | Un bucket privé (accès public bloqué, chiffrement par défaut, accès refusé hors TLS) garde les fichiers de référence (`reference/*.json`), que l'application lit et qui reviennent au dossier local si S3 ne répond pas ; et, sous le préfixe `deploiement/`, les objets du déploiement : l'archive du code de chaque commit déployé, les données non publiées et la configuration. |
+| **Amazon S3** | Un bucket privé (accès public bloqué, chiffrement par défaut, accès refusé hors TLS) garde les fichiers de référence (`reference/*.json`), que l'application lit et qui reviennent au dossier local si S3 ne répond pas ; et, sous le préfixe `deploiement/`, les objets du déploiement : l'archive du code de chaque commit déployé, les données non publiées et la configuration. Sous le préfixe `traces/`, la trace JSON de chaque analyse réellement faite (pas un rejeu de la mémoire) : les étapes des agents, chaque appel d'outil et la réponse du moteur, les contrôles, le verdict et l'angle déterminant, sans les réponses de la fiche ni les poids du portefeuille. La machine y écrit seulement : elle ne peut ni lire, ni lister, ni supprimer une trace. |
+| **Amazon CloudWatch Logs** | Une ligne compacte par analyse (identifiant, verdict, angle déterminant, durée, modèles, repli) dans le journal `/garder-le-cap/analyses`, conservé 7 jours, un flux par jour ; la machine peut seulement y écrire. Réglages : `GLC_TRACES=0` éteint les traces (sans bucket, aucune trace), `GLC_JOURNAL_GROUPE` nomme le journal (vide, aucune ligne). La trace s'écrit en fond : si elle échoue, l'analyse n'est ni retardée ni changée. |
 | **Amazon CloudFront** | L'adresse publique en HTTPS (certificat par défaut de CloudFront), devant l'instance : le visiteur en HTTP est redirigé vers HTTPS, CloudFront joint l'instance en HTTP sur le port 80, ne garde rien en cache et transmet tout ce que le visiteur envoie, y compris le passage au WebSocket de Streamlit. |
 | **Amazon EC2** | L'application publique tourne sur une petite instance Graviton (Amazon Linux 2023), Streamlit en service systemd sur le port 80, le seul port ouvert. Une IP élastique garde la même adresse d'une mise à jour à l'autre. |
-| **AWS IAM** | Un rôle propre à l'instance donne ses droits : appel des deux modèles et du garde-fou, lecture du bucket privé, Systems Manager. Aucune clé n'est posée sur la machine. |
+| **AWS IAM** | Un rôle propre à l'instance donne ses droits : appel des deux modèles et du garde-fou, lecture du bucket privé (références et déploiement), écriture seule des traces dans S3 et CloudWatch Logs, Systems Manager. Aucune clé n'est posée sur la machine. |
 | **AWS Systems Manager** | Run Command amorce l'instance et y passe les mises à jour et les vérifications ; aucun port SSH n'est ouvert. |
 
 Le déploiement est décrit dans [`deploiement/README.md`](deploiement/README.md) et piloté par `deploiement/glc_deploiement.py` : à chaque mise à jour, le code du commit choisi est déposé dans le bucket, l'instance le récupère par Systems Manager, et les fichiers `reference/*.json` de ce commit sont recopiés dans le bucket.
@@ -163,6 +166,8 @@ flowchart LR
     A -->|"agents : chef de dossier, explorateur"| B["Amazon Bedrock : modèle"]
     A -->|"explication et phrases de l'explorateur"| G["Bedrock Guardrails : version publiée"]
     A -->|"fichiers de référence"| S["Amazon S3 : bucket privé"]
+    A -->|"trace de chaque analyse, écriture seule (traces/)"| S
+    A -->|"une ligne par analyse, écriture seule"| L["Amazon CloudWatch Logs"]
     D["Poste de déploiement : glc_deploiement.py"] -->|"archive du commit, données, configuration"| S
     D -->|"mise à jour"| M["AWS Systems Manager : Run Command"]
     M --> A
