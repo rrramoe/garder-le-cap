@@ -328,6 +328,10 @@ def script_mise_a_jour(b: str, sha: str) -> list[str]:
         f"uv pip install --quiet --python /opt/glc/venv/bin/python -r {v}/requirements.txt",
         "chown -R glc:glc /opt/glc",
         f"ln -sfn {v} /opt/glc/courant.nouveau && mv -Tf /opt/glc/courant.nouveau /opt/glc/courant",
+        # Le commit en service, donné à l'application (traces : GLC_VERSION_APPLICATION).
+        "mkdir -p /etc/systemd/system/glc.service.d",
+        f"printf '[Service]\\nEnvironment=GLC_VERSION_APPLICATION={sha[:7]}\\n' > /etc/systemd/system/glc.service.d/version.conf",
+        "systemctl daemon-reload",
         "systemctl restart glc",
         "for i in $(seq 60); do curl -fs -o /dev/null localhost/_stcore/health && break; sleep 2; done",
         "echo santé: $(curl -fsS localhost/_stcore/health)",
@@ -406,7 +410,8 @@ def fermer(args) -> None:
 # ---------------------------------------------------------------- verifier / commit
 
 ENV_SERVICE = ("sudo -u glc env HOME=/opt/glc AWS_REGION=us-east-1 AWS_DEFAULT_REGION=us-east-1 "
-               "GLC_AWS_ENV=/opt/glc/sans-fichier-d-identifiants")
+               "GLC_AWS_ENV=/opt/glc/sans-fichier-d-identifiants "
+               "GLC_VERSION_APPLICATION=$(cut -c1-7 /opt/glc/courant/COMMIT_DEPLOYE)")
 
 
 def commit_en_service() -> str:
