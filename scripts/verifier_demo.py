@@ -249,9 +249,14 @@ def cas_vente_a_decouvert(at: AppTest) -> None:
     attendre(not par_experience and controle.get("effet") in (None, "aucun"),
              f"Vente à découvert : l'expérience seule pèse encore (effet « {controle.get('effet')} »).")
     ecran = textes(at)
-    attendre("Points d'attention" in ecran, "Vente à découvert : « Points d'attention » absent du rapport.")
-    attendre("Profil déclaré" in ecran or "cohéren" in ecran.lower(),
-             "Vente à découvert : observation de cohérence absente du rapport.")
+    attendre("Point d'attention" in ecran or "Points d'attention" in ecran,
+             "Vente à découvert : le point d'attention de l'opération est absent du rapport.")
+    # L'observation sur la cohérence du profil déclaré (débutante, préserver le capital) passe par les agents.
+    explication = ((rapport.get("agent") or {}).get("explication") or "").lower()
+    attendre(any(m in explication for m in ("débutant", "préserver", "cohéren", "profil déclaré")),
+             "Vente à découvert : l'explication ne dit rien de la cohérence avec le profil déclaré.")
+    ligne["Explication"] += " — cohérence : " + ("dite" if any(
+        m in explication for m in ("débutant", "préserver", "cohéren", "profil déclaré")) else "absente")
 
 
 def cas_garde_fou() -> None:
