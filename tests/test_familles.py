@@ -146,3 +146,10 @@ def test_geographie_des_actions():
     assert m["sous_mesures"]["hors_canada"]["valeur"] == pytest.approx(ailleurs)
     assert m["note"] == pytest.approx(_publiee(min(notes.values())), abs=1e-6)
     assert m["decide"] == min(notes, key=notes.get)
+
+
+def test_questions_du_portefeuille_sans_ordre():
+    e = api.etat_des_lieux("mateo")
+    assert e["notes"]["objectif"]["question"] == "Mon portefeuille sert-il mon objectif ?"
+    r = api.simuler_ordre("mateo", "SPY", "achat", 2)
+    assert r["apres"]["notes"]["objectif"]["question"] == "L'ordre sert-il mon objectif ?"

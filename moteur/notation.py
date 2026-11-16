@@ -458,6 +458,14 @@ FAMILLES = {
     "diversification": "Mon portefeuille reste-t-il bien réparti ?",
     "preferences": "L'ordre respecte-t-il mes préférences ?",
 }
+# Sans ordre (état des lieux, portefeuille avant l'ordre), les mêmes angles posés au portefeuille.
+FAMILLES_PORTEFEUILLE = {
+    "objectif": "Mon portefeuille sert-il mon objectif ?",
+    "risque": "Le risque de mon portefeuille reste-t-il dans ce que j'accepte ?",
+    "liquidite": "Mon argent reste-t-il disponible ?",
+    "diversification": "Mon portefeuille est-il bien réparti ?",
+    "preferences": "Mon portefeuille respecte-t-il mes préférences ?",
+}
 FENETRE_MIN_ANNEES, FENETRE_MAX_ANNEES = 1, 3
 
 
@@ -565,7 +573,7 @@ def evaluer(port: dict, fiche: dict, ordre: dict | None = None) -> dict:
     }
     for fam, n in notes.items():
         convertir_famille(n)
-        n["question"] = FAMILLES[fam]
+        n["question"] = (FAMILLES if ordre else FAMILLES_PORTEFEUILLE)[fam]
     notees = {k: n for k, n in notes.items() if isinstance(n.get("note"), (int, float))}
     dim = min(notees, key=lambda k: notees[k]["note"])
     score = notees[dim]["note"]
