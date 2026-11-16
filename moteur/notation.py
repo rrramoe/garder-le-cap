@@ -204,6 +204,45 @@ def note_duree(t: float, h: float) -> float:
     return max(0.0, 100.0 - 50.0 * t / h)
 
 
+def volatilite_mensuelle(valeur) -> float | None:
+    """Écart-type des rendements mensuels (fin de mois), annualisé par racine(12), comme l'Annexe F du Règlement 81-102."""
+    r = valeur.resample("ME").last().pct_change().dropna()
+    if len(r) < 12:
+        return None
+    return float(r.std(ddof=1) * np.sqrt(12))
+
+
+def mesure_fluctuations(valeur, profil_id: str) -> dict:
+    ref = references.charger("limites_risque")["bandes_volatilite_pct"]
+    b = ref["par_profil"][profil_id]
+    vol = volatilite_mensuelle(valeur)
+    m = {"libelle": "Fluctuations : écart-type annualisé des rendements mensuels, face à l'échelle des régulateurs",
+         "niveau": b["niveau"], "cible": b["min"] / 100.0, "limite": None if b["max"] is None else b["max"] / 100.0,
+         "valeur": vol, "unite": "fraction", "source": ref["source"], "hypothese": "hypothese_risque_familles"}
+    if b["max"] is None:
+        m.update(note=None, statut="sans_objet",
+                 phrase=f"{_fr(vol * 100)} % ; niveau « {b['niveau']} » sans plafond publié" if vol is not None else "")
+    elif vol is None:
+        m.update(note=None, statut="indetermine")
+    else:
+        m.update(note=note_lineaire(vol, b["min"] / 100.0, b["max"] / 100.0),
+                 phrase=f"{_fr(vol * 100)} % par an ; niveau « {b['niveau']} » : {b['min']} à {b['max']} %")
+    return m
+
+
+def mesure_pire_annee(valeur, profil_id: str) -> dict:
+    limite, src = _pire_annee_banque(profil_id)
+    pf = pire_fenetre(valeur, 1)
+    m = {"libelle": "Pire année : pire rendement sur douze mois glissants", "cible": 0.0, "limite": limite,
+         "unite": "fraction", "source": src, "hypothese": "hypothese_risque_familles"}
+    if pf["valeur"] is None:
+        m.update(note=None, statut="indetermine")
+    else:
+        m.update(note=note_lineaire(pf["valeur"], 0.0, limite), valeur=pf["valeur"], debut=pf["debut"], fin=pf["fin"],
+                 phrase=f"{_fr(pf['valeur'] * 100)} % ; pire année publiée pour le profil : {_fr(limite * 100, 2)} %")
+    return m
+
+
 def note_risque(port: dict, fiche: dict) -> dict:
     stats = donnees.statistiques(port)
     profil_id = fiche["deduit"]["profil"]["valeur"]
@@ -223,8 +262,11 @@ def note_risque(port: dict, fiche: dict) -> dict:
                   "fin": stats["temps_sous_l_eau_fin"],
                   "libelle": "Durée sous l'eau, comparée à l'horizon"},
     }
-    mesure_min = min(mesures, key=lambda k: mesures[k]["note"])
-    return {"note": mesures[mesure_min]["note"], "mesure_min": mesure_min, "mesures": mesures,
+    valeur = donnees.valeur_portefeuille(port)
+    mesures["fluctuations"] = mesure_fluctuations(valeur, profil_id)
+    mesures["pire_annee"] = mesure_pire_annee(valeur, profil_id)
+    famille = _noter(mesures)
+    return {**famille,
             "volatilite_annualisee": stats["volatilite_annualisee"],
             "etalons": {"reference": et["reference"]["composition_pct"], "limite": et["limite"]["composition_pct"]}}
 
@@ -615,6 +657,9 @@ def cause(fiche: dict, ordres: list, cs: dict, apres: dict, port_apres: dict) ->
         c.update(type=dim, valeur=m.get("valeur"), cible=m.get("cible"), limite=m.get("limite"),
                  libelle_mesure=m.get("libelle"), phrase=m.get("phrase"))
         c["porte_par_l_ordre"] = True
+        if dim == "risque":
+            c["part_du_risque_pct"] = {t: contribution_risque(port_apres, t)["part_du_risque_pct"] for t in tickers
+                                       if t in port_apres}
     elif dim == "risque":
         c["type"] = "risque"
         if mes == "ampleur":

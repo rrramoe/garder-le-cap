@@ -194,5 +194,18 @@
     "source": "Hypothèse du projet",
     "date": "2026-11-15",
     "nature": "hypothese"
+  },
+  "acvm_81_102_annexe_f": {
+    "libelle": "Classification du risque de placement : écart-type annualisé des rendements mensuels, moins de 6 faible, 6 à moins de 11 faible à moyen, 11 à moins de 16 moyen, 16 à moins de 20 moyen à élevé, 20 ou plus élevé",
+    "source": "Autorités canadiennes en valeurs mobilières, Règlement 81-102 sur les fonds d'investissement, Annexe F « Méthode de classification du risque de placement » (consolidation de la Commission des valeurs mobilières de l'Ontario, osc.ca)",
+    "date": "2022-01-05",
+    "nature": "publie",
+    "limite": "Échelle faite pour classer un fonds sur dix ans de rendements mensuels, appliquée ici à un portefeuille sur cinq ans."
+  },
+  "hypothese_risque_familles": {
+    "libelle": "Niveau de l'échelle des régulateurs associé à chaque profil (Revenu = faible … Croissance maximale = élevé) : cible = borne basse du niveau, limite = borne haute ; le niveau élevé n'a pas de plafond publié, la mesure est alors sans objet. Pire année : pire rendement sur 252 séances, cible 0 %, limite = pire année publiée par la banque pour le profil",
+    "source": "Hypothèse du projet",
+    "date": "2026-11-15",
+    "nature": "hypothese"
   }
 }

@@ -69,7 +69,7 @@ def test_scenario_contrainte_stricte_de_n_importe_quel_ordre():
 
 def test_cause_risque():
     c = api.simuler_ordre("robert", "TSLA", "achat", 15)["cause"]
-    assert c["type"] == "risque" and c["mesure"] == "ampleur" and c["sous_le_seuil"]
+    assert c["type"] == "risque" and c["mesure"] == "pire_annee" and c["sous_le_seuil"]
     assert c["valeur"] < c["limite"] < 0 and c["porte_par_l_ordre"] and c["part_du_risque_pct"]["TSLA"] > 0
 
 

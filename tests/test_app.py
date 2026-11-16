@@ -57,8 +57,8 @@ def test_robert_tsla_en_tension(sans_agent):
     texte = _inspecter(at, "robert")
     carte = _verdict(at)
     assert "En tension" in carte and "120 000 $" in carte and "15,0 %" in carte
-    assert "pire baisse" in carte
-    assert "92 000 $" in texte and "11,5 %" in texte  # taille compatible, en dollars et en %
+    assert "pire année" in carte
+    assert "56 000 $" in texte and "7,0 %" in texte  # taille compatible, en dollars et en %
     assert AVIS in texte
     assert "chercher_taille_compatible" in texte  # étapes : appels du moteur faits par l'interface
 
@@ -105,8 +105,8 @@ def test_passer_ordre_simule(sans_agent):
 def test_montant_en_dollars_et_type_d_ordre(sans_agent):
     at = _demarrer()
     at.sidebar.radio(key="persona").set_value("robert").run()
-    at.number_input(key="o_robert_montant").set_value(92_000.0).run()
-    assert "11,5 %" in _textes(at)  # part du portefeuille affichée à côté du montant
+    at.number_input(key="o_robert_montant").set_value(56_000.0).run()
+    assert "7,0 %" in _textes(at)  # part du portefeuille affichée à côté du montant
     at.selectbox(key="o_robert_type").set_value("limite").run()
     assert not at.exception, at.exception
     prix = [n for n in at.number_input if n.key.startswith("o_robert_prix_TSLA")]

@@ -86,3 +86,39 @@ def test_objectif_revenu_regulier():
     assert m["valeur"] == pytest.approx(attendu, abs=1e-3)
     assert m["limite"] < m["cible"]
     assert m["note"] == pytest.approx(_lin(m["valeur"], m["cible"], m["limite"]), abs=1e-6)
+
+
+# ---------------------------------------------------------------- risque : fluctuations et pire année
+
+def _limites():
+    return references.charger("limites_risque")
+
+
+def test_fluctuations_face_a_l_echelle_des_regulateurs():
+    r = api.simuler_ordre("robert", "TSLA", "achat", 15)
+    v = donnees.valeur_portefeuille(r["portefeuille_apres_pct"])
+    fins = v.groupby([v.index.year, v.index.month]).last()
+    rm = fins.to_numpy()[1:] / fins.to_numpy()[:-1] - 1
+    vol = float(np.std(rm, ddof=1) * np.sqrt(12))
+    b = _limites()["bandes_volatilite_pct"]["par_profil"]["conservateur"]
+    m = r["apres"]["notes"]["risque"]["mesures"]["fluctuations"]
+    assert (b["min"], b["max"]) == (6, 11)
+    assert m["valeur"] == pytest.approx(vol, abs=1e-6)
+    assert m["note"] == pytest.approx(_lin(vol, 0.06, 0.11), abs=1e-6)
+
+
+def test_fluctuations_sans_objet_au_niveau_eleve():
+    m = api.etat_des_lieux("amira")["notes"]["risque"]["mesures"]["fluctuations"]
+    assert m["statut"] == "sans_objet" and m["note"] is None
+
+
+def test_pire_annee_face_a_la_banque():
+    r = api.simuler_ordre("robert", "TSLA", "achat", 15)
+    v = donnees.valeur_portefeuille(r["portefeuille_apres_pct"]).to_numpy()
+    pire = float(np.min(v[252:] / v[:-252] - 1))
+    lim = _limites()["pire_annee_banque_pct"]["par_profil"]["conservateur"] / 100
+    m = r["apres"]["notes"]["risque"]["mesures"]["pire_annee"]
+    assert lim == pytest.approx(-0.1058)
+    assert m["valeur"] == pytest.approx(pire, abs=1e-6)
+    assert m["note"] == pytest.approx(_lin(pire, 0.0, lim), abs=1e-6)
+    assert r["dimension_min"] == "risque" and r["mesure_min"] == "pire_annee"

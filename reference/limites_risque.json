@@ -2,6 +2,42 @@
   "note": "Limites publiées utilisées par les familles Objectif et Risque. Modifiables ici sans toucher au code.",
   "pire_annee_banque_pct": {
     "source": "fbngp_pire_annee_2024",
-    "par_profil": {"revenu": -9.64, "conservateur": -10.58, "equilibre": -16.35, "croissance": -21.30, "croissance_maximale": -26.10}
+    "par_profil": {
+      "revenu": -9.64,
+      "conservateur": -10.58,
+      "equilibre": -16.35,
+      "croissance": -21.3,
+      "croissance_maximale": -26.1
+    }
+  },
+  "bandes_volatilite_pct": {
+    "source": "acvm_81_102_annexe_f",
+    "par_profil": {
+      "revenu": {
+        "niveau": "Faible",
+        "min": 0,
+        "max": 6
+      },
+      "conservateur": {
+        "niveau": "Faible à moyen",
+        "min": 6,
+        "max": 11
+      },
+      "equilibre": {
+        "niveau": "Moyen",
+        "min": 11,
+        "max": 16
+      },
+      "croissance": {
+        "niveau": "Moyen à élevé",
+        "min": 16,
+        "max": 20
+      },
+      "croissance_maximale": {
+        "niveau": "Élevé",
+        "min": 20,
+        "max": null
+      }
+    }
   }
 }

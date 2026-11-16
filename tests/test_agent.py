@@ -138,7 +138,7 @@ def test_inspecter_trace_et_explication_avec_modele_simule():
     assert r["trace"][2]["arguments"] == ORDRE_ROBERT
     assert r["trace"][2]["resultat"] == api.simuler_ordre("robert", "TSLA", "achat", 15)
     assert r["trace"][2]["resultat_resume"].startswith("Verdict : En tension")
-    assert "11,5 %" in r["trace"][3]["resultat_resume"]
+    assert "7,0 %" in r["trace"][3]["resultat_resume"]
     json.dumps(r)
 
 
@@ -170,7 +170,7 @@ def test_resumes_en_francais_correct():
     r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(SCENARIO_SUBSTITUT), equipe=False)
     resumes = " ".join(e["resultat_resume"] for e in r["trace"])
     assert "détail détaillé" in resumes and "étiquettes : spéculatif" in resumes
-    assert "compatible avec ajustement" in resumes and "ampleur de la pire baisse" in resumes
+    assert "compatible avec ajustement" in resumes and "pire année" in resumes
     for identifiant in ("detaille", "speculatif", "compatible_avec_ajustement", "plus_grosse_action", "ecarte_esg"):
         assert identifiant not in resumes, identifiant
 
@@ -471,7 +471,7 @@ def test_equipe_chef_de_dossier_et_explorateur():
     assert principal["nom"] == "principal" and principal["etapes"] == [1, 2, 3, 4]
     assert explorateur["statut"] == "termine" and explorateur["mission"] == MISSION and explorateur["etapes"] == [5, 6]
     retour = r["trace"][3]["resultat"]
-    assert retour["statut"] == "termine" and len(retour["pistes"]) == 2 and retour["cause"]["mesure"] == "ampleur"
+    assert retour["statut"] == "termine" and len(retour["pistes"]) == 2 and retour["cause"]["mesure"] == "pire_annee"
     assert r["trace"][3]["resultat_resume"].startswith("Explorateur revenu avec 2 piste(s)")
     debuts = [(e["agent"], e["etape"], e["outil"]) for e in evenements if e["moment"] == "debut_outil"]
     assert debuts == [("principal", 1, "lire_fiche_client"), ("principal", 2, "lire_fiche_instrument"),

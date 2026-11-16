@@ -25,13 +25,15 @@ def test_1_robert_tsla():
     assert "erreur" not in r
     assert r["contraintes_strictes"]["violee"] is False
     assert r["verdict"]["code"] == "en_tension"
-    assert r["score"] == pytest.approx(40, abs=1)
+    # Modèle en cinq familles : la pire année (-17,7 % contre -10,58 % publiés) décide ; la pire baisse garde sa note.
+    assert r["score"] == pytest.approx(16, abs=1)
     assert r["dimension_min"] == "risque"
-    assert r["mesure_min"] == "ampleur"
+    assert r["mesure_min"] == "pire_annee"
+    assert r["apres"]["notes"]["risque"]["mesures"]["ampleur"]["note"] == pytest.approx(40, abs=1)
     assert r["direction"]["cas"] == "fait_sortir_de_la_politique"
     t = api.chercher_taille_compatible("robert", "TSLA", "achat", 15)
     assert t["lancee"] is True
-    assert 9 <= t["taille_compatible_pct"] <= 12
+    assert 6 <= t["taille_compatible_pct"] <= 8
     assert len(t["courbe"]) == 30
 
 
@@ -119,8 +121,12 @@ def test_5_notes_de_risque(client, ticker, pct, avant, apres):
     # arrondies (ex. Robert avant : 100 - 50 x 1,95 / 3 = 67,5 -> 68 ; le moteur mesure
     # T = 1,952 an, d'où 67,47). Tolérance : 1 point.
     r = api.simuler_ordre(client, ticker, "achat", pct)
-    assert r["avant"]["notes"]["risque"]["note"] == pytest.approx(avant, abs=1)
-    assert r["apres"]["notes"]["risque"]["note"] == pytest.approx(apres, abs=1)
+    # Pire baisse et durée sous le sommet : mesures d'avant le modèle en cinq familles, valeurs inchangées.
+    def anciennes(bloc):
+        m = r[bloc]["notes"]["risque"]["mesures"]
+        return min(m["ampleur"]["note"], m["duree"]["note"])
+    assert anciennes("avant") == pytest.approx(avant, abs=1)
+    assert anciennes("apres") == pytest.approx(apres, abs=1)
 
 
 def test_volatilite_spy_et_speculatifs():
