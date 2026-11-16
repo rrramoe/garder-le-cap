@@ -167,7 +167,7 @@ class Film:
         """Le film : sa feuille d'images clés, et son dessin. Aucune image vide : le décor reste, l'histoire seule
         s'efface (voir fin) et reprend aussitôt."""
         d = self.duree
-        self.regles.append(f"@keyframes {self.nom}0 {{ 0% {{ opacity: 1; }} {self._p(d - 0.5)} {{ opacity: 1; }} {self._p(d - 0.15)} {{ opacity: 0; }} 100% {{ opacity: 0; }} }}")
+        self.regles.append(f"@keyframes {self.nom}0 {{ 0% {{ opacity: 1; }} {self._p(d - 0.6)} {{ opacity: 1; }} {self._p(d - 0.28)} {{ opacity: 0; }} 100% {{ opacity: 0; }} }}")
         self.regles.append(f".{self.nom}0 {{ animation: {self.nom}0 {d}s linear infinite both; }}")
         self.regles.append("svg.film .fo { filter: drop-shadow(0 12px 20px rgba(2, 8, 20, .42)); }")
         style = "<style>" + " ".join(self.regles) + "</style>"
@@ -310,7 +310,7 @@ def fiche() -> tuple[str, str]:
                    f'<path class="{f.trace(t + 0.18, t + 0.5, 21)}" d="M{x + 15} {y + 20} l5 5 l9 -10" fill="none" stroke="{BLANC}" '
                    f'stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>')
     au_centre, rangee = "transform: translate(150px, 0px) scale(1.24); opacity: 1;", "transform: none; opacity: .78;"
-    q = f'<g class="{f.cle([(0, au_centre), (2.0, au_centre), (2.8, rangee), (d - 0.5, rangee), (d, au_centre)], extra="opacity: .78;", courbe=ALLER)}">{q}{f.fin(coches)}</g>'
+    q = f'<g class="{f.cle([(0, au_centre), (2.0, au_centre), (2.8, rangee), (d - 0.36, rangee), (d, au_centre)], extra="opacity: .78;", courbe=ALLER)}">{q}{f.fin(coches)}</g>'
     lien = (f'<path class="{f.apparait(2.75, dx=-8, dy=0)}" d="M208 220 H228 M222 213 l7 7 l-7 7" fill="none" stroke="{CIEL}" '
             f'stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>')
     doc = (carte(240, 30, 260, 380)
@@ -356,7 +356,7 @@ def epreuve(ticker: str, montant: str) -> tuple[str, str]:
               + champ(40, 190, 172, "Montant", montant, f.passe(1.0, 1.75, 0.2), classe_valeur=f.fondu,
                       cache=f.tape(50, 201, 158, 30, 1.15, 1.6, max(len(str(montant)), 1)))
               + f.onde(126, 311, 2.3, 70)
-              + bouton(40, 290, 172, "Analyser l'ordre", f.appuie(2.3), f.passe(2.45, d - 0.6, 0.35))
+              + bouton(40, 290, 172, "Analyser l'ordre", f.appuie(2.3), f.passe(2.45, d - 0.9, 0.3))
               + f.fin(pointeur(184, 320, f.cle([(0, loin), (1.55, loin), (2.15, "opacity: 1; transform: none;"),
                                                 (d, "opacity: 1; transform: none;")], courbe=ALLER))))
     issues = [("Il y reste", "compatible", MENTHE, "plein", [(0, 0), (58, -13), (118, 13), (190, 0)]),
@@ -375,7 +375,7 @@ def epreuve(ticker: str, montant: str) -> tuple[str, str]:
     regards = ["transform: translate(134px, 44px) scale(1.24);", "transform: translate(134px, 6px) scale(1.24);",
                "transform: translate(134px, -46px) scale(1.24);"]
     camera = f.cle([(0, regards[0]), (0.75, regards[0]), (1.1, regards[1]), (1.7, regards[1]), (2.05, regards[2]),
-                    (2.55, regards[2]), (3.25, "transform: none;"), (d - 0.5, "transform: none;"), (d, regards[0])],
+                    (2.55, regards[2]), (3.25, "transform: none;"), (d - 0.36, "transform: none;"), (d, regards[0])],
                    extra="transform-box: view-box; transform-origin: 126px 220px;", courbe=ALLER)
     return f.scene(f'<g class="{camera}">{billet}{f.fin(droite)}</g>',
                    titre="Un ordre est analysé avant d'être passé : il reste dans la politique, en sort, ou s'en rapproche")
@@ -471,7 +471,7 @@ def billet(nom: str, titre: str, operation: str, montant: str) -> tuple[str, str
          + champ(142, 208, 236, "Montant", montant, classe_valeur=f.fondu,
                  cache=f.tape(152, 219, 222, 30, 0.85, 1.25, max(len(str(montant)), 1)))
          + f.onde(260, 297, 2.1, 84)
-         + bouton(142, 276, 236, "Analyser l'ordre", f.appuie(2.1), f.passe(2.25, d - 0.6, 0.35))
+         + bouton(142, 276, 236, "Analyser l'ordre", f.appuie(2.1), f.passe(2.25, d - 0.9, 0.3))
          + f.fin(f'<g class="{f.apparait(2.4, dy=0, echelle=0.8)}"><circle cx="260" cy="364" r="22" fill="{VOILE}" stroke="{PISTE}" stroke-width="4"/>'
                  f'<g class="{tourne}"><circle cx="260" cy="364" r="22" fill="none" stroke="url(#fl-lueur)" stroke-width="4" stroke-linecap="round" stroke-dasharray="42 200"/></g>'
                  f'<g class="{f.bat(2.5)}">{texte(260, 371.5, "?", 21, ENCRE, True, "middle")}</g></g>'
