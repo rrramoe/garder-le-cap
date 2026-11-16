@@ -144,3 +144,18 @@ def test_auditeur_sans_resultat_fait_sa_propre_analyse():
     fil.join(5)
     assert erreurs and time.monotonic() - debut < 5                      # pas d'attente de 300 s
     assert r["explication"] == "ok" and r["memoire"]["statut"] == "nouvelle"
+
+
+def test_ancienne_analyse_sans_trace_rejouee_sans_casser(tmp_path, monkeypatch):
+    # Une entrée écrite avant l'ajout des traces (sans `trace_aws`) dans le vrai fichier de mémoire.
+    import json
+    r = _analyser(ModeleSimule(SCENARIO_ROBERT))
+    fichier = memoire.fichier()
+    donnees = json.loads(fichier.read_text(encoding="utf-8"))
+    for entree in donnees.values():
+        entree["resultat"].pop("trace_aws", None)
+    fichier.write_text(json.dumps(donnees), encoding="utf-8")
+    memoire.oublier()
+    rejoue = _analyser(ModeleSimule(SCENARIO_ROBERT))
+    assert rejoue["memoire"]["statut"] == "deja_faite" and rejoue["trace_aws"] is None
+    assert rejoue["explication"] == r["explication"]

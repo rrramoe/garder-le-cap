@@ -151,6 +151,8 @@ def partager(cle: str, calculer, sur_etape=None, relancer: bool = False) -> dict
                 except Exception:
                     pass
             r = copy.deepcopy(entree["resultat"])
+            # Une analyse gardée avant l'ajout des traces se rejoue sans identifiant de trace.
+            r.setdefault("trace_aws", None)
             r["memoire"] = {"statut": "deja_faite", "message": MESSAGE_DEJA_FAITE, "garde_le": entree.get("garde_le")}
             return r
     with _verrou:
