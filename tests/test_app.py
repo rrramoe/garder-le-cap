@@ -57,7 +57,8 @@ def test_robert_tsla_en_tension(sans_agent):
     texte = _inspecter(at, "robert")
     carte = _verdict(at)
     assert "En tension" in carte and "120 000 $" in carte and "15,0 %" in carte
-    assert "pire année" in carte
+    assert "Le maillon le plus faible : la pire année. Votre portefeuille aurait perdu" in carte
+    assert "pire année publiée" not in carte  # les chiffres complets restent dans les mesures repliées
     assert "56 000 $" in texte and "7,0 %" in texte  # taille compatible, en dollars et en %
     assert AVIS in texte
     assert "chercher_taille_compatible" in texte  # étapes : appels du moteur faits par l'interface

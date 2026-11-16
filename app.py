@@ -261,8 +261,8 @@ def decrire_mesure(dimension: str, cle: str, m: dict) -> str:
         return (f"pire baisse passée {pct_frac(m['pire_baisse'])} ; "
                 f"limite du profil {pct_frac(m['pire_baisse_limite'])}")
     if cle == "duree" and dimension == "risque":
-        texte = (f"{nombre(m['temps_sous_l_eau_annees'])} ans pour se remettre, "
-                 f"pour un horizon de {nombre(m['horizon_annees'], 0)} ans")
+        texte = (f"{annees(m['temps_sous_l_eau_annees'])} pour se remettre, "
+                 f"pour un horizon de {annees(m['horizon_annees'], 0)}")
         if m.get("non_recupere"):
             texte += " ; pas encore remis"
         return texte
@@ -292,6 +292,41 @@ def decrire_mesure(dimension: str, cle: str, m: dict) -> str:
     return m.get("libelle", "")
 
 
+def annees(x: float, d: int = 1) -> str:
+    """« 0,5 an », « 1 an », « 2,5 ans »."""
+    return f"{nombre(x, d)} an" + ("s" if abs(x) >= 2 else "")
+
+
+def phrase_maillon(mes: str, m: dict) -> str | None:
+    """Une phrase courte pour le maillon le plus faible ; les chiffres complets restent dans les mesures repliées."""
+    v, lim = m.get("valeur"), m.get("limite")
+    if not isinstance(v, (int, float)):
+        return None
+    if mes == "pire_annee":
+        return (f"Le maillon le plus faible : la pire année. Votre portefeuille aurait perdu {pct_frac(abs(v))} "
+                f"en un an, pour une limite de {pct_frac(abs(lim))}.") if v < 0 else None
+    if mes == "fluctuations":
+        return (f"Le maillon le plus faible : les fluctuations. Elles seraient de {pct_frac(v)} par an, "
+                f"pour une limite de {pct_frac(lim)}.")
+    if mes == "geographie_actions":
+        quoi = "canadiennes" if m.get("decide") == "canada" else "hors du Canada"
+        return (f"Le maillon le plus faible : la répartition des actions. Les actions {quoi} feraient {pct(v)} "
+                f"du portefeuille, pour une zone de {pct(m['limite_basse'], 0)} à {pct(m['limite_haute'], 0)}.")
+    if mes == "capital_preserve":
+        return (f"Le maillon le plus faible : préserver votre capital. Sur {annees(m['fenetre_annees'], 0)}, "
+                f"le pire résultat aurait été {pct_frac(v)}.")
+    if mes == "revenu":
+        return (f"Le maillon le plus faible : le revenu. Votre portefeuille rapporterait {pct_frac(v, 2)} par an, "
+                f"pour une limite de {pct_frac(lim, 2)}.")
+    if mes == "actions":
+        return (f"Le maillon le plus faible : la part des actions pour votre objectif, {pct(v)}, "
+                f"pour un minimum de {pct(lim, 0)}.")
+    if mes == "liquidites_besoin":
+        return (f"Le maillon le plus faible : vos liquidités, {pct(v)}, pour un besoin de "
+                f"{pct(m.get('besoin', lim), 0)} dans l'année.")
+    return None
+
+
 def pourquoi_simple(sim: dict) -> str:
     """Une phrase claire qui dit pourquoi, à partir de la mesure qui donne le score."""
     if sim["verdict"]["code"] == "incompatible":
@@ -314,8 +349,11 @@ def pourquoi_simple(sim: dict) -> str:
         return (f"Dans le passé, la pire baisse du portefeuille aurait été de {pct_frac(m['pire_baisse'], 0)}. "
                 f"Elle {verbe} la limite de votre profil ({pct_frac(m['pire_baisse_limite'], 0)}).")
     if mes == "duree":
-        return (f"Après une baisse, le portefeuille aurait mis {nombre(m['temps_sous_l_eau_annees'])} ans "
-                f"à se remettre, pour un horizon de {nombre(m['horizon_annees'], 0)} ans.")
+        return (f"Après une baisse, le portefeuille aurait mis {annees(m['temps_sous_l_eau_annees'])} "
+                f"à se remettre, pour un horizon de {annees(m['horizon_annees'], 0)}.")
+    phrase = phrase_maillon(mes, m)
+    if phrase:
+        return phrase
     if dim == "preferences":
         return f"Point le plus faible : {libelle_mesure(dim, mes)} — {decrire_mesure(dim, mes, m)}."
     return f"Point le plus faible : {libelle_mesure(dim, mes)} — {decrire_mesure(dim, mes, m)}."
@@ -679,7 +717,8 @@ def libelle_source(source_id: str, sources: dict) -> str:
     if not s:
         return source_id
     if s["nature"] == "publie":
-        return f"Publié par {s['source']}"
+        # Le nom court de l'auteur ; la référence complète reste dans les sources repliées.
+        return f"Publié par {s['source'].split(',')[0].split(' (')[0]}"
     return f"Hypothèse : {s['libelle']}"
 
 
@@ -688,7 +727,7 @@ def valeur_deduite(cle: str, e: dict) -> str:
     if cle == "profil":
         return e.get("libelle", v)
     if cle == "horizon_annees":
-        return f"{nombre(v, 0)} ans"
+        return annees(v, 0)
     if cle == "plafonds_concentration_pct":
         return (f"{pct(v['action_individuelle'], 0)} par action, {pct(v['secteur'], 0)} par secteur, "
                 f"{pct(v['fonds_negocie_en_bourse'], 0)} par fonds")
