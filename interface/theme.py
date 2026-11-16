@@ -252,6 +252,19 @@ div[class*="st-key-carte_compte"] .glc-faits {{ margin: 14px 0 6px 0; }}
 .stApp .glc-duo {{ display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 16px; }}
 @media (max-width: 900px) {{ .stApp .glc-duo {{ grid-template-columns: minmax(0, 1fr); }} }}
 .stApp .glc-duo > * {{ min-width: 0; }}
+.stApp .glc-duo > .glc-carte {{ display: flex; flex-direction: column; justify-content: center; }}
+
+/* ---------- un seul rythme : le même écart entre les cartes partout, un plus petit dedans ---------- */
+.stMainBlockContainer {{ padding-bottom: 40px; }}
+.stMainBlockContainer > div[data-testid="stVerticalBlock"] {{ gap: 14px; }}
+.stMainBlockContainer div[data-testid="stColumn"] > div[data-testid="stVerticalBlock"] {{ gap: 14px; }}
+div[class*="st-key-carte"] {{ gap: 10px; padding: 18px 20px; }}
+.st-key-entete {{ margin-bottom: 10px; }}
+.stApp .glc-titre {{ margin: 2px 0 0 0; }}
+.stApp .glc-carte, .stApp .glc-verdict {{ padding: 18px 20px; }}
+.stApp .glc-liste-def div {{ padding: 7px 0; }}
+.stApp .glc-pas {{ padding: 8px 0; }}
+div[class*="st-key-zone_sigma"] > div[data-testid="stVerticalBlock"], div[class*="st-key-zone_sigma"] {{ gap: 12px; }}
 
 /* ---------- la lueur : le contour vivant de ce que le service ajoute ---------- */
 @property --glc-angle {{ syntax: "<angle>"; initial-value: 0deg; inherits: false; }}
