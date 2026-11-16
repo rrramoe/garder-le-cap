@@ -561,7 +561,8 @@ def test_introduction_puis_choix_du_compte(sans_agent):
         assert '<svg class="film"' in vue and "<video" not in texte and "<img" not in vue
         images_cles = next(m.value for m in at.markdown if m.value.startswith("<style>@keyframes"))
         assert "infinite" in images_cles and images_cles.count("@keyframes") >= 5
-        assert "inspect" not in texte.lower()  # le mot du produit est « analyser »
+        visible = __import__("re").sub(r"<style>.*?</style>", "", texte, flags=__import__("re").S)
+        assert "inspect" not in visible.lower()  # le mot du produit est « analyser »
         at.button(key="intro_suivant").click().run()
         assert not at.exception, at.exception
         if n == len(INTRODUCTION) - 1:  # le dernier panneau nomme le vrai ordre prêt d'un compte enregistré

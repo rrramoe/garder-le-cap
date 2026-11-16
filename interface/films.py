@@ -37,7 +37,7 @@ class Film:
         nom = f"{self.nom}{self.n}"
         corps = " ".join(f"{self._p(t)} {{ {props} }}" for t, props in etapes)
         self.regles.append(f"@keyframes {nom} {{ {corps} }}")
-        self.regles.append(f".{nom} {{ animation: {nom} {self.duree}s ease-out infinite both; "
+        self.regles.append(f".{nom} {{ animation: {nom} {self.duree}s cubic-bezier(.22, .8, .24, 1) infinite both; "
                            f"transform-box: fill-box; transform-origin: center; {extra} }}")
         return nom
 
@@ -98,7 +98,7 @@ class Film:
 # ---------------------------------------------------------------- pièces de dessin
 
 def carte(x: float, y: float, l: float, h: float, classe: str = "", rayon: float = 14) -> str:
-    return (f'<rect class="{classe}" x="{x}" y="{y}" width="{l}" height="{h}" rx="{rayon}" fill="{BLANC}" '
+    return (f'<rect class="carte {classe}" x="{x}" y="{y}" width="{l}" height="{h}" rx="{rayon}" fill="{BLANC}" '
             f'stroke="{BORD}" stroke-width="1.2"/>')
 
 

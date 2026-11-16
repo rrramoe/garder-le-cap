@@ -278,6 +278,16 @@ def variation(pourcentage: float | None, periode: str = "") -> str:
     return (f'<span class="glc-var {"hausse" if hausse else "baisse"}">{"▲" if hausse else "▼"} {texte}{suite}</span>')
 
 
+def lien(mot: str) -> str:
+    """Le lien entre deux cartes : un canal où la lumière descend, et le mot qui dit ce qui se passe."""
+    return f'<div class="glc-lien"><span class="canal"><i></i><i></i><i></i></span><span class="mot">{e(mot)}</span></div>'
+
+
+def etiquette_du_service(titre: str, sous: str = "") -> str:
+    """Le nom du travail propre au service, avec sa marque."""
+    return f'<p class="glc-sigma">{marque(18)}{e(titre)}' + (f"<span>· {e(sous)}</span>" if sous else "") + "</p>"
+
+
 def montrer(contenu: str) -> None:
     """Affiche un composant. Le contenu ne passe par aucune mise en forme : il est rendu tel quel."""
     import streamlit as st

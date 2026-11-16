@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+
 import streamlit as st
 
 from interface import composants as C
@@ -194,8 +196,12 @@ def politique(persona: str, fiche_client: dict) -> None:
     nom = etat.client_enregistre(persona)["nom"]
     articles, utilisees, connues = articles_de_la_politique(fiche_client)
     profil = fiche_client["deduit"]["profil"]["libelle"]
-    C.montrer(C.document("Politique de placement",
-                         f"Établie pour {nom} à partir de sa fiche · profil {profil}", articles))
+    C.montrer(C.lien("Votre fiche devient votre politique de placement"))
+    # La carte change de clé quand la politique change : elle se redessine alors avec une courte pulsation.
+    empreinte = hashlib.md5("".join(articles).encode("utf-8")).hexdigest()[:8]
+    with st.container(key=f"politique_{empreinte}"):
+        C.montrer(C.document("Politique de placement",
+                             f"Établie pour {nom} à partir de sa fiche · profil {profil}", articles))
     publiees = [connues[i] for i in utilisees if connues[i].get("nature") == "publie"]
     conventions = [connues[i] for i in utilisees if connues[i].get("nature") != "publie"]
     with st.expander("Références"):

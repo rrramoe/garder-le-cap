@@ -17,7 +17,7 @@ from interface import etat, marche
 from interface.theme import BAISSE, BORD, ENCRE, FILET, GRIS, HAUSSE, POLICE, POSITIF, TENSION
 from interface.textes import (AIDE_ANGLES, ANGLES_DEFAUT, AVIS_SANS_AGENT, BOUTON_ACTION, BOUTON_PASSER, CORRECTION_TEXTE,
                               DEJA_FAITE, DELAI_MAX_AGENT_S, DEPUIS_PRECEDENT, DIRECTIONS_TEXTE, EN_DIRECT_AGENT, LIBELLES_OUTILS,
-                              LIBELLES_PHASES, LIMITE, MESURES, OPERATIONS, SOLIDITE_TEXTE, STATUTS_REGLE, THEMES, TITRE_ANALYSE, TRACE,
+                              LIBELLES_PHASES, LIMITE, MESURES, NOM, OPERATIONS, SOLIDITE_TEXTE, STATUTS_REGLE, THEMES, TITRE_ANALYSE, TRACE,
                               TITRE_ETAPES, TYPES_ORDRE, VERIFICATION_TEXTE, angles_du_bloc, decrire_mesure,
                               derniers_prix_cad, dollars, francais, instruments, libelle_mesure, libelle_option,
                               libelle_theme_reponse, mesures_a_plat, nom_agent, nom_angle, nom_instrument, nombre,
@@ -698,7 +698,9 @@ def afficher(persona: str, fiche: dict) -> None:
     gauche, droite = st.columns([4.3, 7.7], gap="large")
     with gauche:
         billet(persona, fiche)
-    with droite:
+    # L'analyse est ce que le service ajoute au courtage : sa zone porte la lueur, plus vive pendant qu'elle tourne.
+    with droite, st.container(key="zone_sigma"):
+        C.montrer(C.etiquette_du_service(f"L'analyse {NOM}", "votre ordre face à votre politique de placement"))
         rapport = st.session_state.get(f"rapport_{persona}")
         if rapport is not None:
             analyse(persona, rapport, fiche)
