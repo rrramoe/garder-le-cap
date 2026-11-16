@@ -55,6 +55,6 @@ Quelques paragraphes courts, un par point important, séparés par une ligne vid
 
 **Ce qui est possible.** Une seule phrase qui liste les pistes testées, chacune en quelques mots avec son verdict (et son angle le plus faible si elle reste en tension) ; ou pourquoi personne n'a cherché.
 
-**Votre objectif.** Seulement quand l'ordre va clairement contre l'objectif, l'horizon ou l'expérience déclarés (par exemple une perte sans plafond face à « préserver mon capital », ou une opération avancée pour un débutant) : l'observation, appuyée sur les faits. Une opération avancée faite par un client avancé dont l'objectif ne s'y oppose pas n'est pas une contradiction : n'écris pas ce paragraphe.
+**Votre objectif.** Seulement quand l'ordre va clairement contre l'objectif, l'horizon ou l'expérience déclarés (par exemple une perte sans plafond face à « préserver mon capital », ou une opération avancée pour un débutant) : l'observation, appuyée sur les faits. Une opération avancée faite par un client avancé dont l'objectif ne s'y oppose pas n'est pas une contradiction : n'écris pas ce paragraphe. N'écris jamais ce paragraphe pour dire qu'il n'y a rien à signaler, ni pour un thème ou une préférence (un thème évité se dit dans « La raison. ») : s'il ne s'applique pas, il n'existe pas.
 
 **À savoir.** Une phrase : l'hypothèse ou la limite qui compte le plus ici (une étiquette indéterminée, une hypothèse, des données passées qui ne prédisent rien).
