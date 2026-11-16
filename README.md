@@ -78,6 +78,8 @@ cp glc.env.exemple glc.env
 
 Les deux scripts de création peuvent être relancés sans risque : ils réutilisent les ressources existantes. Une variable déjà présente dans l'environnement l'emporte sur `glc.env`.
 
+Quand `GLC_BUCKET` est configuré, les fichiers de référence sont lus dans le bucket, pas dans `reference/` : après une modification de `reference/`, relancez `scripts/creer_bucket.py` pour que le bucket et le dépôt restent identiques.
+
 **Sans AWS**, l'application fonctionne : la fiche du client, la politique déduite, le portefeuille, le verdict, les cinq angles et le rapport du moteur s'affichent, avec l'avis « Explication de l'agent indisponible ». Les fichiers de référence sont lus dans `reference/`.
 **Il faut AWS** pour l'explication rédigée par les agents, les pistes de l'explorateur, le contrôle du garde-fou et la lecture des références dans S3.
 
