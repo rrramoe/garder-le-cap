@@ -111,7 +111,7 @@ class Film:
         etapes = [(0, "opacity: 0;"), (t0, "opacity: 0;"), (t0 + 0.3, "opacity: 1; transform: none;")]
         t = t0 + 0.3
         while t + 1.2 < self.duree - 0.2:
-            etapes += [(t + 0.6, "opacity: .35; transform: scale(0.9);"), (t + 1.2, "opacity: 1; transform: none;")]
+            etapes += [(t + 0.6, "opacity: .4; transform: scale(0.9);"), (t + 1.2, "opacity: 1; transform: none;")]
             t += 1.2
         etapes.append((self.duree, "opacity: 1; transform: none;"))
         return self.cle(etapes, courbe="ease-in-out")
@@ -169,14 +169,14 @@ class Film:
         d = self.duree
         self.regles.append(f"@keyframes {self.nom}0 {{ 0% {{ opacity: 1; }} {self._p(d - 0.5)} {{ opacity: 1; }} {self._p(d - 0.15)} {{ opacity: 0; }} 100% {{ opacity: 0; }} }}")
         self.regles.append(f".{self.nom}0 {{ animation: {self.nom}0 {d}s linear infinite both; }}")
-        self.regles.append(f"svg.film .fo {{ filter: drop-shadow(0 12px 20px rgba(2, 8, 20, .42)); }}")
+        self.regles.append("svg.film .fo { filter: drop-shadow(0 12px 20px rgba(2, 8, 20, .42)); }")
         style = "<style>" + " ".join(self.regles) + "</style>"
         fond = (f'<defs><radialGradient id="fl-scene" gradientUnits="userSpaceOnUse" cx="260" cy="190" r="430">'
                 f'<stop offset="0" stop-color="{NUIT_CLAIRE}"/><stop offset="1" stop-color="{NUIT}"/></radialGradient>'
                 f'<linearGradient id="fl-lueur" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3D97EC"/>'
                 f'<stop offset="1" stop-color="{VIOLET}"/></linearGradient>'
-                f'<radialGradient id="fl-halo"><stop offset="0" stop-color="{VIOLET}" stop-opacity=".55"/>'
-                f'<stop offset=".55" stop-color="{ACCENT}" stop-opacity=".28"/><stop offset="1" stop-color="{ACCENT}" stop-opacity="0"/></radialGradient>'
+                f'<radialGradient id="fl-halo"><stop offset="0" stop-color="{VIOLET}" stop-opacity=".8"/>'
+                f'<stop offset=".6" stop-color="#4C8FE6" stop-opacity=".42"/><stop offset="1" stop-color="#3D97EC" stop-opacity="0"/></radialGradient>'
                 f'<pattern id="fl-grain" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="{BLANC}" opacity=".055"/></pattern></defs>'
                 f'<rect x="-1500" y="-1500" width="3520" height="3440" fill="url(#fl-scene)"/>'
                 f'<rect x="-1500" y="-1500" width="3520" height="3440" fill="url(#fl-grain)"/>')
@@ -239,8 +239,11 @@ def champ(x: float, y: float, l: float, etiquette: str, valeur: str, classe_halo
             f'{texte(x + 13, y + 31, valeur, 14, ENCRE, True, classe=classe_valeur)}{cache}{lueur}</g>')
 
 
-def bouton(x: float, y: float, l: float, libelle: str, classe: str = "") -> str:
-    return (f'<g class="{classe}"><rect x="{x}" y="{y}" width="{l}" height="42" rx="21" fill="{ACCENT}"/>'
+def bouton(x: float, y: float, l: float, libelle: str, classe: str = "", classe_lueur: str = "") -> str:
+    """Le bouton de l'action ; sa lueur, du bleu vers le violet, dit que l'analyse est partie."""
+    lueur = (f'<rect class="{classe_lueur}" x="{x - 4}" y="{y - 4}" width="{l + 8}" height="50" rx="25" fill="none" '
+             f'stroke="url(#fl-lueur)" stroke-width="2.4"/>' if classe_lueur else "")
+    return (f'<g class="{classe}">{lueur}<rect x="{x}" y="{y}" width="{l}" height="42" rx="21" fill="{ACCENT}"/>'
             f'{texte(x + l / 2, y + 26, libelle, 13.5, BLANC, True, "middle")}</g>')
 
 
@@ -261,21 +264,22 @@ def zone(x: float, y: float, l: float, h: float, classe: str = "") -> str:
 def ecart() -> tuple[str, str]:
     """Le cours suit la zone de la politique de placement ; un ordre arrive, la ligne s'en écarte, l'écart est mesuré."""
     f = Film("fa", 6.8)
-    decor = (zone(20, 206, 444, 68) + texte(44, 192, "Votre politique de placement", 13, CLAIR)
-             + f'<circle cx="482" cy="240" r="16" fill="none" stroke="{BLANC}" stroke-width="2.4"/>'
-               f'<circle cx="482" cy="240" r="5.5" fill="{BLANC}"/>'
-             + texte(506, 304, "Vos objectifs", 13, BLANC, True, "end"))
-    c = (f'<path class="{f.apparait(1.95, dy=0, duree=0.6)}" d="M250 240 C320 232 390 246 462 240" fill="none" stroke="{CLAIR}" stroke-width="2.2" stroke-dasharray="1 8" stroke-linecap="round"/>'
-         + texte(356, 262, "il reste dans votre politique", 12, CLAIR, False, "middle", f.apparait(2.3))
-         + f.course([(44, 250), (110, 224), (170, 258), (250, 240)], 0.2, 1.6, BLANC)
-         + f.anneau(250, 240, 1.55, 14, BLANC)
-         + texte(250, 304, "Un ordre", 13, BLANC, True, "middle", f.apparait(1.6))
-         + f'<line class="{f.apparait(1.6, dy=0)}" x1="250" y1="256" x2="250" y2="288" stroke="{CLAIR}" stroke-width="1.2" stroke-dasharray="2 4"/>'
-         + f.course([(250, 240), (300, 222), (350, 162), (400, 100)], 2.7, 4.0, AMBRE)
-         + texte(306, 150, "il vous en écarte", 12, CLAIR, False, "end", f.apparait(3.5))
-         + f'<g class="{f.apparait(3.95, dy=0)}"><path d="M400 118 V200 M393 118 H407 M393 200 H407" fill="none" stroke="{BLANC}" stroke-width="1.6" stroke-linecap="round"/></g>'
-         + texte(414, 164, "l'écart, mesuré", 12.5, BLANC, True, classe=f.apparait(4.25, dx=-6, dy=0)))
-    return f.scene(f'<g transform="translate(0 30)">{decor}{f.fin(c)}</g>',
+    decor = (zone(20, 236, 448, 80) + texte(48, 222, "Votre politique de placement", 13.5, CLAIR)
+             + f'<circle cx="486" cy="276" r="17" fill="none" stroke="{BLANC}" stroke-width="2.4"/>'
+               f'<circle cx="486" cy="276" r="6" fill="{BLANC}"/>'
+             + texte(506, 348, "Vos objectifs", 14, BLANC, True, "end"))
+    c = (f'<path class="{f.apparait(1.95, dy=0, duree=0.6)}" d="M250 276 C320 266 390 284 464 276" fill="none" stroke="{CLAIR}" stroke-width="2.2" stroke-dasharray="1 8" stroke-linecap="round"/>'
+         + texte(358, 302, "il reste dans votre politique", 12.5, CLAIR, False, "middle", f.apparait(2.3))
+         + f.course([(46, 288), (112, 258), (172, 298), (250, 276)], 0.2, 1.6, BLANC)
+         + f.anneau(250, 276, 1.55, 15, BLANC)
+         + texte(250, 348, "Un ordre", 14, BLANC, True, "middle", f.apparait(1.6))
+         + f'<line class="{f.apparait(1.6, dy=0)}" x1="250" y1="293" x2="250" y2="330" stroke="{CLAIR}" stroke-width="1.2" stroke-dasharray="2 4"/>'
+         + f.course([(250, 276), (304, 254), (352, 170), (400, 92)], 2.7, 4.0, AMBRE)
+         + texte(300, 168, "il vous en écarte", 12.5, CLAIR, False, "end", f.apparait(3.5))
+         + f'<g class="{f.apparait(3.95, dy=0)}"><path d="M400 112 V228 M392 112 H408 M392 228 H408" fill="none" stroke="{BLANC}" stroke-width="1.8" stroke-linecap="round"/></g>'
+         + texte(415, 175, "l'écart,", 13, BLANC, True, classe=f.apparait(4.25, dx=-6, dy=0))
+         + texte(415, 192, "mesuré", 13, BLANC, True, classe=f.apparait(4.35, dx=-6, dy=0)))
+    return f.scene(decor + f.fin(c),
                    titre="Un ordre peut rester dans votre politique de placement ou s'en écarter : l'écart est mesuré")
 
 
@@ -310,7 +314,7 @@ def fiche() -> tuple[str, str]:
     lien = (f'<path class="{f.apparait(2.75, dx=-8, dy=0)}" d="M208 220 H228 M222 213 l7 7 l-7 7" fill="none" stroke="{CIEL}" '
             f'stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>')
     doc = (carte(240, 30, 260, 380)
-           + f'<circle cx="266" cy="62" r="14" fill="url(#fl-lueur)"/>' + texte(266, 67.5, "σ", 16, BLANC, True, "middle")
+           + '<circle cx="266" cy="62" r="14" fill="url(#fl-lueur)"/>' + texte(266, 67.5, "σ", 16, BLANC, True, "middle")
            + texte(290, 67, "Politique de placement", 14, ENCRE, True)
            + f'<line x1="258" y1="88" x2="482" y2="88" stroke="{FILET}" stroke-width="1.2"/>')
     articles = [("Profil d'investisseur", None, None, 2), ("Répartition", 52, 92, 124), ("Limites de risque", 0, 112, 74),
@@ -352,7 +356,7 @@ def epreuve(ticker: str, montant: str) -> tuple[str, str]:
               + champ(40, 190, 172, "Montant", montant, f.passe(1.0, 1.75, 0.2), classe_valeur=f.fondu,
                       cache=f.tape(50, 201, 158, 30, 1.15, 1.6, max(len(str(montant)), 1)))
               + f.onde(126, 311, 2.3, 70)
-              + bouton(40, 290, 172, "Analyser l'ordre", f.appuie(2.3))
+              + bouton(40, 290, 172, "Analyser l'ordre", f.appuie(2.3), f.passe(2.45, d - 0.6, 0.35))
               + f.fin(pointeur(184, 320, f.cle([(0, loin), (1.55, loin), (2.15, "opacity: 1; transform: none;"),
                                                 (d, "opacity: 1; transform: none;")], courbe=ALLER))))
     issues = [("Il y reste", "compatible", MENTHE, "plein", [(0, 0), (58, -13), (118, 13), (190, 0)]),
@@ -458,7 +462,7 @@ def billet(nom: str, titre: str, operation: str, montant: str) -> tuple[str, str
          + champ(142, 208, 236, "Montant", montant, classe_valeur=f.fondu,
                  cache=f.tape(152, 219, 222, 30, 0.85, 1.25, max(len(str(montant)), 1)))
          + f.onde(260, 297, 2.1, 84)
-         + bouton(142, 276, 236, "Analyser l'ordre", f.appuie(2.1))
+         + bouton(142, 276, 236, "Analyser l'ordre", f.appuie(2.1), f.passe(2.25, d - 0.6, 0.35))
          + f.fin(f'<g class="{f.apparait(2.4, dy=0, echelle=0.8)}"><circle cx="260" cy="364" r="22" fill="{VOILE}" stroke="{PISTE}" stroke-width="4"/>'
                  f'<g class="{tourne}"><circle cx="260" cy="364" r="22" fill="none" stroke="url(#fl-lueur)" stroke-width="4" stroke-linecap="round" stroke-dasharray="42 200"/></g>'
                  f'<g class="{f.bat(2.5)}">{texte(260, 371.5, "?", 21, ENCRE, True, "middle")}</g></g>'
