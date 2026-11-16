@@ -62,6 +62,7 @@ def resume(r: dict) -> dict:
                                   "raison_du_repli": a.get("raison_du_repli")} for a in r["agents"]
                                  if a["nom"] == "explorateur"), None),
             "ancrage": r["ancrage"].get("statut"), "correction": r.get("correction"),
+            "jugements": (r["agents"][0] if r.get("agents") else {}).get("jugements"),
             "explication": r["explication"]}
 
 
@@ -83,9 +84,15 @@ def main() -> int:
     print("\n1. Thèmes différents, pistes différentes :", pistes["robert_tsla"] != pistes["robert_tsla_techno_exclue"])
     print("2. Causes différentes (TSLA risque, RY.TO plafond, BTC-USD crypto), familles :", familles["robert_tsla"],
           familles["robert_ry"], familles["robert_btc"])
-    print("3. Débutante et avancée, explications différentes :",
-          resultats["robert_tsla"]["explication"] != resultats["robert_tsla_debutante"]["explication"])
-    print("4. Mateo XOM sans explorateur :", not any("envoyer_explorateur" in o for o in resultats["mateo_xom"]["outils"]))
+    a, d = resultats["robert_tsla"]["explication"] or "", resultats["robert_tsla_debutante"]["explication"] or ""
+    nomme = lambda t: any(m in t.lower() for m in ("objectif", "horizon", "capital", "ans"))
+    mots = lambda t: len(t.split())
+    print("3. Même ordre, avancée et débutante : la même explication standard, les deux nomment l'objectif ou "
+          "l'horizon :", nomme(a) and nomme(d), "| mots :", mots(a), mots(d))
+    x = resultats["mateo_xom"]
+    print("4. Mateo XOM (incompatible) : verdict", x["verdict"], "| explorateur", (x["explorateur"] or {}).get("statut"),
+          "| pistes (règle respectée par le code) :", [p["piste"] for p in x["pistes"]])
+    print("   chef : jugements", {n: r.get("jugements") for n, r in resultats.items() if r.get("jugements")})
     deb, ava = resultats["decouvert_debutante"], resultats["decouvert_avancee"]
     print("5. Vente à découvert : verdicts du moteur (débutante, avancée) :", deb["verdict"], ava["verdict"])
     print("   contradiction nommée (débutante, avancée) :",
