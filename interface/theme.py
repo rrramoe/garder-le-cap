@@ -170,14 +170,9 @@ div[class*="st-key-introduction"] {{ max-width: 1080px; margin: 16px auto 0 auto
   border-left: 2px solid var(--bord); }}
 .stApp .glc-vue {{ background: var(--voile); border-radius: 20px; padding: 28px; height: 480px; overflow: hidden;
   display: flex; flex-direction: column; justify-content: center; position: relative; }}
-.stApp .glc-vue.clip {{ padding: 18px; }}
-.stApp .glc-vue.clip video {{ width: 100%; height: 100%; object-fit: contain; display: block; border-radius: 10px; }}
-/* une image qui joue : jamais de commandes, de bouton de lecture ni de menu, même si la lecture est refusée */
-.stApp .glc-vue.clip video {{ pointer-events: none; background: transparent; }}
-.stApp .glc-vue.clip video::-webkit-media-controls, .stApp .glc-vue.clip video::-webkit-media-controls-panel,
-.stApp .glc-vue.clip video::-webkit-media-controls-start-playback-button,
-.stApp .glc-vue.clip video::-webkit-media-controls-overlay-play-button {{ display: none !important;
-  -webkit-appearance: none; opacity: 0; }}
+.stApp .glc-vue.film {{ padding: 14px; }}
+.stApp .glc-vue svg.film {{ width: 100%; height: 100%; display: block; overflow: visible; }}
+.stApp .glc-vue svg.film text {{ font-family: inherit; }}
 .stApp .glc-vue > .glc-carte, .stApp .glc-vue > .glc-paire > div {{ box-shadow: 0 10px 30px rgba(var(--ombre), 0.07); }}
 .stApp .glc-vue .glc-angles {{ grid-template-columns: repeat(5, 1fr); gap: 2px; }}
 .stApp .glc-vue .glc-angle {{ padding: 8px 0; }}
@@ -510,7 +505,7 @@ hr {{ border-color: var(--bord); }}
   .stApp .glc-intro {{ min-height: 0; padding-top: 4px; }}
   .stApp .glc-intro h1 {{ font-size: var(--t4); }}
   .stApp .glc-vue, .stApp .glc-vue:has(.glc-billet) {{ height: auto; min-height: 220px; padding: 14px; }}
-  .stApp .glc-vue.clip {{ height: 360px; padding: 10px; }}
+  .stApp .glc-vue.film {{ height: 320px; padding: 8px; }}
   .stApp .glc-paire {{ grid-template-columns: 1fr; }}
   .stApp .glc-paire > svg {{ transform: rotate(90deg); }}
   .stApp table.glc-table .nb {{ white-space: normal; }}

@@ -557,15 +557,16 @@ def test_introduction_puis_choix_du_compte(sans_agent):
         assert f"{n + 1} / {len(INTRODUCTION)}" in texte and lignes[0] in texte and note in texte
         assert "{" not in texte.split("</style>")[-1]  # les titres qui nomment un ordre sont remplis
         vue = next(m.value for m in at.markdown if 'class="glc-vue' in m.value)
-        assert len(vue) > 400  # chaque panneau montre une vraie vue du service, fixe ou filmée
-        if "<video" in vue:  # un clip joue seul, muet, en boucle, sans commandes, avec son affiche
-            assert all(mot in vue for mot in ("autoplay", "muted", "loop", "playsinline", 'poster="data:image/jpeg'))
-            assert "controls" not in vue
+        # Chaque panneau montre une histoire dessinée qui joue seule : un SVG, ses images clés, aucune vidéo.
+        assert '<svg class="film"' in vue and "<video" not in texte and "<img" not in vue
+        images_cles = next(m.value for m in at.markdown if m.value.startswith("<style>@keyframes"))
+        assert "infinite" in images_cles and images_cles.count("@keyframes") >= 5
         assert "inspect" not in texte.lower()  # le mot du produit est « analyser »
         at.button(key="intro_suivant").click().run()
         assert not at.exception, at.exception
         if n == len(INTRODUCTION) - 1:  # le dernier panneau nomme le vrai ordre prêt d'un compte enregistré
             assert "Robert veut 120 000 $ de Tesla." in texte
+            assert "TSLA — Tesla" in vue and "120 000 $" in vue and "Acheter" in vue  # le vrai ordre, dessiné
     # Après le dernier panneau : le choix d'un compte, les comptes prêts d'abord, puis le nouveau compte.
     assert at.session_state["etape"] == "comptes"
     assert [b.key for b in at.button][:4] == ["compte_robert", "compte_mateo", "compte_amira", "compte_nouveau"]
@@ -636,23 +637,22 @@ def test_nom_du_service_et_trace_de_l_analyse(monkeypatch):
     assert "Chaque analyse laisse une trace" in _textes(at) and textes.NOM in _textes(at)
 
 
-def test_clips_de_l_introduction_legers_et_vues_fixes_en_secours(sans_agent, monkeypatch, tmp_path):
-    """Chaque clip pèse moins de 700 Ko et a son affiche ; sans clip, le panneau montre sa vue fixe."""
-    from interface import page_accueil
+def test_films_de_l_introduction_et_vues_fixes_en_secours(sans_agent, monkeypatch):
+    """Les films sont du SVG animé, sans fichier ; si un film ne peut pas être fait, la vue fixe prend sa place."""
+    from interface import films, page_accueil
     from interface.textes import INTRODUCTION
-    clips = sorted(page_accueil.ASSETS.glob("intro_*.mp4"))
-    assert {c.stem.removeprefix("intro_") for c in clips} <= {cle for cle, *_ in INTRODUCTION}
-    for clip in clips:
-        assert clip.stat().st_size < 700_000, clip.name
-        assert clip.with_suffix(".jpg").exists(), clip.name
-    # Sans aucun clip : les vues fixes, faites des vrais composants, et le vrai billet d'ordre au dernier panneau.
-    monkeypatch.setattr(page_accueil, "ASSETS", tmp_path)
-    page_accueil._clip.cache_clear()
-    try:
-        at = _ouvrir()
-        for _ in range(len(INTRODUCTION) - 1):
-            assert "<video" not in _textes(at)
-            at.button(key="intro_suivant").click().run()
-        assert "<video" not in _textes(at) and "TSLA — Tesla" in _textes(at)
-    finally:
-        page_accueil._clip.cache_clear()
+    assert not list((Path(APP).parent / "interface").rglob("*.mp4"))  # aucune vidéo dans le dépôt de l'interface
+    style, dessin = films.resultat([{"nom": "Risque", "note": 21.0, "decide": True}, {"nom": "Objectif", "note": None}],
+                                   {"libelle": "En tension", "code": "en_tension"}, 70.0)
+    assert "Angle" in dessin and "En tension" in dessin and ">21<" in dessin and "infinite" in style
+
+    def panne(*a, **k):
+        raise RuntimeError("film indisponible")
+
+    monkeypatch.setattr(page_accueil, "_film", panne)
+    at = _ouvrir()
+    for _ in range(len(INTRODUCTION) - 1):
+        assert '<svg class="film"' not in _textes(at) and 'class="glc-vue"' in _textes(at)
+        at.button(key="intro_suivant").click().run()
+        assert not at.exception, at.exception
+    assert "TSLA — Tesla" in _textes(at)

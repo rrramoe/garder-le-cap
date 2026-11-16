@@ -2,15 +2,11 @@
 
 from __future__ import annotations
 
-import base64
-import functools
-from pathlib import Path
-
 import streamlit as st
 
 from moteur import api, references
 from interface import composants as C
-from interface import etat
+from interface import etat, films
 from interface.theme import BLANC, BLEU_CLAIR, ENCRE, GRIS, TENSION
 from interface.textes import (AIDE_ANGLES, BOUTON_ACTION, BOUTON_ESSAI, BOUTON_PASSER_INTRO, CHAMPS_Q, CLASSES,
                               INTRO_FIN, INTRO_REPRENDRE, INTRO_RETOUR, INTRO_SUIVANT, INTRODUCTION, ISSUE_REGLE,
@@ -266,28 +262,47 @@ VUES = {"ecart": _vue_ecart, "fiche": _vue_fiche, "issues": _vue_issues, "result
 
 # ---------------------------------------------------------------- l'introduction
 
-ASSETS = Path(__file__).resolve().parent / "assets"
+def _film(cle: str) -> tuple[str, str]:
+    """Le film d'un panneau : une histoire dessinée qui joue seule. Les mots et les chiffres qu'elle montre
+    sont ceux de l'ordre prêt d'un compte enregistré, lus dans le moteur."""
+    if cle == "ecart":
+        return films.ecart()
+    if cle == "fiche":
+        return films.fiche()
+    exemple = _exemple()
+    if not exemple:
+        raise LookupError("aucun compte enregistré avec un ordre prêt")
+    client, fiche = exemple
+    o = client["ordre_demo"]
+    montant = dollars(o["pourcentage"] * client["valeur"] / 100)
+    if cle == "issues":
+        return films.epreuve(str(o["ticker"]), montant)
+    if cle == "billet":
+        nom_titre = instruments().get(o["ticker"], {}).get("nom", "")
+        operation = OPERATIONS.get(o["sens"], {}).get("libelle", str(o["sens"]).capitalize())
+        return films.billet(client["nom"], f"{o['ticker']} — {nom_titre}" if nom_titre else str(o["ticker"]),
+                            operation, montant)
+    sim = _simulation(fiche, o["ticker"], o["sens"], float(o["pourcentage"]))
+    if "erreur" in sim:
+        raise LookupError(sim["erreur"])
+    apres, angles = sim["apres"], []
+    for angle in angles_du_bloc(apres):
+        n = apres["notes"][angle]
+        sans = n.get("sans_objet") or n.get("note") is None
+        angles.append({"nom": nom_angle(angle), "note": None if sans else n["note"],
+                       "decide": angle == apres.get("dimension_min") and not sans
+                       and sim["verdict"]["code"] != "incompatible"})
+    return films.resultat(angles, sim["verdict"], LIMITE)
 
 
-@functools.lru_cache(maxsize=None)
-def _clip(cle: str) -> tuple[str, str] | None:
-    """Le clip d'un panneau (MP4 muet) et son affiche, encodés pour être servis avec la page elle-même :
-    aucune adresse de plus à joindre, donc rien qui dépende du chemin par lequel on atteint l'application."""
-    video, affiche = ASSETS / f"intro_{cle}.mp4", ASSETS / f"intro_{cle}.jpg"
-    if not (video.exists() and affiche.exists()):
-        return None
-    return (base64.b64encode(video.read_bytes()).decode("ascii"), base64.b64encode(affiche.read_bytes()).decode("ascii"))
-
-
-def vue(cle: str) -> str:
-    """La vue d'un panneau : son clip s'il existe (il joue seul, muet, en boucle ; son affiche reste si la
-    lecture est impossible), sinon la vue fixe, faite des vrais composants."""
-    clip = _clip(cle)
-    if clip is None:
-        return f'<div class="glc-vue">{VUES[cle]()}</div>'
-    return ('<div class="glc-vue clip"><video autoplay muted loop playsinline disablepictureinpicture '
-            'disableremoteplayback tabindex="-1" aria-hidden="true" preload="auto" '
-            f'poster="data:image/jpeg;base64,{clip[1]}" src="data:video/mp4;base64,{clip[0]}"></video></div>')
+def vue(cle: str) -> tuple[str, str]:
+    """La vue d'un panneau : (feuille d'images clés, dessin). Si le film ne peut pas être fait, la vue fixe,
+    faite des vrais composants, prend sa place."""
+    try:
+        style, dessin = _film(cle)
+        return style, f'<div class="glc-vue film">{dessin}</div>'
+    except Exception:
+        return "", f'<div class="glc-vue">{VUES[cle]()}</div>'
 
 
 def _titre(titre: str) -> str:
@@ -325,7 +340,10 @@ def introduction() -> None:
             suivant.button(suite, key="intro_suivant", type="primary", width="stretch",
                            on_click=etat.avancer_introduction, args=(1, dernier))
         with droite:
-            C.montrer(vue(cle))
+            style, dessin = vue(cle)
+            if style:
+                C.montrer(style)
+            C.montrer(dessin)
 
 
 # ---------------------------------------------------------------- le choix d'un compte
