@@ -115,7 +115,9 @@ def test_un_rejeu_n_ecrit_aucune_trace(faux_aws):
 def test_un_client_en_panne_ne_casse_rien(faux_aws, monkeypatch):
     monkeypatch.setattr(traces, "CLIENTS", (FauxS3(panne=True), FauxLogs(panne=True)))
     r = _analyser()
-    assert r["erreur"] is None and r["explication"] == "**Le verdict.** En tension." and r["trace_aws"]
+    assert r["erreur"] is None and r["explication"] == "**Le verdict.** En tension."
+    assert r["trace_aws"] is None                                  # trace non écrite : aucun identifiant montré
+    assert _analyser()["trace_aws"] is None                        # ni dans l'analyse rejouée
 
 
 def test_traces_eteintes_ou_sans_bucket(faux_aws, monkeypatch):
@@ -139,3 +141,43 @@ def test_sans_groupe_aucune_ligne(faux_aws, monkeypatch):
     monkeypatch.setenv("GLC_JOURNAL_GROUPE", "")
     _analyser()
     assert len(s3.objets) == 1 and not logs.lignes
+
+
+class FauxS3Lent(FauxS3):
+    def put_object(self, **kwargs):
+        import time
+        time.sleep(0.5)
+        super().put_object(**kwargs)
+
+
+def test_identifiant_garde_une_fois_la_trace_ecrite(faux_aws, monkeypatch):
+    s3 = FauxS3Lent()
+    monkeypatch.setattr(traces, "CLIENTS", (s3, FauxLogs()))
+    monkeypatch.setattr(traces, "ATTENDRE", False)                 # comme l'application : écriture en fond
+    r = _analyser()
+    assert r["trace_aws"] is None and not s3.objets                # pas encore écrite : pas d'identifiant
+    traces.attendre_ecritures()                                    # ce que fait le script de préchauffage
+    (_, cle), trace = next(iter(s3.objets.items()))
+    rejoue = _analyser()
+    assert rejoue["memoire"]["statut"] == "deja_faite" and rejoue["trace_aws"]["id"] == trace["identifiant"]
+
+
+def test_compte_de_visiteur_sans_nom_dans_la_trace(faux_aws):
+    s3, logs = faux_aws
+    nom = "Zorglub Quixotte"
+    client = {"id": "zorglub-quixotte", "nom": nom,
+              "questionnaire": {"objectif": "croissance_equilibree", "horizon": "8_12", "fluctuations": "moderees",
+                                "experience": "intermediaire", "themes": {}},
+              "portefeuille_pct": {"ZST.TO": 15, "XBB.TO": 35, "AGG": 15, "XIU.TO": 8, "RY.TO": 6, "FTS.TO": 4,
+                                   "ENB.TO": 3, "JNJ": 5, "PG": 4, "GLD": 5}}
+    principal = [[("lire_fiche_client", {"client_id": "zorglub-quixotte"}),
+                  ("simuler_ordre", {"client_id": "zorglub-quixotte", "ticker": "TSLA", "sens": "achat",
+                                     "pourcentage": 15})],
+                 f"**Le verdict.** En tension pour {nom}, compte zorglub-quixotte."]
+    r = inspection.inspecter(client, "TSLA", "achat", 15, modele=ModeleSimule(principal), equipe=True, chef=True,
+                             tracer=True, memoire=True)
+    assert r["trace_aws"]
+    texte = json.dumps(next(iter(s3.objets.values())), ensure_ascii=False).lower()
+    assert "zorglub" not in texte and "quixotte" not in texte and "le client" in texte
+    assert "zorglub" not in json.dumps(logs.lignes, ensure_ascii=False).lower()
+    assert "Zorglub" in r["explication"]                           # seule la trace est anonymisée, pas l'analyse

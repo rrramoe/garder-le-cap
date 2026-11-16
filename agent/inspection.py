@@ -541,6 +541,8 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
     utiliser = MEMOIRE and (memoire if memoire is not None else reel)
     tracer = reel if tracer is None else bool(tracer)
 
+    tenue = {"cle": None}
+
     def faire(diffuser):
         """L'analyse, puis sa trace (identifiant dans le résultat, écriture en fond) : jamais d'effet sur l'analyse."""
         r = analyser(client, ticker, sens, pourcentage, modele, operation, diffuser, equipe, modele_explorateur, chef)
@@ -557,8 +559,13 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
                             "equipe": EQUIPE if equipe is None else bool(equipe),
                             "chef": CHEF if chef is None else bool(chef), "effort": EFFORT,
                             "effort_explorateur": EFFORT_EXPLORATEUR, "memoire": MEMOIRE}
-                identifiant = _traces.preparer(r, fiche if isinstance(fiche, dict) else {}, ordre, reglages)
-                r["trace_aws"] = {"id": identifiant} if identifiant else None
+                def apres(identifiant):
+                    # L'identifiant n'arrive au résultat et à la mémoire qu'une fois la trace écrite.
+                    r["trace_aws"] = {"id": identifiant}
+                    if tenue["cle"]:
+                        from . import memoire as _memoire_traces
+                        _memoire_traces.completer(tenue["cle"], {"trace_aws": {"id": identifiant}})
+                _traces.preparer(r, fiche if isinstance(fiche, dict) else {}, ordre, reglages, apres=apres)
             except Exception:
                 r["trace_aws"] = None
         return r
@@ -575,6 +582,7 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
         r["memoire"] = None
         return r
     from . import memoire as _memoire
+    tenue["cle"] = cle
     return _memoire.partager(cle, faire, sur_etape=sur_etape, relancer=relancer)
 
 

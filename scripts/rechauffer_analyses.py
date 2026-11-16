@@ -17,7 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from agent import inspection, memoire  # noqa: E402
+from agent import inspection, memoire, traces  # noqa: E402
 from moteur import references  # noqa: E402
 
 
@@ -38,12 +38,16 @@ def rechauffer(cid: str, ordre: dict) -> str:
 
 
 def main() -> int:
+    # Un script se termine : chaque trace est écrite avant la fin de son analyse, et l'identifiant n'est gardé
+    # dans la mémoire que si la trace a bien été écrite.
+    traces.ATTENDRE = True
     ordres = ordres_preremplis()
     if not ordres:
         print("Aucun ordre prérempli dans les clients enregistrés.")
         return 0
     with ThreadPoolExecutor(max_workers=2) as pool:
         lignes = list(pool.map(lambda o: rechauffer(*o), ordres))
+    traces.attendre_ecritures()
     print("\n".join(lignes))
     print(f"Mémoire : {memoire.fichier()}")
     return 0 if all("NON gardée" not in l for l in lignes) else 1

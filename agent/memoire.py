@@ -119,6 +119,16 @@ def _trouver(cle: str) -> dict | None:
     return None
 
 
+def completer(cle: str, champs: dict) -> None:
+    """Ajoute des champs à une analyse gardée (par exemple l'identifiant de sa trace, une fois écrite)."""
+    with _verrou:
+        entree = _finies.get(cle)
+        if entree is None:
+            return
+        entree["resultat"].update(copy.deepcopy(champs))
+        _ecrire_fichier(cle, entree)
+
+
 def oublier(cle: str | None = None) -> None:
     """Vide la mémoire (toute, ou une seule analyse) ; le fichier local n'est pas touché."""
     with _verrou:

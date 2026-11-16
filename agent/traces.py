@@ -97,7 +97,8 @@ def construire(resultat: dict, fiche: dict, ordre: dict, reglages: dict, identif
     simulation = next((e.get("resultat") for e in trace if e.get("outil") == "simuler_ordre"
                        and e.get("agent") in (None, "principal") and isinstance(e.get("resultat"), dict)), {}) or {}
     ancrage = resultat.get("ancrage") or {}
-    return {
+    compte = str(fiche.get("id") or "").strip()
+    trace = {
         "identifiant": identifiant,
         "heure_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "version_application": _version_application(),
@@ -123,6 +124,39 @@ def construire(resultat: dict, fiche: dict, ordre: dict, reglages: dict, identif
         "repli": explorateur.get("statut") == "repli",
         "erreur": resultat.get("erreur"),
     }
+    if compte.lower() not in comptes_enregistres():
+        # Un compte de visiteur : aucun nom tapé par un visiteur n'entre dans la trace (ni son identifiant).
+        trace = anonymiser(trace, [str(fiche.get("nom") or "").strip(), compte])
+        trace["identifiant"] = identifiant
+    return trace
+
+
+def comptes_enregistres() -> set:
+    try:
+        from moteur import references
+        return set(references.charger("personas")["personas"])
+    except Exception:
+        return set()
+
+
+def anonymiser(objet, noms: list):
+    """Remplace le nom (et l'identifiant) d'un compte de visiteur par « le client » dans tous les textes."""
+    import re
+
+    motifs = [re.compile(re.escape(n), re.IGNORECASE) for n in sorted({n for n in noms if n and len(n) >= 2},
+                                                                      key=len, reverse=True)]
+
+    def nettoyer(x):
+        if isinstance(x, str):
+            for m in motifs:
+                x = m.sub("le client", x)
+            return x
+        if isinstance(x, dict):
+            return {nettoyer(k) if isinstance(k, str) else k: nettoyer(v) for k, v in x.items()}
+        if isinstance(x, list):
+            return [nettoyer(v) for v in x]
+        return x
+    return nettoyer(objet) if motifs else objet
 
 
 def ligne_compacte(trace: dict) -> str:
@@ -185,8 +219,25 @@ CLIENTS = None        # (s3, logs) imposés par les essais ; sinon créés à l'
 ATTENDRE = False      # les essais attendent la fin de l'écriture
 
 
-def preparer(resultat: dict, fiche: dict, ordre: dict, reglages: dict, s3=None, logs=None, attendre=None) -> str | None:
-    """Donne un identifiant à l'analyse et lance l'écriture de sa trace en fond. None si les traces sont éteintes."""
+_fils: list = []
+_verrou_fils = threading.Lock()
+
+
+def attendre_ecritures(delai_s: float = 20) -> None:
+    """Attend la fin des écritures de traces en cours (pour un script qui se termine après ses analyses)."""
+    with _verrou_fils:
+        fils = list(_fils)
+    fin = time.monotonic() + delai_s
+    for f in fils:
+        f.join(max(0.0, fin - time.monotonic()))
+
+
+def preparer(resultat: dict, fiche: dict, ordre: dict, reglages: dict, s3=None, logs=None, attendre=None,
+             apres=None) -> str | None:
+    """Donne un identifiant à l'analyse et lance l'écriture de sa trace en fond. None si les traces sont éteintes.
+
+    `apres(identifiant)` n'est appelé que si l'objet de la trace a bien été écrit : c'est lui qui donne
+    l'identifiant au résultat et à la mémoire, jamais avant."""
     if not actives():
         return None
     try:
@@ -196,7 +247,20 @@ def preparer(resultat: dict, fiche: dict, ordre: dict, reglages: dict, s3=None, 
         return None
     if CLIENTS is not None and s3 is None and logs is None:
         s3, logs = CLIENTS
-    fil = threading.Thread(target=ecrire, args=(trace, s3, logs), name="trace", daemon=True)
+    def ecrire_puis_annoncer():
+        try:
+            if ecrire(trace, s3, logs).get("s3") and apres is not None:
+                apres(identifiant)
+        except Exception:
+            pass
+        finally:
+            with _verrou_fils:
+                if threading.current_thread() in _fils:
+                    _fils.remove(threading.current_thread())
+
+    fil = threading.Thread(target=ecrire_puis_annoncer, name="trace", daemon=True)
+    with _verrou_fils:
+        _fils.append(fil)
     fil.start()
     if attendre if attendre is not None else ATTENDRE:
         fil.join(10)
