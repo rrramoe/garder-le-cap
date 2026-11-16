@@ -70,7 +70,7 @@ Les contraintes strictes d'abord ; puis chaque famille prend sa mesure la plus f
 | `diversification` (« Mon portefeuille reste-t-il bien réparti ? ») | Les cinq mesures d'avant ; `geographie_actions` : en % du portefeuille, actions canadiennes face à cible d'actions du profil x 40 % et actions hors du Canada face à x 60 % (`fbngp_repartition_actions_2024` : 40 % Canada, 40 % États-Unis, 20 % étranger), limites à 10 points de part et d'autre de chaque cible (`rbcgam_fourchettes_regionales_2025`) ; la plus faible des deux (`decide`, `sous_mesures`) ; hypothèse `hypothese_geographie` |
 | `preferences` (« L'ordre respecte-t-il mes préférences ? ») | Inchangée, tous les thèmes de la fiche |
 
-Limites publiées et bandes : `reference/limites_risque.json`. La solidité recalcule seulement la pire baisse et la durée sur ses deux fenêtres ; les autres familles y gardent leur note de la période complète.
+Limites publiées et bandes : `reference/limites_risque.json`. La solidité recalcule sur ses deux fenêtres toutes les mesures fondées sur l'historique (voir `solidite`).
 
 ## `etat_des_lieux(client)`
 
@@ -120,14 +120,14 @@ Même résultat que `simuler_ordre`, plus `ordres` ; `ordre` est le premier ordr
 
 ## `solidite(client, ticker, sens, pourcentage)`
 
-Section 7.7 : la note de risque du portefeuille après l'ordre est recalculée sur deux fenêtres, **défavorable** (2022 seule) et **favorable** (toute la période sans 2022), avec les mêmes formules et des portefeuilles étalons recalculés sur la même fenêtre. Le score d'une fenêtre est le minimum de cette note de risque et des notes de diversification et de préférences (qui ne dépendent pas de l'historique). Le score principal reste celui de la période complète.
+Chaque mesure fondée sur l'historique est recalculée sur deux fenêtres, **défavorable** (2022 seule) et **favorable** (toute la période sans 2022), avec les mêmes formules et les mêmes limites que la période complète : angle Risque (pire baisse avec des portefeuilles étalons recalculés sur la même fenêtre, durée sous le sommet, fluctuations, pire année) et angle Objectif quand la mesure est le capital préservé. Les autres angles ne dépendent pas de l'historique et gardent leur note. Une mesure qu'une fenêtre est trop courte pour calculer (par exemple les fluctuations ou le capital préservé sur trois ans en 2022 seule) est `indetermine`, porte `raison` et ne décide pas. La note d'une fenêtre est celle de son angle déterminant ; la note principale reste celle de la période complète, et aucun verdict ne dépend de la solidité.
 
 | Champ | Contenu |
 |---|---|
 | `statut`, `libelle` | `solide` (la note la plus faible est du même côté de 70 dans les deux fenêtres) ou `fragile` |
 | `explication`, `regle` | La règle et son résultat, en français |
 | `score_principal` | Le score de la période complète |
-| `fenetres` | `defavorable` et `favorable` : `{libelle, debut, fin, score, dimension_min, dans_la_politique, note_risque}` ; `note_risque` = `{note, mesure_min, mesures}` (`ampleur`, `duree`) |
+| `fenetres` | `defavorable` et `favorable` : `{libelle, debut, fin, score, dimension_min, dans_la_politique, note_risque, note_objectif, mesures_indeterminees}` ; `note_risque` = `{note, mesure_min, mesures}` (`ampleur`, `duree`, `fluctuations`, `pire_annee`) ; `note_objectif` = l'angle Objectif recalculé, ou `null` si sa mesure ne dépend pas de l'historique |
 | `ordre`, `verdict` | Rappel de l'ordre et du verdict |
 
 Le même bloc figure dans le résultat de `simuler_ordre` (champ `solidite`). Fenêtre favorable : les rendements d'avant et d'après 2022 sont mis bout à bout, les dates d'après 2022 avancées de 365 jours (la durée sous l'eau ne compte pas l'année retirée).

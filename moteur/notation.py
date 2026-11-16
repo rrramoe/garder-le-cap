@@ -496,7 +496,8 @@ def _rendement_revenu(poids_pct: dict) -> float | None:
     return total
 
 
-def note_objectif(port: dict, fiche: dict) -> dict:
+def note_objectif(port: dict, fiche: dict, valeur=None) -> dict:
+    """`valeur` : la valeur du portefeuille sur une autre période (solidité) ; par défaut, toute la période."""
     obj = fiche["questionnaire"]["objectif"]
     profil_id = fiche["deduit"]["profil"]["valeur"]
     f_actions = fiche["deduit"]["fourchettes_pct"]["valeur"]["actions"]
@@ -504,7 +505,7 @@ def note_objectif(port: dict, fiche: dict) -> dict:
     if obj == "preserver_capital":
         h = float(fiche["deduit"]["horizon_annees"]["valeur"])
         annees = min(FENETRE_MAX_ANNEES, max(FENETRE_MIN_ANNEES, h))
-        pf = pire_fenetre(donnees.valeur_portefeuille(port), annees)
+        pf = pire_fenetre(donnees.valeur_portefeuille(port) if valeur is None else valeur, annees)
         pente, src = _pire_annee_banque(profil_id)
         m = {**base, "libelle": "Pire rendement cumulé sur une fenêtre de la durée de l'horizon",
              "fenetre_annees": annees, "horizon_annees": h, "fenetre_ajustee": annees != h,
