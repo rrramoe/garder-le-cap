@@ -59,7 +59,13 @@ def libelle_outil(outil: str, arguments: dict, ticker_ordre: str | None = None) 
     if outil == "decrire_apport":
         return f"Je regarde ce que {symbole or 'l’instrument'} apporterait à votre portefeuille."
     if outil == "envoyer_explorateur":
-        return "J'envoie l'explorateur chercher des pistes."
+        return "Je décide qu'il faut chercher et j'envoie l'explorateur avec son mandat."
+    if outil == "juger_pistes":
+        if str(a.get("decision", "")).lower() == "a_completer":
+            critique = str(a.get("critique") or "").strip().rstrip(".")
+            return f"Je demande une recherche complémentaire : {critique}." if critique else \
+                "Je demande une recherche complémentaire."
+        return "Je juge les pistes : elles répondent à la cause."
     return "J'appelle un outil du moteur."
 
 

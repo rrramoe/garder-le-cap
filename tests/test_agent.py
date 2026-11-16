@@ -465,7 +465,7 @@ EXPLORATEUR_ROBERT = [
 
 def test_equipe_chef_de_dossier_et_explorateur():
     evenements = []
-    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(PRINCIPAL_ROBERT), equipe=True,
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(PRINCIPAL_ROBERT), equipe=True, chef=False,
                              modele_explorateur=ModeleSimule(EXPLORATEUR_ROBERT), sur_etape=evenements.append)
     assert set(r) == CHAMPS and r["erreur"] is None
     assert [(e["agent"], e["outil"]) for e in r["trace"]] == [
@@ -498,7 +498,7 @@ def test_explorateur_refuse_hors_tension():
         principal = [[("lire_fiche_client", {"client_id": client})], [("simuler_ordre", ordre)],
                      [("envoyer_explorateur", {"client_id": client, "mission": "Cherche."})], "Texte."]
         explorateur = ModeleSimule(EXPLORATEUR_ROBERT)
-        r = inspection.inspecter(client, ticker, "achat", pct, modele=ModeleSimule(principal), equipe=True,
+        r = inspection.inspecter(client, ticker, "achat", pct, modele=ModeleSimule(principal), equipe=True, chef=False,
                                  modele_explorateur=explorateur)
         assert explorateur.appels == 0 and r["pistes"] == [] and r["intention"] is None
         assert motif in r["trace"][2]["resultat"]["erreur"]
@@ -508,7 +508,7 @@ def test_explorateur_refuse_hors_tension():
 def test_explorateur_envoye_une_seule_fois():
     principal = PRINCIPAL_ROBERT[:4] + [[("envoyer_explorateur", {"client_id": "robert", "mission": "Encore."})],
                                         "Texte."]
-    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(principal), equipe=True,
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(principal), equipe=True, chef=False,
                              modele_explorateur=ModeleSimule(EXPLORATEUR_ROBERT))
     envois = [e for e in r["trace"] if e["outil"] == "envoyer_explorateur"]
     assert len(envois) == 2 and "déjà été envoyé" in envois[1]["resultat"]["erreur"]
@@ -518,7 +518,7 @@ def test_explorateur_envoye_une_seule_fois():
 def test_explorateur_en_echec_repli_sur_la_taille_du_code():
     from botocore.exceptions import ClientError
     e = ClientError({"Error": {"Code": "ThrottlingException", "Message": "trop"}}, "ConverseStream")
-    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(PRINCIPAL_ROBERT), equipe=True,
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(PRINCIPAL_ROBERT), equipe=True, chef=False,
                              modele_explorateur=ModeleSimule([], erreur=e))
     assert r["erreur"] is None and r["agents"][1]["statut"] == "repli"
     assert "taille compatible calculée par le code" in r["agents"][1]["avis"]
@@ -540,7 +540,7 @@ def test_explorateur_trop_lent_repli(monkeypatch):
     from agent import explorateur
     monkeypatch.setattr(explorateur, "DELAI_EXPLORATEUR_S", 0.5)
     evenements = []
-    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(PRINCIPAL_ROBERT), equipe=True,
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(PRINCIPAL_ROBERT), equipe=True, chef=False,
                              modele_explorateur=ModeleLent(EXPLORATEUR_ROBERT), sur_etape=evenements.append)
     assert r["agents"][1]["statut"] == "repli" and "délai" in r["agents"][1]["raison_du_repli"]
     assert [p["famille"] for p in r["pistes"]] == ["montant_reduit"]
@@ -692,7 +692,7 @@ def test_explorateur_recoit_des_resultats_compacts_et_la_trace_les_complets():
                    "Mission.", api.simuler_ordre("robert", "TSLA", "achat", 15))
     for cle in ('"apport"', '"instrument"', '"fourchettes_pct"', '"portefeuille_deja_hors_politique":false'):
         assert cle in texte
-    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(PRINCIPAL_ROBERT), equipe=True,
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(PRINCIPAL_ROBERT), equipe=True, chef=False,
                              modele_explorateur=ModeleSimule(EXPLORATEUR_ROBERT))
     etape = next(e for e in r["trace"] if e["outil"] == "simuler_scenario")
     assert etape["resultat"]["avant"] and etape["resultat_resume"].startswith("Scénario : achat de 7,5 % de TSLA")
@@ -737,7 +737,7 @@ def test_repli_sans_piste_avancee_pour_un_debutant():
                  "**Verdict** : en tension."]
     e = ClientError({"Error": {"Code": "ThrottlingException", "Message": "trop"}}, "ConverseStream")
     r = inspection.inspecter(client, "TSLA", "vente", 10, operation="decouvert", modele=ModeleSimule(principal),
-                             equipe=True, modele_explorateur=ModeleSimule([], erreur=e))
+                             equipe=True, chef=False, modele_explorateur=ModeleSimule([], erreur=e))
     assert r["agents"][1]["statut"] == "repli" and r["pistes"] == []
     assert "n'est pas proposée à un client débutant" in r["agents"][1]["avis"]
 
@@ -750,7 +750,7 @@ def test_explorateur_qui_conclut_sans_piste():
     principal = [[("simuler_ordre", ordre)],
                  [("envoyer_explorateur", {"client_id": "robert", "mission": "Débutante."})], "**Verdict** : x."]
     r = inspection.inspecter(client, "TSLA", "vente", 10, operation="decouvert", modele=ModeleSimule(principal),
-                             equipe=True, modele_explorateur=ModeleSimule(explorateur))
+                             equipe=True, chef=False, modele_explorateur=ModeleSimule(explorateur))
     assert r["agents"][1]["statut"] == "termine" and r["pistes"] == []
     assert r["agents"][1]["bilan"].startswith("aucun ajustement raisonnable")
 
@@ -783,3 +783,82 @@ def test_correction_quand_le_texte_parle_d_un_score():
     from agent.inspection import motifs_de_correction
     assert motifs_de_correction({"statut": "appuyee"}, "Le score passe de 56,25 à 39,6.")
     assert not motifs_de_correction({"statut": "appuyee"}, "L'angle du risque décide : la pire baisse dépasse sa limite.")
+
+
+# --- Le chef de dossier : il trie, écrit le mandat, juge les pistes ----------------------------------
+
+MANDAT = {"client_id": "robert", "finalite_supposee": "l'achat semble viser une action de croissance.",
+          "cause": "la pire baisse dépasse la limite du profil.", "a_respecter": "le thème spéculatif évité.",
+          "pistes_d_abord": "un partage avec un fonds diversifié."}
+LECTURES_ROBERT = [("lire_fiche_client", {"client_id": "robert"}), ("lire_fiche_instrument", {"ticker": "TSLA"}),
+                   ("decrire_apport", {"client_id": "robert", "ticker": "TSLA", "pourcentage": 15}),
+                   ("simuler_ordre", ORDRE_ROBERT)]
+
+
+def test_chef_renvoie_une_fois_puis_le_code_refuse():
+    principal = [LECTURES_ROBERT, [("envoyer_explorateur", MANDAT)],
+                 [("juger_pistes", {"client_id": "robert", "decision": "a_completer",
+                                    "critique": "Une seule piste ; essaie un autre instrument."})],
+                 [("juger_pistes", {"client_id": "robert", "decision": "a_completer", "critique": "Encore."})],
+                 "**Verdict** : en tension."]
+    explorateur = [[("simuler_scenario", {"client_id": "robert", "ordres": PARTAGE, "raison": "Partage."})],
+                   "Pistes retenues : 1\nBilan : un partage.",
+                   [("simuler_ordre", {**ORDRE_ROBERT, "ticker": "SPY", "raison": "Autre instrument."})],
+                   "Pistes retenues : 1, 2\nBilan : un partage et un autre instrument."]
+    evenements = []
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(principal), equipe=True, chef=True,
+                             modele_explorateur=ModeleSimule(explorateur), sur_etape=evenements.append)
+    assert r["erreur"] is None
+    assert [(e["agent"], e["outil"]) for e in r["trace"]][4:] == [
+        ("principal", "envoyer_explorateur"), ("explorateur", "simuler_scenario"), ("principal", "juger_pistes"),
+        ("explorateur", "simuler_ordre"), ("principal", "juger_pistes")]
+    assert [p["famille"] for p in r["pistes"]] == ["achat_partage", "autre_instrument"]
+    assert [p["etape"] for p in r["pistes"]] == [6, 8]
+    assert "déjà été renvoyé" in r["trace"][8]["resultat"]["erreur"]
+    assert r["intention"] == MANDAT["finalite_supposee"]                    # l'hypothèse du chef de dossier
+    jugements = r["agents"][0]["jugements"]
+    assert [j["decision"] for j in jugements] == ["a_completer", "a_completer"] and jugements[1].get("refuse")
+    libelles = [e["libelle"] for e in evenements if e["moment"] == "debut_outil" and e["agent"] == "principal"]
+    assert "Je demande une recherche complémentaire : Une seule piste ; essaie un autre instrument." in libelles
+    assert any(l.startswith("Je décide qu'il faut chercher") for l in libelles)
+
+
+def test_chef_juge_suffisant_sans_renvoi():
+    principal = [LECTURES_ROBERT, [("envoyer_explorateur", MANDAT)],
+                 [("juger_pistes", {"client_id": "robert", "decision": "suffisant"})], "**Verdict** : en tension."]
+    explorateur = [[("simuler_scenario", {"client_id": "robert", "ordres": PARTAGE, "raison": "Partage."})],
+                   "Pistes retenues : 1\nBilan : un partage."]
+    modele = ModeleSimule(explorateur)
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(principal), equipe=True, chef=True,
+                             modele_explorateur=modele)
+    assert modele.appels == 2 and len(r["pistes"]) == 1
+    assert r["trace"][-1]["resultat_resume"] == "Pistes jugées suffisantes."
+
+
+def test_chef_mandat_etroit_pour_un_ordre_incompatible():
+    ordre = {"client_id": "mateo", "ticker": "XOM", "sens": "achat", "pourcentage": 8}
+    mandat = {**MANDAT, "client_id": "mateo", "a_respecter": "l'exclusion des sociétés écartées ESG."}
+    principal = [[("simuler_ordre", ordre)], [("envoyer_explorateur", mandat)],
+                 [("juger_pistes", {"client_id": "mateo", "decision": "suffisant"})], "**Verdict** : incompatible."]
+    explorateur = [[("chercher_taille_compatible", {**ordre, "raison": "Plus petit."}),
+                    ("simuler_ordre", {**ordre, "ticker": "ENB.TO", "raison": "Énergie canadienne."}),
+                    ("simuler_ordre", {**ordre, "ticker": "CNR.TO", "raison": "Autre secteur établi."})],
+                   "Pistes retenues : 1\nBilan : un autre instrument."]
+    r = inspection.inspecter("mateo", "XOM", "achat", 8, modele=ModeleSimule(principal), equipe=True, chef=True,
+                             modele_explorateur=ModeleSimule(explorateur))
+    etapes = {e["arguments"].get("ticker") if e["outil"] == "simuler_ordre" else e["outil"]: e["resultat"]
+              for e in r["trace"] if e["agent"] == "explorateur"}
+    assert "ne répare pas une règle stricte" in etapes["chercher_taille_compatible"]["erreur"]
+    assert "viole une règle stricte" in etapes["ENB.TO"]["erreur"]
+    assert [p["description"] for p in r["pistes"]] == ["Achat de 8 % de CNR.TO à la place de XOM"]
+    assert r["trace"][0]["resultat"]["verdict"]["code"] == "incompatible"        # l'ordre reste incompatible
+    assert r["agents"][0]["mandat"] == "remplacer"
+
+
+def test_chef_ne_cherche_pas_pour_un_ordre_compatible():
+    ordre = {"client_id": "robert", "ticker": "XIU.TO", "sens": "achat", "pourcentage": 2}
+    principal = [[("simuler_ordre", ordre)], [("envoyer_explorateur", MANDAT)], "**Verdict** : compatible."]
+    explorateur = ModeleSimule(["x"])
+    r = inspection.inspecter("robert", "XIU.TO", "achat", 2, modele=ModeleSimule(principal), equipe=True, chef=True,
+                             modele_explorateur=explorateur)
+    assert explorateur.appels == 0 and "déjà compatible" in r["trace"][1]["resultat"]["erreur"]

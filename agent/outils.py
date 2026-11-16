@@ -153,7 +153,7 @@ LIMITE_PISTES = 4     # pistes rendues au chef de dossier, au plus
 LIMITE_ESSAIS = 6     # essais de l'explorateur, au plus (il en garde quatre)
 
 
-def creer_outils_principal(client, envoyer) -> list:
+def creer_outils_principal(client, envoyer, juger=None) -> list:
     """Outils du chef de dossier : les trois lectures et `envoyer_explorateur`.
 
     `envoyer(mission)` est fourni par l'analyse : il vérifie les règles (ordre en tension, un seul envoi), fait
@@ -162,10 +162,13 @@ def creer_outils_principal(client, envoyer) -> list:
     communs = {t.tool_name: t for t in creer_outils(client)}
     id_lie = identifiant_client(client)
 
+    if juger is not None:   # le chef de dossier comprend le cas : il lit aussi l'apport de l'instrument
+        return _outils_chef(client, envoyer, juger, communs, id_lie)
+
     @tool(name="envoyer_explorateur")
     def envoyer_explorateur(client_id: str, mission: str) -> dict:
-        """Envoie l'agent explorateur chercher des pistes pour un ordre « en tension » (refusé sinon, et une seule
-        fois par analyse). Il renvoie son hypothèse sur ce que l'ordre apporte, la cause, et 2 à 4 pistes testées
+        """Envoie l'agent explorateur chercher des pistes pour un ordre « en tension », ou, avec un mandat étroit
+        (remplacer l'instrument), pour un ordre « incompatible ». Refusé pour un ordre compatible ; une fois par analyse. Il renvoie son hypothèse sur ce que l'ordre apporte, la cause, et 2 à 4 pistes testées
         par le moteur, chacune avec sa raison et son résultat (verdict, score, direction).
 
         Args:
@@ -223,14 +226,69 @@ def compacter_apport(r: dict, candidats: int = 8) -> dict:
     return c
 
 
+def _outils_chef(client, envoyer, juger, communs, id_lie) -> list:
+    """Outils du chef de dossier qui comprend le cas, décide de la recherche, écrit le mandat et juge le retour."""
+    apport = creer_outil_decrire_apport(client)
+
+    def lie(client_id):
+        if str(client_id).strip().lower() != id_lie:
+            return {"erreur": f"Cette analyse porte sur le client « {id_lie} » : utilisez client_id=\"{id_lie}\"."}
+        return None
+
+    @tool(name="envoyer_explorateur")
+    def envoyer_explorateur(client_id: str, finalite_supposee: str, cause: str, a_respecter: str,
+                            pistes_d_abord: str) -> dict:
+        """Envoie l'explorateur chercher des pistes avec ton mandat, pour un ordre « en tension », ou « incompatible »
+        (mandat étroit : remplacer l'instrument). Refusé pour un ordre compatible ; une seule fois par analyse. Il
+        renvoie de 2 à 4 pistes testées par le moteur, chacune avec la façon dont elle sert la finalité et répond à la
+        cause.
+
+        Args:
+            client_id: Identifiant du client de l'analyse.
+            finalite_supposee: Ta lecture de ce que l'ordre semble viser pour ce portefeuille (une hypothèse).
+            cause: La règle en cause et ce qui la fait, telle que tu la lis.
+            a_respecter: Ce que les pistes doivent respecter pour ce client : exclusions, préférences, expérience,
+                besoin de liquidités, et pour un ordre incompatible la règle stricte violée.
+            pistes_d_abord: Le genre de pistes à explorer d'abord, et pourquoi.
+        """
+        mandat = {"finalite_supposee": finalite_supposee, "cause": cause, "a_respecter": a_respecter,
+                  "pistes_d_abord": pistes_d_abord}
+        return lie(client_id) or envoyer(mandat)
+
+    @tool(name="juger_pistes")
+    def juger_pistes(client_id: str, decision: str, critique: str = "") -> dict:
+        """Ton jugement des pistes rendues par l'explorateur, au regard de ta lecture et de ton mandat. `decision` =
+        « suffisant » (rédige ensuite le rapport) ou « a_completer » avec une critique précise : l'explorateur fait un
+        tour de plus (trois essais au plus) et te renvoie ses pistes. Un seul renvoi ; le code refuse le second.
+
+        Args:
+            client_id: Identifiant du client de l'analyse.
+            decision: « suffisant » ou « a_completer ».
+            critique: Pour « a_completer », en une ou deux phrases : ce qui manque aux pistes.
+        """
+        return lie(client_id) or juger(str(decision or "").strip().lower(), str(critique or "").strip())
+
+    return [communs["lire_fiche_client"], communs["lire_fiche_instrument"], apport, communs["simuler_ordre"],
+            envoyer_explorateur, juger_pistes]
+
+
 def creer_outils_explorateur(client, limite_essais: int = LIMITE_ESSAIS, registre: dict | None = None,
-                             operations_avancees: bool = True) -> list:
+                             operations_avancees: bool = True, mode: str = "ajuster", ticker_ordre: str | None = None,
+                             bornes: dict | None = None) -> list:
     """Outils de l'explorateur. Chaque essai porte sa `raison` et reçoit un numéro (`essai`) ; le code borne les
     essais à `limite_essais`. L'explorateur reçoit un résultat compact ; le résultat complet de chaque essai va dans
     `registre` (numéro d'essai → résultat), pour la trace et le rapport."""
     id_lie = identifiant_client(client)
-    essais = {"n": 0}
+    essais = bornes if bornes is not None else {"n": 0, "limite": None}
+    essais.setdefault("n", 0)
     registre = {} if registre is None else registre
+    ticker_ordre = str(ticker_ordre or "").strip().upper()
+
+    def remplace(ordres) -> bool:
+        """Mandat « remplacer » : aucune jambe n'achète l'instrument de l'ordre, et au moins une achète autre chose."""
+        jambes = [o for o in ordres if isinstance(o, dict)]
+        achats = [str(o.get("ticker", "")).strip().upper() for o in jambes if str(o.get("sens", "")).lower() == "achat"]
+        return bool(achats) and ticker_ordre not in achats
 
     def verifier(client_id, operations=()):
         if str(client_id).strip().lower() != id_lie:
@@ -238,11 +296,23 @@ def creer_outils_explorateur(client, limite_essais: int = LIMITE_ESSAIS, registr
         if not operations_avancees and any(str(o or "comptant").strip().lower() != "comptant" for o in operations):
             return {"erreur": "Client débutant : une piste n'utilise ni l'achat sur marge ni la vente à découvert. "
                               "Cherche une voie au comptant, ou dis qu'il n'y en a pas."}
-        if essais["n"] >= limite_essais:
-            return {"erreur": f"Limite de {limite_essais} essais atteinte : rends ton compte rendu."}
+        limite = essais.get("limite") or limite_essais
+        if essais["n"] >= limite:
+            return {"erreur": f"Limite de {limite} essais atteinte : rends ton compte rendu."}
+        return None
+
+    def refus_mandat(ordres):
+        if mode == "remplacer" and not remplace(ordres):
+            return {"erreur": "Ordre incompatible : aucun montant ne répare une règle stricte. Seules les pistes qui "
+                              "remplacent l'instrument (seules, ou payées par une vente) sont acceptées."}
         return None
 
     def numeroter(resultat: dict, compacter=compacter_simulation) -> dict:
+        if isinstance(resultat, dict) and (resultat.get("contraintes_strictes") or {}).get("violee"):
+            # Règle du code : jamais une piste qui viole une règle stricte du client.
+            return {"erreur": "Cette piste viole une règle stricte du client ("
+                              + ", ".join(resultat["contraintes_strictes"].get("themes_violes") or []) +
+                              ") : elle n'est pas retenue."}
         if isinstance(resultat, dict) and "erreur" not in resultat:
             essais["n"] += 1
             registre[essais["n"]] = {"essai": essais["n"], **resultat}
@@ -265,8 +335,8 @@ def creer_outils_explorateur(client, limite_essais: int = LIMITE_ESSAIS, registr
             raison: Une phrase : ce que la piste garde de la finalité supposée, et comment elle répond à la cause.
             operation: « comptant » (par défaut), « marge » ou « decouvert ».
         """
-        return verifier(client_id, [operation]) or numeroter(api.simuler_ordre(client, ticker, sens, pourcentage,
-                                                                                 operation))
+        return (verifier(client_id, [operation]) or refus_mandat([{"ticker": ticker, "sens": sens}]) or
+                numeroter(api.simuler_ordre(client, ticker, sens, pourcentage, operation)))
 
     @tool(name="simuler_scenario")
     def simuler_scenario(client_id: str, ordres: list[dict], raison: str) -> dict:
@@ -281,7 +351,8 @@ def creer_outils_explorateur(client, limite_essais: int = LIMITE_ESSAIS, registr
             raison: Une phrase : ce que la piste garde de la finalité supposée, et comment elle répond à la cause.
         """
         jambes = [o.get("operation") for o in ordres or [] if isinstance(o, dict)]
-        return verifier(client_id, jambes) or numeroter(api.simuler_scenario(client, ordres))
+        return (verifier(client_id, jambes) or refus_mandat(ordres or []) or
+                numeroter(api.simuler_scenario(client, ordres)))
 
     @tool(name="chercher_taille_compatible")
     def chercher_taille_compatible(client_id: str, ticker: str, sens: str, pourcentage: float, raison: str,
@@ -297,6 +368,9 @@ def creer_outils_explorateur(client, limite_essais: int = LIMITE_ESSAIS, registr
             raison: Une phrase : pourquoi cette piste répond à la cause.
             operation: « comptant » (par défaut), « marge » ou « decouvert ».
         """
+        if mode == "remplacer":
+            return {"erreur": "Ordre incompatible : un montant plus petit ne répare pas une règle stricte. Cherche un "
+                              "autre instrument."}
         return verifier(client_id, [operation]) or numeroter(
             api.chercher_taille_compatible(client, ticker, sens, pourcentage, operation), compacter_taille)
 

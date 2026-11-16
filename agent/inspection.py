@@ -30,12 +30,16 @@ LIMITE_TOURS = 10            # agent seul : 7 tours dans le chemin le plus long 
 LIMITE_TOURS_PRINCIPAL = 8   # équipe : 3 lectures, l'envoi de l'explorateur, le rapport, avec une marge
 # Équipe de deux agents (chef de dossier + explorateur). GLC_EQUIPE=0 revient à l'agent seul d'avant.
 EQUIPE = os.environ.get("GLC_EQUIPE", "1").strip() != "0"
+# Le chef de dossier décide s'il faut chercher (ordre incompatible compris) et juge les pistes, avec un renvoi au plus.
+# GLC_CHEF=0 revient à l'équipe d'avant (envoi pour un ordre en tension seulement, sans jugement des pistes).
+CHEF = os.environ.get("GLC_CHEF", "1").strip() != "0"
 # Profondeur de raisonnement (output_config.effort) : « medium » garde les preuves de l'équipe et divise le temps
 # de chaque tour ; GLC_EFFORT=high revient au défaut du modèle.
 EFFORT = os.environ.get("GLC_EFFORT", "medium").strip() or None
 TENTATIVES_SDK = {"max_attempts": 4, "mode": "adaptive"}   # mode de tentatives de botocore (ThrottlingException)
 PROMPT_SYSTEME = Path(__file__).parent / "prompts" / "systeme.md"        # agent seul
 PROMPT_PRINCIPAL = Path(__file__).parent / "prompts" / "principal.md"    # chef de dossier de l'équipe
+PROMPT_CHEF = Path(__file__).parent / "prompts" / "principal_chef.md"   # le même, qui trie et juge (CHEF)
 
 
 def nom_modele(modele=None) -> str:
@@ -70,7 +74,7 @@ def creer_modele(model_id: str, effort: str | None = None, garde_fou: bool = Tru
                         boto_client_config=Config(retries=TENTATIVES_SDK, read_timeout=120, connect_timeout=10))
 
 
-def creer_agent(client, modele=None, suivi=None, envoyer=None):
+def creer_agent(client, modele=None, suivi=None, envoyer=None, juger=None):
     """Agent Strands d'une analyse. `modele` : identifiant Bedrock, ou objet modèle Strands (essais).
 
     `suivi` : un `agent.suivi.Suivi` qui relaie les étapes en direct, ou None. `envoyer` : la fonction qui fait
@@ -81,8 +85,11 @@ def creer_agent(client, modele=None, suivi=None, envoyer=None):
     if modele is None or isinstance(modele, str):
         identifiants.charger_identifiants()
         modele = creer_modele(nom_modele(modele))
-    outils, prompt = ((creer_outils_principal(client, envoyer), PROMPT_PRINCIPAL) if envoyer is not None
-                      else (creer_outils(client), PROMPT_SYSTEME))
+    if envoyer is None:
+        outils, prompt = creer_outils(client), PROMPT_SYSTEME
+    else:
+        outils = creer_outils_principal(client, envoyer, juger)
+        prompt = PROMPT_CHEF if juger is not None else PROMPT_PRINCIPAL
     return Agent(model=modele, tools=outils, system_prompt=prompt.read_text(encoding="utf-8"),
                  callback_handler=suivi.rappel if suivi is not None else None,
                  name="principal" if envoyer is not None else "inspection",
@@ -230,6 +237,11 @@ def resumer(outil: str, r) -> str:
                     f"{_nombre(r.get('taille_demandee_pct'))} % demandés ({ISSUES.get(r.get('issue'), r.get('issue'))}).")
         if outil == "lister_instruments":
             return f"{r.get('nombre')} instruments (classe : {CLASSES.get(r.get('classe'), r.get('classe'))})."
+        if outil == "juger_pistes":
+            if r.get("decision") == "suffisant":
+                return "Pistes jugées suffisantes."
+            pistes = r.get("pistes") or []
+            return f"Recherche complémentaire faite : {len(pistes)} piste(s) retenue(s)."
         if outil == "envoyer_explorateur":
             pistes = r.get("pistes") or []
             liste = " ; ".join(f"{p.get('piste')} : {str(p.get('verdict') or '').lower()}" for p in pistes)
@@ -435,7 +447,7 @@ def message_erreur(e: Exception) -> str:
 # --- Point d'entrée -----------------------------------------------------------------------------
 
 def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptant", sur_etape=None,
-              equipe=None, modele_explorateur=None) -> dict:
+              equipe=None, modele_explorateur=None, chef=None) -> dict:
     """Fait analyser l'ordre par les agents. Ne lève jamais d'exception.
 
     `equipe` (par défaut le réglage `EQUIPE`) : le chef de dossier, qui envoie l'explorateur pour un ordre en
@@ -448,12 +460,13 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
     """
     debut = time.monotonic()
     equipe = EQUIPE if equipe is None else bool(equipe)
+    chef = equipe and (CHEF if chef is None else bool(chef))
     T, S = str(ticker).strip().upper(), str(sens).strip().lower()
     op = str(operation or "comptant").strip().lower()
     compteur = Compteur()
     suivi = Suivi(sur_etape, agent="principal", ticker_ordre=T, compteur=compteur)
     agent, explication, erreur, trace = None, None, None, []
-    envoi = {"resultat": None, "mission": None, "refus": []}
+    envoi = {"resultat": None, "mission": None, "refus": [], "explorateur": None, "mode": None, "jugements": []}
     config = _garde_fou.configuration_garde_fou()
     simule = not (modele is None or isinstance(modele, str))
     etat_garde_fou = {"actif": bool(config) and not simule, "version": config["version"] if config else None,
@@ -471,23 +484,46 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
         if "erreur" in sim:
             return {"erreur": sim["erreur"]}
         code = sim["verdict"]["code"]
-        if code != "en_tension":
+        permis = ("en_tension", "incompatible") if chef else ("en_tension",)
+        if code not in permis:
             refus = ("L'explorateur n'est envoyé que pour un ordre « en tension » : "
                      + ("une contrainte stricte est violée, et rien ne la répare." if code == "incompatible"
-                        else "l'ordre est déjà compatible."))
+                        else "l'ordre est déjà compatible.")) if not chef else \
+                "L'explorateur n'est pas envoyé pour un ordre déjà compatible."
             envoi["refus"].append(refus)
             return {"erreur": refus}
         envoi["mission"] = mission
-        envoi["resultat"] = _explorateur.explorer(
-            client, {"ticker": T, "sens": S, "pourcentage": float(pourcentage), "operation": op}, mission, sim,
+        envoi["mode"] = "remplacer" if code == "incompatible" else "ajuster"
+        if isinstance(mission, dict) and code == "incompatible":
+            mission = {**mission, "mandat": "remplacer l'instrument : aucun montant ne répare une règle stricte"}
+        envoi["explorateur"] = _explorateur.Explorateur(
+            client, {"ticker": T, "sens": S, "pourcentage": float(pourcentage), "operation": op}, sim,
             modele=modele_explorateur if modele_explorateur is not None else modele, sur_etape=sur_etape,
-            compteur=compteur)
+            compteur=compteur, mode=envoi["mode"], sous_mandat=isinstance(mission, dict))
+        envoi["resultat"] = envoi["explorateur"].lancer(mission)
         return envoi["resultat"]["retour"]
 
+    def juger(decision: str, critique: str) -> dict:
+        """Règles du code pour le jugement : après un retour de l'explorateur, un seul renvoi."""
+        if envoi["explorateur"] is None:
+            return {"erreur": "Aucun travail de l'explorateur à juger."}
+        if decision not in ("suffisant", "a_completer"):
+            return {"erreur": "decision vaut « suffisant » ou « a_completer »."}
+        envoi["jugements"].append({"decision": decision, "critique": critique or None})
+        if decision == "suffisant":
+            return {"decision": "suffisant", "message": "Pistes jugées suffisantes : rédige le rapport."}
+        r = envoi["explorateur"].reprendre(critique)
+        if "erreur" in r:
+            envoi["jugements"][-1]["refuse"] = True
+            return r
+        envoi["resultat"] = r
+        return {"decision": "a_completer", **r["retour"]}
+
     try:
-        agent = creer_agent(client, modele, suivi=suivi, envoyer=envoyer if equipe else None)
+        agent = creer_agent(client, modele, suivi=suivi, envoyer=envoyer if equipe else None,
+                            juger=juger if chef else None)
         resultat = agent(consigne(identifiant_client(client), T, S, pourcentage, op),
-                         limits={"turns": LIMITE_TOURS_PRINCIPAL if equipe else LIMITE_TOURS})
+                         limits={"turns": (LIMITE_TOURS_PRINCIPAL + (2 if chef else 0)) if equipe else LIMITE_TOURS})
         explication = texte_final(getattr(resultat, "message", None))
         if getattr(resultat, "stop_reason", "") == "guardrail_intervened":
             etat_garde_fou["intervenu"] = True
@@ -540,7 +576,9 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
             "duree_s": round(time.monotonic() - debut, 2), "erreur": erreur,
             "garde_fou": etat_garde_fou, "ancrage": ancrage,
             "substitut": extraire_substitut(trace, T), "pistes": pistes,
-            "intention": (explo or {}).get("intention"),
+            # La finalité supposée est l'hypothèse du chef de dossier (son mandat) ; sans chef, celle de l'explorateur.
+            "intention": ((envoi["mission"] or {}).get("finalite_supposee") if isinstance(envoi["mission"], dict)
+                          else (explo or {}).get("intention")),
             "agents": decrire_agents(equipe, trace, envoi), "correction": correction}
 
 
@@ -590,14 +628,23 @@ def consigne_correction(motifs: list) -> str:
 
 
 def fusionner_traces(trace_principal: list, trace_explorateur: list) -> list:
-    """Les étapes de l'explorateur se placent juste après `envoyer_explorateur` ; chaque étape porte `agent`."""
+    """Les étapes de l'explorateur se placent à leur moment : son premier tour juste après `envoyer_explorateur`, son
+    second tour juste après le `juger_pistes` qui l'a demandé. Chaque étape porte `agent` ; une étape de l'explorateur
+    garde son numéro à lui dans `etape_explorateur`."""
+    par_tour: dict = {}
+    for x in trace_explorateur:
+        par_tour.setdefault(x.get("tour", 1), []).append({**x, "agent": "explorateur",
+                                                           "etape_explorateur": x.get("etape")})
     fusion = []
     for e in trace_principal:
         fusion.append({**e, "agent": "principal"})
-        if e.get("outil") == "envoyer_explorateur" and trace_explorateur:
-            fusion += [{**x, "agent": "explorateur"} for x in trace_explorateur]
-            trace_explorateur = []
-    fusion += [{**x, "agent": "explorateur"} for x in trace_explorateur]
+        if e.get("outil") == "envoyer_explorateur" and 1 in par_tour:
+            fusion += par_tour.pop(1)
+        elif (e.get("outil") == "juger_pistes" and 2 in par_tour
+              and str((e.get("arguments") or {}).get("decision", "")).lower() == "a_completer"):
+            fusion += par_tour.pop(2)
+    for reste in par_tour.values():
+        fusion += reste
     for i, e in enumerate(fusion, start=1):
         e["etape"] = i
     return fusion
@@ -605,8 +652,8 @@ def fusionner_traces(trace_principal: list, trace_explorateur: list) -> list:
 
 def pistes_dans_la_trace(pistes: list, trace: list) -> list:
     """Les pistes de l'explorateur, avec le numéro de leur étape dans la trace fusionnée."""
-    debut = next((e["etape"] for e in trace if e.get("outil") == "envoyer_explorateur"), None)
-    return [dict(p, etape=(debut + p["etape"]) if debut is not None and p.get("etape") else None) for p in pistes]
+    numeros = {e.get("etape_explorateur"): e["etape"] for e in trace if e.get("agent") == "explorateur"}
+    return [dict(p, etape=numeros.get(p.get("etape"))) for p in pistes]
 
 
 ROLES = {"principal": "Chef de dossier : monte le dossier de A à Z et rédige l'explication.",
@@ -627,6 +674,9 @@ def decrire_agents(equipe: bool, trace: list, envoi: dict) -> list:
                                       "Non envoyé : l'ordre n'est pas en tension.")
     else:
         statut, avis = explo.get("statut"), explo.get("avis")
+    if envoi.get("jugements") is not None:
+        agents[0]["jugements"] = envoi["jugements"]
+        agents[0]["mandat"] = envoi.get("mode")
     agents.append({"nom": "explorateur", "role": ROLES["explorateur"], "statut": statut, "avis": avis,
                    "mission": envoi.get("mission"), "etapes": etapes("explorateur"),
                    "bilan": (explo or {}).get("bilan"), "cause_lue": (explo or {}).get("cause_lue"),
