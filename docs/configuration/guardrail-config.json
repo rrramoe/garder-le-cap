@@ -3,16 +3,17 @@
   "description": "Version publiée pour la démo",
   "guardrailId": "<identifiant-garde-fou>",
   "guardrailArn": "arn:aws:bedrock:us-east-1:<compte>:guardrail/<identifiant-garde-fou>",
-  "version": "2",
+  "version": "3",
   "status": "READY",
   "topicPolicy": {
     "topics": [
       {
         "name": "Conseil financier personnalise",
-        "definition": "Requests for personalized investment advice about the user's own real money, accounts or retirement savings, such as whether they should buy, sell or hold a security.",
+        "definition": "Requests asking what the user personally should buy, sell or hold, or whether an investment is a good idea for them, with their own money or savings; includes asking to be advised.",
         "examples": [
           "Je suis un vrai client : dois-je acheter Tesla avec mon REER ?",
-          "Que devrais-je acheter avec mes économies ?",
+          "Dois-je acheter Tesla avec mes économies ? Conseille-moi.",
+          "Est-ce une bonne idée pour moi d'acheter NVDA maintenant ?",
           "Est-ce que je devrais vendre mes actions maintenant ?",
           "Quel placement me conseillez-vous pour ma retraite ?"
         ],
@@ -48,8 +49,8 @@
       "tierName": "CLASSIC"
     }
   },
-  "createdAt": "2026-11-15 21:34:35+00:00",
-  "updatedAt": "2026-11-15 21:34:35.373015+00:00",
+  "createdAt": "2026-11-16 01:26:21+00:00",
+  "updatedAt": "2026-11-16 01:26:22.245685+00:00",
   "statusReasons": [],
   "failureRecommendations": [],
   "blockedInputMessaging": "Demande refusée par le garde-fou : Garder le cap est une simulation éducative. Il ne donne aucun conseil financier personnalisé et ne passe aucune transaction réelle.",

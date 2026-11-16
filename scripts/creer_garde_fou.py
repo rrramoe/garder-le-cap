@@ -42,11 +42,12 @@ MESSAGE_SORTIE = ("Réponse retenue par le garde-fou : elle sortait du cadre de 
 SUJETS = [
     {
         "name": "Conseil financier personnalise",
-        "definition": ("Requests for personalized investment advice about the user's own real money, accounts or "
-                       "retirement savings, such as whether they should buy, sell or hold a security."),
+        "definition": ("Requests asking what the user personally should buy, sell or hold, or whether an investment "
+                       "is a good idea for them, with their own money or savings; includes asking to be advised."),
         "examples": [
             "Je suis un vrai client : dois-je acheter Tesla avec mon REER ?",
-            "Que devrais-je acheter avec mes économies ?",
+            "Dois-je acheter Tesla avec mes économies ? Conseille-moi.",
+            "Est-ce une bonne idée pour moi d'acheter NVDA maintenant ?",
             "Est-ce que je devrais vendre mes actions maintenant ?",
             "Quel placement me conseillez-vous pour ma retraite ?",
         ],
