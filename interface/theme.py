@@ -29,12 +29,21 @@ VIOLET_TEXTE = "#6941C6"  # dérivée : le violet assombri, pour un texte lisibl
 VIOLET_PALE = "#F2EEFC"   # dérivée : fond violet pâle
 POSITIF = "#00AD94"       # site : le vert d'eau (secondary-500), ce qui respecte la politique de placement
 POSITIF_PALE = "#E8FBF8"  # site : fond vert d'eau pâle (secondary-100)
-TENSION = VIOLET          # ce qui dépasse une limite
+# Les couleurs de signal, celles que tout investisseur connaît : bon, prudence, arrêt. Accordées au système froid.
+TENSION = "#E09600"       # site : l'ambre, ce qui dépasse une limite (prudence)
+TENSION_PALE = "#FDF6D8"  # site : fond ambre pâle
+ARRET = "#D12C4A"         # dérivée : un rouge net, un peu froid (cramoisi), ce qui touche une règle stricte
+ARRET_PALE = "#FFEFF1"    # site : fond rose pâle
+HAUSSE = "#00826F"        # dérivée : le vert d'eau assombri, pour un chiffre en hausse (contraste 4,8 sur blanc)
+BAISSE = "#B4233D"        # dérivée : le cramoisi assombri, pour un chiffre en baisse (contraste 6,6 sur blanc)
+HAUSSE_SUR_SOMBRE = "#5FE0CB"   # les mêmes, éclaircies pour le panneau sombre
+BAISSE_SUR_SOMBRE = "#FF9FB0"
 
 # Un verdict ne se lit jamais par la couleur seule : son mot est écrit à l'encre (contraste de plus de 10 sur
 # son fond pâle), sa forme change (un point plein, un anneau, un carré) et sa place reste la même.
-COULEURS_VERDICT = {"compatible": POSITIF, "en_tension": TENSION, "incompatible": ENCRE}
-FONDS_VERDICT = {"compatible": POSITIF_PALE, "en_tension": VIOLET_PALE, "incompatible": BORD}
+# Le violet reste la seconde voix de la marque (angle déterminant, liens, agents) : jamais un statut.
+COULEURS_VERDICT = {"compatible": POSITIF, "en_tension": TENSION, "incompatible": ARRET}
+FONDS_VERDICT = {"compatible": POSITIF_PALE, "en_tension": TENSION_PALE, "incompatible": ARRET_PALE}
 FORMES_VERDICT = {"compatible": "point", "en_tension": "anneau", "incompatible": "carre"}
 COULEURS_CLASSES = {"actions": ENCRE, "revenu_fixe": ACCENT, "liquidites": BLEU_CLAIR, "alternatifs": BORD}
 COULEUR_AUTRE = PISTE
@@ -209,6 +218,50 @@ div[class*="st-key-carte_compte"] .glc-faits {{ margin: 14px 0 6px 0; }}
 .stApp .glc-pas b {{ font-weight: 700; }}
 .stApp .glc-pas p {{ margin: 0; font-size: var(--t2); }}
 
+/* ---------- données vivantes : courbes, variations, panneau sombre ---------- */
+.stApp .glc-var {{ font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }}
+.stApp .glc-var.hausse {{ color: {HAUSSE}; }}
+.stApp .glc-var.baisse {{ color: {BAISSE}; }}
+.stApp .glc-var small {{ font-weight: 400; color: var(--gris); font-size: var(--t1); margin-left: 4px; }}
+.stApp svg.glc-courbe {{ display: inline-block; vertical-align: middle; overflow: visible; }}
+.stApp .glc-sombre {{ background: var(--marine); color: {BLANC}; border-radius: var(--rayon); padding: 22px 24px 0 24px;
+  overflow: hidden; position: relative; height: 100%; }}
+.stApp .glc-sombre .glc-etiquette {{ color: {BLEU_CLAIR}; }}
+.stApp .glc-sombre .glc-chiffre {{ color: {BLANC}; font-size: var(--t5); }}
+.stApp .glc-sombre .glc-var.hausse {{ color: {HAUSSE_SUR_SOMBRE}; }}
+.stApp .glc-sombre .glc-var.baisse {{ color: {BAISSE_SUR_SOMBRE}; }}
+.stApp .glc-sombre .glc-var small {{ color: {BLEU_CLAIR}; }}
+.stApp .glc-sombre .glc-faits div span {{ color: {BLEU_CLAIR}; }}
+.stApp .glc-sombre .glc-faits div b {{ color: {BLANC}; }}
+.stApp .glc-sombre svg.glc-courbe {{ display: block; width: calc(100% + 48px); margin: 14px -24px 0 -24px; }}
+.stApp .glc-sombre .note {{ position: absolute; right: 24px; top: 24px; font-size: var(--t1); color: {BLEU_CLAIR}; }}
+.stApp .glc-cours {{ display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 2px 2px 0 2px; }}
+.stApp .glc-cours b {{ font-size: var(--t3); font-weight: 700; font-variant-numeric: tabular-nums; }}
+.stApp .glc-duo {{ display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 16px; }}
+@media (max-width: 900px) {{ .stApp .glc-duo {{ grid-template-columns: 1fr; }} }}
+
+/* ---------- mouvement, avec retenue ---------- */
+@keyframes glc-arrive {{ from {{ opacity: 0; transform: translateY(6px); }} to {{ opacity: 1; transform: none; }} }}
+@keyframes glc-arc {{ from {{ stroke-dasharray: 0.1 999; }} }}
+@keyframes glc-trace {{ from {{ stroke-dashoffset: var(--long, 600); }} to {{ stroke-dashoffset: 0; }} }}
+.stApp .glc-verdict, .stApp .glc-carte, .stApp .glc-doc, .stApp .glc-sombre, .stApp .glc-vue > *,
+.stApp .glc-etapes li {{ animation: glc-arrive .22s ease-out both; }}
+.stApp .glc-angle circle.arc {{ animation: glc-arc .7s cubic-bezier(.2, .7, .2, 1) both; }}
+.stApp svg.glc-courbe path.trait {{ stroke-dasharray: var(--long, 600); animation: glc-trace .9s ease-out both; }}
+.stApp table.glc-table tbody tr {{ transition: background .15s ease; }}
+.stApp table.glc-table tbody tr:hover {{ background: var(--voile); }}
+.stApp .stButton > button {{ transition: background .15s ease, border-color .15s ease, box-shadow .2s ease,
+  transform .15s ease; }}
+.stApp .stButton > button[kind="primary"] {{ box-shadow: 0 6px 16px rgba(26, 97, 169, .28); }}
+.stApp .stButton > button[kind="primary"]:hover {{ box-shadow: 0 8px 22px rgba(26, 97, 169, .36);
+  transform: translateY(-1px); }}
+div[class*="st-key-carte"] {{ transition: border-color .2s ease, box-shadow .2s ease; }}
+div[class*="st-key-carte_compte"]:hover {{ border-color: var(--accent); box-shadow: 0 8px 24px rgba(var(--ombre), .08); }}
+@media (prefers-reduced-motion: reduce) {{
+  .stApp *, .stApp *::before, .stApp *::after {{ animation: none !important; transition: none !important; }}
+}}
+
 /* ---------- pastilles ---------- */
 .stApp .glc-pastille {{ display: inline-flex; align-items: center; gap: 6px; font-size: var(--t1); font-weight: 600;
   padding: 3px 10px; border-radius: 999px; white-space: nowrap; }}
@@ -255,7 +308,7 @@ div[class*="st-key-deja_faite"] .stButton {{ display: flex; justify-content: fle
 .stApp table.glc-table tr {{ border: 0; background: transparent; }}
 .stApp table.glc-table th {{ text-align: left; font-size: var(--t1); font-weight: 600; color: var(--gris);
   padding: 0 12px 8px 0; border-bottom: 1px solid var(--bord); white-space: nowrap; }}
-.stApp table.glc-table td {{ padding: 9px 12px 9px 0; line-height: 1.35; border-bottom: 1px solid var(--filet); color: var(--encre);
+.stApp table.glc-table td {{ padding: 7px 12px 7px 0; line-height: 1.3; border-bottom: 1px solid var(--filet); color: var(--encre);
   vertical-align: middle; }}
 .stApp table.glc-table tr:last-child td {{ border-bottom: 0; }}
 .stApp table.glc-table .n {{ text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; padding-right: 0;
@@ -330,16 +383,16 @@ div[class*="st-key-deja_faite"] .stButton {{ display: flex; justify-content: fle
   color: var(--encre); }}
 .stApp .glc-etapes li .pt {{ width: 8px; height: 8px; border-radius: 50%; background: {BORD}; margin: 7px 0 0 4px; }}
 .stApp .glc-etapes li.fini .pt {{ background: {POSITIF}; }}
-.stApp .glc-etapes li.cours .pt {{ background: var(--encre); animation: glc-pouls 1.2s ease-in-out infinite; }}
+.stApp .glc-etapes li.cours .pt {{ background: {VIOLET}; animation: glc-pouls 1.2s ease-in-out infinite; }}
 .stApp .glc-etapes li.cours .quoi {{ font-weight: 600; }}
-.stApp .glc-etapes li .qui {{ font-size: var(--t1); color: var(--gris); margin-left: 8px; white-space: nowrap; }}
+.stApp .glc-etapes li .qui {{ font-size: var(--t1); color: var(--violet); font-weight: 600; margin-left: 8px; white-space: nowrap; }}
 .stApp .glc-etapes li .res {{ display: block; font-size: var(--t1); color: var(--gris); margin-top: 1px; }}
 .stApp .glc-etapes h5 {{ font-size: var(--t1); font-weight: 600; color: var(--gris); margin: 10px 0 2px 0; }}
-@keyframes glc-pouls {{ 0%, 100% {{ box-shadow: 0 0 0 0 rgba(var(--ombre), .30); }}
-  50% {{ box-shadow: 0 0 0 6px rgba(var(--ombre), 0); }} }}
+@keyframes glc-pouls {{ 0%, 100% {{ box-shadow: 0 0 0 0 rgba(127, 86, 217, .35); }}
+  50% {{ box-shadow: 0 0 0 6px rgba(127, 86, 217, 0); }} }}
 .stApp .glc-direct {{ display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }}
 .stApp .glc-direct .rond {{ width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--piste);
-  border-top-color: var(--encre); animation: glc-tourne .9s linear infinite; }}
+  border-top-color: {VIOLET}; animation: glc-tourne .9s linear infinite; }}
 @keyframes glc-tourne {{ to {{ transform: rotate(360deg); }} }}
 
 /* ---------- état vide ---------- */

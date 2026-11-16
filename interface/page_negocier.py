@@ -13,8 +13,8 @@ import streamlit as st
 
 from moteur import api, references
 from interface import composants as C
-from interface import etat
-from interface.theme import BORD, ENCRE, FILET, GRIS, POLICE, POSITIF, TENSION
+from interface import etat, marche
+from interface.theme import BAISSE, BORD, ENCRE, FILET, GRIS, HAUSSE, POLICE, POSITIF, TENSION
 from interface.textes import (AIDE_ANGLES, ANGLES_DEFAUT, AVIS_SANS_AGENT, BOUTON_ACTION, BOUTON_PASSER, CORRECTION_TEXTE,
                               DEJA_FAITE, DELAI_MAX_AGENT_S, DEPUIS_PRECEDENT, DIRECTIONS_TEXTE, EN_DIRECT_AGENT, LIBELLES_OUTILS,
                               LIBELLES_PHASES, LIMITE, MESURES, OPERATIONS, SOLIDITE_TEXTE, STATUTS_REGLE, THEMES, TITRE_ANALYSE, TRACE,
@@ -41,6 +41,12 @@ def billet(persona: str, fiche: dict) -> None:
                  format_func=lambda k: OPERATIONS[k]["libelle"])
         ticker = st.session_state[f"o_{persona}_ticker"]
         operation = st.session_state[f"o_{persona}_operation"]
+        serie = marche.cours(ticker)
+        if serie and prix.get(ticker):
+            hausse = (marche.variation(serie) or 0) >= 0
+            C.montrer(f'<div class="glc-cours"><span><b>{C.e(dollars(prix[ticker], 2))}</b> '
+                      f'{C.variation(marche.variation(serie), marche.PERIODE)}</span>'
+                      f'{C.courbe(serie, 110, 34, HAUSSE if hausse else BAISSE)}</div>')
         sens = OPERATIONS[operation]["sens"]
 
         st.number_input("Montant ($ CA)", min_value=100.0, max_value=float(valeur), step=500.0,
@@ -60,10 +66,6 @@ def billet(persona: str, fiche: dict) -> None:
             st.session_state.setdefault(cle_prix, round(dernier, 2) if dernier else 1.0)
             c2.number_input(TYPES_ORDRE[type_ordre]["prix"], min_value=0.01, step=1.0, key=cle_prix, format="%.2f")
             prix_ordre = float(st.session_state[cle_prix])
-        elif dernier:
-            with c2:
-                C.montrer(f'<p class="glc-etiquette" style="margin-bottom:10px">Dernier prix</p>'
-                          f'<p style="font-weight:600;margin:0">{C.e(dollars(dernier, 2))}</p>')
 
         detenu = pf.get(ticker, 0.0) * valeur / 100
         deja = f"Vous détenez {dollars(detenu)} de {ticker}." if detenu > 0 else f"Vous ne détenez pas de {ticker}."

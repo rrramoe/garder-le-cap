@@ -27,20 +27,29 @@ def fiche(persona: str, fiche_session: dict) -> None:
             nom, question = RUBRIQUES[cle]
             C.montrer(f'<p class="glc-rubrique">{C.e(nom)}<span>{C.e(question)}</span></p>')
 
-        # Une colonne par rubrique, assez large pour que son plus long libellé tienne sur une ligne.
-        def largeur(champ: str) -> float:
-            plus_longue = max(len(libelle_option(champ, o)) for o in QUESTIONNAIRE[champ]["options"])
-            return max(0.8, len(QUESTIONNAIRE[champ]["libelle"]) / 33, min(plus_longue / 40, 1.6))
+        def liste(champ: str) -> None:
+            st.selectbox(QUESTIONNAIRE[champ]["libelle"], list(QUESTIONNAIRE[champ]["options"]),
+                         key=etat.cle_q(persona, champ), index=None, placeholder="Choisir",
+                         format_func=lambda o, c=champ: libelle_option(c, o))
 
-        largeurs = [max([len(RUBRIQUES[cle][1]) / 33] + [largeur(c) for c in champs]) for cle, champs in groupes]
-        colonnes = st.columns(largeurs, gap="medium")
-        for colonne, (cle, champs) in zip(colonnes, groupes):
-            with colonne:
-                rubrique(cle)
-                for champ in champs:
-                    st.selectbox(QUESTIONNAIRE[champ]["libelle"], list(QUESTIONNAIRE[champ]["options"]),
-                                 key=etat.cle_q(persona, champ), index=None, placeholder="Choisir",
-                                 format_func=lambda o, c=champ: libelle_option(c, o))
+        def largeur(champ: str) -> int:
+            """La place que demande une liste : son libellé ou sa plus longue réponse, en caractères."""
+            return max([len(QUESTIONNAIRE[champ]["libelle"]), 18]
+                       + [len(libelle_option(champ, o)) + 6 for o in QUESTIONNAIRE[champ]["options"]])
+
+        # Chaque liste a la largeur que demande sa plus longue réponse. Les rubriques à une question vont
+        # deux par rangée ; une rubrique à plusieurs questions a sa rangée, ses listes côte à côte.
+        seules = [g for g in groupes if len(g[1]) == 1]
+        for debut in range(0, len(seules), 2):
+            for colonne, (cle, champs) in zip(st.columns(2, gap="large"), seules[debut:debut + 2]):
+                with colonne:
+                    rubrique(cle)
+                    liste(champs[0])
+        for cle, champs in [g for g in groupes if len(g[1]) > 1]:
+            rubrique(cle)
+            for colonne, champ in zip(st.columns([largeur(c) for c in champs], gap="large"), champs):
+                with colonne:
+                    liste(champ)
         rubrique("preferences")
         C.montrer(f'<p class="glc-sur">{C.e(PHRASE_LIMITES)} « Exclure » et « Obligatoire » sont des règles strictes ; '
                   "« Éviter » et « Rechercher », des préférences.</p>")

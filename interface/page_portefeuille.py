@@ -6,8 +6,8 @@ import streamlit as st
 
 from moteur import api, references
 from interface import composants as C
-from interface import etat
-from interface.theme import COULEUR_AUTRE, COULEURS_CLASSES
+from interface import etat, marche
+from interface.theme import BAISSE, BLEU_CLAIR, COULEUR_AUTRE, COULEURS_CLASSES, HAUSSE
 from interface.textes import (AIDE_ANGLES, CLASSES, LIMITE, angles_du_bloc, dollars, instruments,
                               libelle_mesure, nom_angle, pct)
 
@@ -43,7 +43,8 @@ def composer(persona: str) -> None:
 
 
 def _apercu(persona: str, fiche_client: dict) -> str:
-    """La valeur d'un côté, la répartition par classe d'actif de l'autre, face aux zones de la politique."""
+    """La valeur et son allure sur un an dans un panneau sombre ; à côté, la répartition par classe d'actif,
+    face aux zones de la politique de placement."""
     valeur = etat.valeur_pf(persona)
     pf = fiche_client["portefeuille_pct"]
     cash = references.encaisse()
@@ -58,12 +59,17 @@ def _apercu(persona: str, fiche_client: dict) -> str:
              f'<div><span>Profil</span><b>{C.e(fiche_client["deduit"]["profil"]["libelle"])}</b></div>')
     if ordres:
         faits += f'<div><span>Ordres simulés</span><b>{len(ordres)}</b></div>'
-    return ('<div class="glc-carte"><div class="glc-repart">'
-            f'<div style="flex:1;min-width:240px"><p class="glc-etiquette">Valeur du portefeuille</p>'
-            f'<div class="glc-chiffre">{C.e(dollars(valeur))}</div><div class="glc-faits">{faits}</div></div>'
-            f'<div>{C.anneau(parts)}</div>'
-            f'<div class="lignes"><p class="glc-etiquette">Répartition, et zone permise par votre politique de placement</p>'
-            f'{lignes}</div></div></div>')
+    histoire = marche.valeur_du_portefeuille(pf, valeur)
+    allure = C.courbe(histoire, 600, 110, BLEU_CLAIR, remplie=True, epaisseur=2.2)
+    note = (f'<span class="note">Sur {marche.PERIODE}, avec le portefeuille d\'aujourd\'hui</span>' if histoire else "")
+    sombre = (f'<div class="glc-sombre">{note}<p class="glc-etiquette">Valeur du portefeuille</p>'
+              f'<div class="glc-chiffre">{C.e(dollars(valeur))}</div>'
+              f'<p style="margin:2px 0 0 0">{C.variation(marche.variation(histoire), marche.PERIODE)}</p>'
+              f'<div class="glc-faits">{faits}</div>{allure}</div>')
+    clair = ('<div class="glc-carte"><p class="glc-etiquette">Répartition, et zone permise par votre politique '
+             f'de placement</p><div class="glc-repart"><div>{C.anneau(parts, 124)}</div>'
+             f'<div class="lignes">{lignes}</div></div></div>')
+    return f'<div class="glc-duo">{sombre}{clair}</div>'
 
 
 def _face_a_la_politique(fiche: dict) -> None:
@@ -102,12 +108,16 @@ def _positions(persona: str, fiche_client: dict) -> None:
     lignes = []
     for t, w in sorted(pf.items(), key=lambda x: -x[1]):
         i = univers.get(t, {})
+        serie = marche.cours(t)
+        hausse = (marche.variation(serie) or 0) >= 0
         lignes.append([f"<b>{C.e(t)}</b><br><span class='s'>{C.e(i.get('nom', ''))}</span>",
                        C.e(CLASSES.get(i.get("classe_politique", ""), "")),
+                       C.courbe(serie, 96, 26, HAUSSE if hausse else BAISSE), C.variation(marche.variation(serie)),
                        C.barre(w, plus_gros) + C.e(pct(w)), C.e(dollars(w * valeur / 100))])
     with st.container(key="carte_positions"):
-        C.montrer(C.h2("Positions") + C.tableau([("Titre", ""), ("Classe d'actif", ""), ("Part", "n"), ("Montant", "n")],
-                                                lignes))
+        C.montrer(C.h2("Positions", f"Cours et variation sur {marche.PERIODE}, en dollars canadiens.")
+                  + C.tableau([("Titre", ""), ("Classe d'actif", ""), ("Cours", ""), ("Variation", "n"),
+                               ("Part", "n"), ("Montant", "n")], lignes))
     ordres = st.session_state.get(f"ordres_{persona}", [])
     if ordres:
         colonnes = [("Opération", ""), ("Titre", ""), ("Type", ""), ("Verdict", ""), ("Part", "n"), ("Montant", "n")]

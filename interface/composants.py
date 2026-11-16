@@ -83,7 +83,7 @@ def cadran(note: float | None, passage: float, taille: int = 84) -> str:
                 f'<text x="{c}" y="{c + 5}" text-anchor="middle" font-size="15" font-weight="600" fill="{GRIS}">—</text></svg>')
     n = max(0.0, min(100.0, float(note)))
     couleur = POSITIF if note >= passage else TENSION
-    valeur = (f'<circle cx="{c}" cy="{c}" r="{r}" fill="none" stroke="{couleur}" stroke-width="7" stroke-linecap="round" '
+    valeur = (f'<circle class="arc" cx="{c}" cy="{c}" r="{r}" fill="none" stroke="{couleur}" stroke-width="7" stroke-linecap="round" '
               f'stroke-dasharray="{max(arc * n / 100, 0.1):.1f} {tour:.1f}" transform="rotate(135 {c} {c})"/>')
     a = math.radians(135 + 270 * max(0.0, min(100.0, passage)) / 100)
     x1, y1 = c + (r - 7) * math.cos(a), c + (r - 7) * math.sin(a)
@@ -245,6 +245,37 @@ def suite(libelle: str, page: str, cle: str, principal: bool = True) -> None:
     _, droite = st.columns([2.2, 1])
     droite.button(libelle, key=cle, type="primary" if principal else "secondary", width="stretch",
                   on_click=etat.aller, args=(page,), icon=":material/arrow_forward:")
+
+
+def courbe(valeurs: list[float], largeur: int = 96, hauteur: int = 28, couleur: str = ACCENT,
+           remplie: bool = False, epaisseur: float = 1.8) -> str:
+    """Une ligne de cours, en SVG : l'allure seule, sans axe. Vide si la série manque."""
+    if len(valeurs) < 2:
+        return ""
+    bas, haut = min(valeurs), max(valeurs)
+    ecart = (haut - bas) or 1.0
+    marge = epaisseur + 1
+    pas = (largeur - 2) / (len(valeurs) - 1)
+    points = [(1 + i * pas, marge + (hauteur - 2 * marge) * (1 - (v - bas) / ecart)) for i, v in enumerate(valeurs)]
+    trait = "M" + " L".join(f"{x:.1f} {y:.1f}" for x, y in points)
+    fond = ""
+    if remplie:
+        fond = (f'<path d="{trait} L{points[-1][0]:.1f} {hauteur} L{points[0][0]:.1f} {hauteur} Z" '
+                f'fill="{couleur}" opacity=".16"/>')
+    return (f'<svg class="glc-courbe" viewBox="0 0 {largeur} {hauteur}" width="{largeur}" height="{hauteur}" '
+            f'preserveAspectRatio="none" aria-hidden="true">{fond}<path class="trait" d="{trait}" fill="none" '
+            f'stroke="{couleur}" stroke-width="{epaisseur}" stroke-linejoin="round" stroke-linecap="round" '
+            f'vector-effect="non-scaling-stroke" style="--long:{largeur * 3}"/></svg>')
+
+
+def variation(pourcentage: float | None, periode: str = "") -> str:
+    """Une variation, lisible sans la couleur : son signe et sa flèche la disent aussi."""
+    if pourcentage is None:
+        return ""
+    hausse = pourcentage >= 0
+    texte = f"{pourcentage:+.1f}".replace(".", ",").replace("-", "−") + " %"
+    suite = f"<small>sur {e(periode)}</small>" if periode else ""
+    return (f'<span class="glc-var {"hausse" if hausse else "baisse"}">{"▲" if hausse else "▼"} {texte}{suite}</span>')
 
 
 def montrer(contenu: str) -> None:
