@@ -285,7 +285,8 @@ def vue(cle: str) -> str:
     clip = _clip(cle)
     if clip is None:
         return f'<div class="glc-vue">{VUES[cle]()}</div>'
-    return ('<div class="glc-vue clip"><video autoplay muted loop playsinline preload="auto" '
+    return ('<div class="glc-vue clip"><video autoplay muted loop playsinline disablepictureinpicture '
+            'disableremoteplayback tabindex="-1" aria-hidden="true" preload="auto" '
             f'poster="data:image/jpeg;base64,{clip[1]}" src="data:video/mp4;base64,{clip[0]}"></video></div>')
 
 

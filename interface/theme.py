@@ -102,7 +102,8 @@ div[data-testid="stCaptionContainer"] p, .stApp small {{ font-size: var(--t1); c
 .st-key-page label[data-testid="stRadioOption"] {{ margin: 0; padding: 6px 16px; border-radius: 999px; cursor: pointer;
   transition: background .15s ease; }}
 .st-key-page label[data-testid="stRadioOption"] > div > div:first-child:not([data-testid]) {{ display: none; }}
-.st-key-page label[data-testid="stRadioOption"] p {{ font-size: var(--t2); font-weight: 600; color: var(--gris); }}
+.st-key-page label[data-testid="stRadioOption"] p {{ font-size: var(--t2); font-weight: 600; color: var(--gris);
+  white-space: nowrap; }}
 .st-key-page label[data-testid="stRadioOption"]:hover p {{ color: var(--encre); }}
 .st-key-page label[data-testid="stRadioOption"][data-selected="true"] {{ background: var(--surface);
   box-shadow: 0 1px 2px rgba(var(--ombre), 0.12); }}
@@ -171,6 +172,12 @@ div[class*="st-key-introduction"] {{ max-width: 1080px; margin: 16px auto 0 auto
   display: flex; flex-direction: column; justify-content: center; position: relative; }}
 .stApp .glc-vue.clip {{ padding: 18px; }}
 .stApp .glc-vue.clip video {{ width: 100%; height: 100%; object-fit: contain; display: block; border-radius: 10px; }}
+/* une image qui joue : jamais de commandes, de bouton de lecture ni de menu, même si la lecture est refusée */
+.stApp .glc-vue.clip video {{ pointer-events: none; background: transparent; }}
+.stApp .glc-vue.clip video::-webkit-media-controls, .stApp .glc-vue.clip video::-webkit-media-controls-panel,
+.stApp .glc-vue.clip video::-webkit-media-controls-start-playback-button,
+.stApp .glc-vue.clip video::-webkit-media-controls-overlay-play-button {{ display: none !important;
+  -webkit-appearance: none; opacity: 0; }}
 .stApp .glc-vue > .glc-carte, .stApp .glc-vue > .glc-paire > div {{ box-shadow: 0 10px 30px rgba(var(--ombre), 0.07); }}
 .stApp .glc-vue .glc-angles {{ grid-template-columns: repeat(5, 1fr); gap: 2px; }}
 .stApp .glc-vue .glc-angle {{ padding: 8px 0; }}
@@ -239,7 +246,8 @@ div[class*="st-key-carte_compte"] .glc-faits {{ margin: 14px 0 6px 0; }}
   padding: 2px 2px 0 2px; }}
 .stApp .glc-cours b {{ font-size: var(--t3); font-weight: 700; font-variant-numeric: tabular-nums; }}
 .stApp .glc-duo {{ display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 16px; }}
-@media (max-width: 900px) {{ .stApp .glc-duo {{ grid-template-columns: 1fr; }} }}
+@media (max-width: 900px) {{ .stApp .glc-duo {{ grid-template-columns: minmax(0, 1fr); }} }}
+.stApp .glc-duo > * {{ min-width: 0; }}
 
 /* ---------- mouvement, avec retenue ---------- */
 @keyframes glc-arrive {{ from {{ opacity: 0; transform: translateY(6px); }} to {{ opacity: 1; transform: none; }} }}
@@ -497,6 +505,8 @@ hr {{ border-color: var(--bord); }}
 
 @media (max-width: 640px) {{
   .stApp .glc-barre {{ display: none; }}
+  .stApp .glc-sombre .note {{ position: static; display: block; margin: 0 0 6px 0; }}
+  .st-key-page label[data-testid="stRadioOption"] {{ padding: 6px 10px; }}
   .stApp .glc-intro {{ min-height: 0; padding-top: 4px; }}
   .stApp .glc-intro h1 {{ font-size: var(--t4); }}
   .stApp .glc-vue, .stApp .glc-vue:has(.glc-billet) {{ height: auto; min-height: 220px; padding: 14px; }}
