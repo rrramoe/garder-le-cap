@@ -1,5 +1,5 @@
-"""Une vraie analyse, lancée sur la machine déployée : l'application elle-même (Streamlit AppTest), le client
-« robert », clic sur « Analyser l'ordre ». Vérifie que le moteur rend un verdict, que l'équipe d'agents sur
+"""Une vraie analyse, lancée sur la machine déployée : l'application elle-même (Streamlit AppTest), l'introduction
+passée, le compte « robert » ouvert, clic sur « Analyser l'ordre » dans « Négocier ». Vérifie que le moteur rend un verdict, que l'équipe d'agents sur
 Bedrock rend une explication et d'où viennent les fichiers de référence. Code de sortie 0 si tout répond.
 
     python deploiement/essai_analyse.py [client]
@@ -24,7 +24,10 @@ def main() -> int:
     client = sys.argv[1] if len(sys.argv) > 1 else "robert"
     at = AppTest.from_file(str(RACINE / "app.py"), default_timeout=300)
     at.run()
-    at.sidebar.radio(key="persona").set_value(client).run()
+    # Comme un visiteur : passer l'introduction, ouvrir le compte, aller au billet d'ordre.
+    at.button(key="passer_intro").click().run()
+    at.button(key=f"compte_{client}").click().run()
+    at.radio(key="page").set_value("negocier").run()
     debut = time.monotonic()
     at.button(key="inspecter").click().run()
     duree = time.monotonic() - debut

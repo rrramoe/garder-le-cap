@@ -89,7 +89,7 @@ Quand `GLC_BUCKET` est configuré, les fichiers de référence sont lus dans le 
 .venv/bin/streamlit run app.py --server.address localhost
 ```
 
-L'application s'ouvre sur http://localhost:8501. Le premier écran dit en trois lignes ce que fait le service ; « Essayer avec un exemple » mène au billet d'ordre déjà rempli d'un client enregistré. Sinon, choisissez un client dans le menu du compte, en haut à droite (Robert, Mateo, Amira, ou un nouveau client), ouvrez « Négocier », préparez un ordre (instrument, achat ou vente, montant, opération), puis cliquez sur « Analyser l'ordre ». L'analyse donne le verdict, la note de chaque angle et l'angle déterminant, l'explication et les pistes testées.
+L'application s'ouvre sur http://localhost:8501, par une courte introduction qu'on peut passer d'un clic, puis par le choix d'un compte : Robert, Mateo, Amira, ou un nouveau compte. Un compte s'ouvre sur son profil (la fiche, puis la politique de placement qui en découle) ; la barre du haut mène ensuite au portefeuille, à « Négocier » et à l'aide. Dans « Négocier », préparez un ordre (instrument, achat ou vente, montant, opération), puis cliquez sur « Analyser l'ordre ». L'analyse donne le verdict, la note de chaque angle et l'angle déterminant, l'explication et les pistes testées.
 
 ### Tests
 
