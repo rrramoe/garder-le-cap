@@ -333,6 +333,12 @@ def mettre_a_jour(args) -> None:
     if not ok:
         sys.exit("Échec de la mise à jour (l'ancienne version reste en service si le lien n'a pas été changé).")
     print(f"Commit {sha[:12]} en service en {time.monotonic() - debut:.0f} s. {url()}")
+    if args.rechauffer:
+        print("Préchauffage des analyses des clients enregistrés (scripts/rechauffer_analyses.py, sur la machine)…")
+        ok, _ = ssm([f"cd /opt/glc/courant && test -f scripts/rechauffer_analyses.py && {ENV_SERVICE} "
+                     "/opt/glc/venv/bin/python scripts/rechauffer_analyses.py"], delai_s=600)
+        if not ok:
+            sys.exit("Préchauffage en échec (l'application reste en service, sans mémoire préchauffée).")
 
 
 # ---------------------------------------------------------------- ouvrir / fermer
@@ -359,6 +365,10 @@ def fermer(args) -> None:
 
 
 # ---------------------------------------------------------------- verifier / commit
+
+ENV_SERVICE = ("sudo -u glc env HOME=/opt/glc AWS_REGION=us-east-1 AWS_DEFAULT_REGION=us-east-1 "
+               "GLC_AWS_ENV=/opt/glc/sans-fichier-d-identifiants")
+
 
 def commit_en_service() -> str:
     ok, sortie = ssm(["cat /opt/glc/courant/COMMIT_DEPLOYE 2>/dev/null || echo aucun"], delai_s=60, afficher=False)
@@ -395,9 +405,8 @@ def verifier(args) -> int:
             ok &= asyncio.run(essai_distant(url())) == 0
     if args.analyse:
         print("Vraie analyse sur la machine (application, moteur, agents Bedrock, garde-fou, bucket)…")
-        ok_a, _ = ssm(["cd /opt/glc/courant && sudo -u glc env HOME=/opt/glc AWS_REGION=us-east-1 "
-                       "AWS_DEFAULT_REGION=us-east-1 GLC_AWS_ENV=/opt/glc/sans-fichier-d-identifiants "
-                       "GLC_RACINE=/opt/glc/courant /opt/glc/venv/bin/python /opt/glc/essai_analyse.py"], delai_s=420)
+        ok_a, _ = ssm([f"cd /opt/glc/courant && {ENV_SERVICE} GLC_RACINE=/opt/glc/courant "
+                       "/opt/glc/venv/bin/python /opt/glc/essai_analyse.py"], delai_s=420)
         ok &= ok_a
     print("Bilan : " + ("tout répond" if ok else "PROBLÈME"))
     return 0 if ok else 1
@@ -458,6 +467,8 @@ def main() -> int:
     m = sous.add_parser("mettre-a-jour")
     m.add_argument("ref", help="commit, branche ou tag de ce dépôt (par exemple main)")
     m.add_argument("--fichiers", action="store_true", help="redéposer aussi les données privées et glc.env")
+    m.add_argument("--rechauffer", action="store_true",
+                   help="préchauffer ensuite les analyses des clients enregistrés (1 à 2 min)")
     m.set_defaults(f=mettre_a_jour)
     sous.add_parser("ouvrir").set_defaults(f=ouvrir)
     sous.add_parser("fermer").set_defaults(f=fermer)

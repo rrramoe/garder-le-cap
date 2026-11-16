@@ -4,7 +4,7 @@ L'application tourne sur une petite instance EC2 Graviton (`t4g.medium`, Amazon 
 
 ```bash
 python deploiement/glc_deploiement.py creer                # rôle, groupe de sécurité (fermé), instance, IP élastique
-python deploiement/glc_deploiement.py mettre-a-jour main   # ou un sha : déploie ce commit (quelques secondes)
+python deploiement/glc_deploiement.py mettre-a-jour main --rechauffer   # ou un sha : déploie ce commit (quelques secondes), puis préchauffe les analyses des clients enregistrés
 python deploiement/glc_deploiement.py ouvrir               # ouvre le port 80 au monde (ce port seulement)
 python deploiement/glc_deploiement.py verifier --analyse --distant   # état, commit, vraie analyse sur la machine et par l'adresse publique
 python deploiement/glc_deploiement.py commit               # commit en service
