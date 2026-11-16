@@ -283,6 +283,18 @@ def _verifier_rapport(r):
     assert not any(m in texte for m in MOTS_INTERDITS)
 
 
+def _verifier_ordre_du_chef(r):
+    """Le chef de dossier lit le client, puis l'instrument, puis simule, puis écrit le mandat ; toute la recherche
+    vient après le mandat, et elle est faite par l'explorateur."""
+    principal = [e["outil"] for e in r["trace"] if e["agent"] == "principal"
+                 and e["outil"] in ("lire_fiche_client", "lire_fiche_instrument", "simuler_ordre", "envoyer_explorateur")]
+    assert principal[:4] == ["lire_fiche_client", "lire_fiche_instrument", "simuler_ordre", "envoyer_explorateur"], principal
+    envoi = next(e["etape"] for e in r["trace"] if e["outil"] == "envoyer_explorateur")
+    recherche = [e for e in r["trace"] if e["outil"] in ("chercher_taille_compatible", "simuler_scenario", "lister_instruments")
+                 or (e["outil"] == "simuler_ordre" and e["agent"] == "explorateur")]
+    assert all(e["agent"] == "explorateur" and e["etape"] > envoi for e in recherche)
+
+
 @bedrock
 def test_6_cas_1_robert_tsla_cherche_la_taille():
     # Équipe : le chef de dossier lit, simule, puis envoie l'explorateur, qui fait la recherche.
@@ -305,8 +317,7 @@ def _mots(texte: str) -> int:
 def test_6_cas_1_pistes_et_longueur():
     r = inspection.inspecter("robert", "TSLA", "achat", 15)
     _verifier_rapport(r)
-    outils = [e["outil"] for e in r["trace"]]
-    assert outils[:4] == ["lire_fiche_client", "lire_fiche_instrument", "simuler_ordre", "envoyer_explorateur"]
+    _verifier_ordre_du_chef(r)
     assert 2 <= len(r["pistes"]) <= 4 and all(p["raison"] for p in r["pistes"]), r["pistes"]
     assert r["intention"]
     assert _mots(r["explication"]) <= 180
@@ -314,13 +325,23 @@ def test_6_cas_1_pistes_et_longueur():
 
 
 @bedrock
-def test_6_cas_2_mateo_xom_ne_cherche_pas_de_taille():
+def test_6_cas_2_mateo_xom_reste_incompatible():
+    # Une règle stricte violée : aucun montant ne la répare. Le chef peut envoyer un mandat étroit (remplacer
+    # l'instrument) ; l'ordre reste incompatible et toute piste rendue respecte la règle.
     r = inspection.inspecter("mateo", "XOM", "achat", 8)
     _verifier_rapport(r)
     outils = [e["outil"] for e in r["trace"]]
     assert _sous_suite(["lire_fiche_client", "lire_fiche_instrument", "simuler_ordre"], outils), outils
-    assert "envoyer_explorateur" not in outils and "chercher_taille_compatible" not in outils
-    assert r["pistes"] == [] and r["substitut"] is None  # chemin visiblement différent du cas 1
+    simulation = next(e for e in r["trace"] if e["outil"] == "simuler_ordre" and e["agent"] == "principal")
+    assert simulation["resultat"]["verdict"]["code"] == "incompatible"
+    assert not any(e["outil"] == "chercher_taille_compatible" and "erreur" not in (e["resultat"] or {})
+                   for e in r["trace"])                                  # aucun montant cherché
+    if "envoyer_explorateur" in outils:
+        assert r["agents"][0]["mandat"] == "remplacer"
+    for p in r["pistes"]:
+        achats = [o["ticker"] for o in p["ordres"] if o["sens"] == "achat"]
+        assert "XOM" not in achats and achats, p                          # l'instrument est remplacé
+        assert not api.simuler_scenario("mateo", p["ordres"])["contraintes_strictes"]["violee"], p
     assert _mots(r["explication"]) <= 180
 
 
