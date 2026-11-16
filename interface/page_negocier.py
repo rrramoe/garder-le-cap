@@ -81,7 +81,6 @@ def billet(persona: str, fiche: dict) -> None:
         details = {"operation": operation, "montant": montant, "type": type_ordre, "prix": prix_ordre,
                    "hypothese_execution": phrase_execution(type_ordre, prix_ordre)}
         if analyser:
-            st.session_state["accueil_vu"] = True
             ancien = st.session_state.get(f"rapport_{persona}")
             if ancien is not None:
                 st.session_state[f"precedent_{persona}"] = ancien
@@ -692,3 +691,4 @@ def afficher(persona: str, fiche: dict) -> None:
             C.montrer(C.etat_vide(TITRE_ANALYSE, f"Cliquez sur « {BOUTON_ACTION} » pour savoir si cet ordre respecte "
                                   "votre politique de placement, avant de le passer.",
                                   [nom_angle(a) for a in ANGLES_DEFAUT]))
+    C.suite("Comprendre l'analyse : Aide", "aide", "suite_negocier", principal=False)

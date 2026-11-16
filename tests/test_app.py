@@ -18,9 +18,20 @@ def sans_agent(monkeypatch):
     monkeypatch.setitem(sys.modules, "agent.inspection", None)
 
 
-def _demarrer() -> AppTest:
+def _ouvrir() -> AppTest:
+    """L'application telle qu'elle s'ouvre : sur l'introduction."""
     at = AppTest.from_file(APP, default_timeout=60)
     at.run()
+    assert not at.exception, at.exception
+    return at
+
+
+def _demarrer(compte: str = "robert") -> AppTest:
+    """Passe l'introduction et ouvre un compte : on arrive sur son profil."""
+    at = _ouvrir()
+    at.button(key="passer_intro").click().run()
+    assert not at.exception, at.exception
+    at.button(key=f"compte_{compte}").click().run()
     assert not at.exception, at.exception
     return at
 
@@ -61,7 +72,8 @@ def _inspecter(at: AppTest, persona: str) -> str:
 def test_demarre_avec_bandeau(sans_agent):
     at = _demarrer()
     assert "Simulation à but éducatif. Aucune transaction réelle." in _textes(at)
-    assert list(at.radio(key="page").options) == ["Portefeuille", "Négocier", "Profil", "Aide"]
+    assert list(at.radio(key="page").options) == ["Profil", "Portefeuille", "Négocier", "Aide"]  # l'ordre du parcours
+    assert at.session_state["page"] == "profil"  # un compte s'ouvre sur son profil
     assert not at.sidebar.radio  # plus de volet à gauche : le client se choisit dans le menu du compte
     for page in ("negocier", "profil", "aide", "portefeuille"):
         _aller(at, page)
@@ -157,6 +169,7 @@ def test_montant_en_dollars_et_type_d_ordre(sans_agent):
 
 def test_portefeuille_en_dollars_avec_anneaux(sans_agent):
     at = _demarrer()
+    _aller(at, "portefeuille")
     assert "800 000 $" in _textes(at)
     assert not at.exception, at.exception
 
@@ -391,16 +404,24 @@ def test_pistes_testees_et_correction(equipe_simulee):
 
 def test_nouveau_client_tout_le_parcours(sans_agent):
     from moteur import api
-    at = _demarrer()
-    _client(at, "nouveau", "profil")
+    at = _demarrer("nouveau")
     texte = _textes(at)
-    assert "réponses par défaut" in texte  # aucune réponse héritée d'un exemple
+    # Une fiche vide : aucune réponse héritée d'un exemple, et pas de politique de placement sans elle.
+    assert at.session_state["page"] == "profil" and at.selectbox(key="q_nouveau_objectif").value is None
+    assert "Elle apparaîtra ici dès que la fiche sera complète" in texte and 'class="glc-doc"' not in texte
     assert at.session_state["pf_nouveau"] == {"ZST.TO": 100.0}
+    for page in ("portefeuille", "negocier"):  # ces pages attendent la fiche
+        _aller(at, page)
+        assert "Commencez par votre fiche" in _textes(at) and not [b for b in at.button if b.key == "inspecter"]
+    at.button(key="vers_fiche").click().run()
+    assert at.session_state["page"] == "profil"
 
     # Fiche : choisie à l'écran.
     for champ, valeur in (("horizon", "15_plus"), ("fluctuations", "elevees"), ("capacite_perte", "elevees"),
-                          ("experience", "avancee"), ("objectif", "croissance_long_terme")):
+                          ("experience", "avancee"), ("objectif", "croissance_long_terme"),
+                          ("besoin_liquidite", "aucun")):
         at.selectbox(key=f"q_nouveau_{champ}").set_value(valeur).run()
+    assert 'class="glc-doc"' in _textes(at)  # la politique de placement suit la fiche complète
     at.radio(key="q_nouveau_theme_ecarte_esg").set_value("exclure").run()
     assert not at.exception, at.exception
 
@@ -430,7 +451,7 @@ def test_nouveau_client_tout_le_parcours(sans_agent):
     assert not at.exception, at.exception
     carte = _verdict(at)
     assert "20 000 $" in carte and "AAPL" in carte and "10,0 %" in carte
-    fiche = {"id": "nouveau", "nom": "Nouveau client",
+    fiche = {"id": "nouveau", "nom": "Nouveau compte",
              "questionnaire": {"objectif": "croissance_long_terme", "horizon": "15_plus", "fluctuations": "elevees",
                                "capacite_perte": "elevees", "besoin_liquidite": "aucun", "experience": "avancee",
                                "themes": {"ecarte_esg": "exclure", "speculatif": "neutre", "crypto": "neutre",
@@ -520,3 +541,66 @@ def test_analyse_deja_faite_et_relance(monkeypatch):
     assert appels == [False, True]
     assert "Analyse déjà faite" not in _textes(at) and not [b for b in at.button if b.key == "relancer"]
     assert "En tension" in _verdict(at)
+
+
+# ---------------------------------------------------------------- introduction, choix du compte, parcours
+
+def test_introduction_puis_choix_du_compte(sans_agent):
+    from interface.textes import INTRODUCTION
+    at = _ouvrir()
+    assert at.session_state["etape"] == "introduction" and not at.radio  # ni navigation ni compte avant le choix
+    assert "Simulation à but éducatif. Aucune transaction réelle." in _textes(at)
+    assert 1 < len(INTRODUCTION) <= 5
+    for n, (_, titre, _) in enumerate(INTRODUCTION):
+        texte = _textes(at)
+        assert titre in texte and f"{n + 1} / {len(INTRODUCTION)}" in texte
+        assert 'class="glc-vue"' in texte  # chaque panneau montre une vraie vue du service
+        at.button(key="intro_suivant").click().run()
+        assert not at.exception, at.exception
+    # Après le dernier panneau : le choix d'un compte, les comptes prêts d'abord, puis le nouveau compte.
+    assert at.session_state["etape"] == "comptes"
+    assert [b.key for b in at.button][:4] == ["compte_robert", "compte_mateo", "compte_amira", "compte_nouveau"]
+    assert "prenez un compte déjà prêt" in _textes(at)
+    at.button(key="compte_mateo").click().run()
+    assert not at.exception, at.exception
+    assert (at.session_state["etape"], at.session_state["persona"], at.session_state["page"]) == \
+        ("service", "mateo", "profil")
+    assert "Établie pour Mateo à partir de sa fiche" in _textes(at)
+
+
+def test_introduction_se_passe_d_un_clic_et_se_revoit_depuis_l_aide(sans_agent):
+    at = _ouvrir()
+    at.button(key="passer_intro").click().run()
+    assert at.session_state["etape"] == "comptes"
+    at.button(key="compte_robert").click().run()
+    _aller(at, "aide")
+    at.button(key="revoir_intro").click().run()
+    assert not at.exception, at.exception
+    assert at.session_state["etape"] == "introduction"
+    at.button(key="passer_intro").click().run()
+    # Le compte est déjà choisi : on revient au service, sans repasser par le choix.
+    assert (at.session_state["etape"], at.session_state["persona"], at.session_state["page"]) == \
+        ("service", "robert", "aide")
+
+
+def test_chaque_page_mene_a_la_suivante(sans_agent):
+    at = _demarrer()
+    for cle, page in (("suite_profil", "portefeuille"), ("suite_portefeuille", "negocier"), ("suite_negocier", "aide")):
+        at.button(key=cle).click().run()
+        assert not at.exception, at.exception
+        assert at.session_state["page"] == page
+
+
+def test_ordre_d_exemple_et_adresse_directe(sans_agent):
+    at = _ouvrir()
+    at.button(key="passer_intro").click().run()
+    at.button(key="essayer").click().run()  # « Analyser tout de suite un ordre d'exemple »
+    assert not at.exception, at.exception
+    assert (at.session_state["etape"], at.session_state["page"]) == ("service", "negocier")
+    assert [b for b in at.button if b.key == "inspecter"]
+    # Une adresse qui nomme une page mène droit au service (essai distant, lien direct).
+    direct = AppTest.from_file(APP, default_timeout=60)
+    direct.query_params["page"] = "negocier"
+    direct.run()
+    assert not direct.exception, direct.exception
+    assert direct.session_state["etape"] == "service" and [b for b in direct.button if b.key == "inspecter"]

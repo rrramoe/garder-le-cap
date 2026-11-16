@@ -195,10 +195,6 @@ def etat_vide(titre: str, texte: str, puces: list[str]) -> str:
             f'<div class="puces">{p}</div></div>')
 
 
-def accueil(lignes: list[str]) -> str:
-    return '<div class="glc-accueil">' + "".join(f"<p>{e(l)}</p>" for l in lignes) + "</div>"
-
-
 def pas(lignes: list[tuple[str, str]]) -> str:
     """Une suite d'étapes numérotées : un titre, une phrase."""
     return "".join(f'<div class="glc-pas"><span class="no">{i:02d}</span><p><b>{e(t)}.</b> {e(x)}</p></div>'
@@ -221,6 +217,15 @@ def definitions(paires: list[tuple[str, str]]) -> str:
 def reponse(texte: str, code: str | None) -> str:
     couleur, fond = COULEURS_VERDICT.get(code, PISTE), FONDS_VERDICT.get(code, VOILE)
     return f'<div class="glc-reponse" style="background:{fond};border-left:4px solid {couleur}">{e(texte)}</div>'
+
+
+def suite(libelle: str, page: str, cle: str, principal: bool = True) -> None:
+    """La fin d'une page : l'étape qui suit, à droite."""
+    import streamlit as st
+    from interface import etat
+    _, droite = st.columns([2.2, 1])
+    droite.button(libelle, key=cle, type="primary" if principal else "secondary", width="stretch",
+                  on_click=etat.aller, args=(page,), icon=":material/arrow_forward:")
 
 
 def montrer(contenu: str) -> None:

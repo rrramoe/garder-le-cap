@@ -121,8 +121,12 @@ def etapes_texte(agent: dict) -> str:
 # ---------------------------------------------------------------- pilotage de l'application
 
 def demarrer() -> AppTest:
+    """Ouvre l'application comme un visiteur : passe l'introduction, puis ouvre le premier compte prêt."""
     at = AppTest.from_file(APP, default_timeout=DELAI_S)
     at.run()
+    at.button(key="passer_intro").click().run()
+    premier = next(b.key for b in at.button if str(b.key).startswith("compte_"))
+    at.button(key=premier).click().run()
     return at
 
 
@@ -161,6 +165,8 @@ def analyser(at: AppTest, cid: str, ticker=None, operation=None, montant=None) -
 def composer_nouveau(at: AppTest, reponses: dict, themes: dict, valeur: float, positions: list) -> None:
     choisir_client(at, "nouveau")
     aller(at, "profil")
+    # Un nouveau compte part d'une fiche vide : chaque question reçoit sa réponse, celles du cas d'abord.
+    reponses = {**FICHE_NEUTRE, **reponses}
     for champ, v in reponses.items():
         at.selectbox(key=f"q_nouveau_{champ}").set_value(v).run()
     for t, v in themes.items():
@@ -176,6 +182,8 @@ def composer_nouveau(at: AppTest, reponses: dict, themes: dict, valeur: float, p
 
 # ---------------------------------------------------------------- cas
 
+FICHE_NEUTRE = {"objectif": "croissance_equilibree", "horizon": "5_8", "fluctuations": "moderees",
+                "capacite_perte": "moderees", "besoin_liquidite": "aucun", "experience": "debutante"}
 LIGNES: list[dict] = []
 ECARTS: list[str] = []
 

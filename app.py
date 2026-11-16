@@ -7,7 +7,7 @@ Le code calcule, le modèle explique : tous les chiffres affichés viennent de m
 
 Ce fichier ne fait que monter la page : l'en-tête, puis la page choisie. Le reste vit dans `interface/` :
 `theme` (couleurs et feuille de style), `composants` (HTML et SVG), `textes` (mots et formats),
-`etat` (session, moteur, agents) et une page par destination.
+`etat` (session, moteur, agents), l'accueil (introduction, choix du compte) et une page par destination.
 """
 
 from __future__ import annotations
@@ -16,13 +16,15 @@ import streamlit as st
 
 from moteur import api
 from interface import composants as C
-from interface import etat, page_aide, page_negocier, page_portefeuille, page_profil
+from interface import etat, page_accueil, page_aide, page_negocier, page_portefeuille, page_profil
 from interface.textes import BANDEAU, PAGES
 from interface.theme import CSS
 
 
-def entete() -> str:
-    """Le bandeau de simulation, toujours visible, puis la barre : la marque, les destinations, le compte."""
+def entete(service: bool) -> str:
+    """Le bandeau de simulation, toujours visible, puis la barre : la marque, les destinations, le compte.
+
+    Avant le choix d'un compte (introduction, choix du compte), la barre ne porte que la marque."""
     tous = etat.clients()
     with st.container(key="entete"):
         C.montrer(C.bandeau(BANDEAU))
@@ -30,6 +32,8 @@ def entete() -> str:
             gauche, milieu, droite = st.columns([2.6, 5, 2.6], vertical_alignment="center")
             with gauche:
                 C.montrer(C.entete_marque())
+            if not service:
+                return st.session_state["persona"]
             milieu.radio("Navigation", list(PAGES), key="page", horizontal=True, label_visibility="collapsed",
                          format_func=PAGES.get)
             # Le menu se referme quand un client est choisi : son conteneur change alors de clé.
@@ -45,18 +49,29 @@ def main() -> None:
                        initial_sidebar_state="collapsed")
     C.montrer(CSS)
     etat.garder_les_choix()
-    persona = entete()
+    etape = st.session_state["etape"]
+    persona = entete(service=etape == "service")
+    if etape == "introduction":
+        page_accueil.introduction()
+        return
+    if etape == "comptes":
+        page_accueil.comptes()
+        return
+
     etat.initialiser(persona)
     fiche = etat.fiche_session(persona)
-    fiche_client = api.lire_fiche_client(fiche)
+    complete = etat.fiche_complete(fiche)
+    fiche_client = api.lire_fiche_client(fiche) if complete else None
 
     page = st.session_state["page"]
-    if page == "negocier":
-        page_negocier.afficher(persona, fiche)
+    if page == "aide":
+        page_aide.afficher(persona)
     elif page == "profil":
         page_profil.afficher(persona, fiche, fiche_client)
-    elif page == "aide":
-        page_aide.afficher(persona)
+    elif not complete:
+        page_profil.fiche_a_completer(page)  # le portefeuille et l'ordre s'ouvrent quand la fiche est complète
+    elif page == "negocier":
+        page_negocier.afficher(persona, fiche)
     else:
         page_portefeuille.afficher(persona, fiche, fiche_client)
 

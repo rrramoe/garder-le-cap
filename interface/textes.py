@@ -25,7 +25,8 @@ EN_DIRECT_AGENT = "Analyse en cours"
 DEJA_FAITE = "Analyse déjà faite pour cet ordre."
 DELAI_MAX_AGENT_S = 240  # au-delà, l'analyse du moteur reste seule affichée
 
-PAGES = {"portefeuille": "Portefeuille", "negocier": "Négocier", "profil": "Profil", "aide": "Aide"}
+# Les destinations, dans l'ordre du parcours : la fiche et la politique, le portefeuille, l'ordre, l'aide.
+PAGES = {"profil": "Profil", "portefeuille": "Portefeuille", "negocier": "Négocier", "aide": "Aide"}
 
 NOMS_AGENTS = {"principal": "Agent principal", "explorateur": "Agent explorateur"}
 LIBELLES_OUTILS = {
@@ -46,10 +47,26 @@ LIBELLES_PHASES = {
     "correction": "Je corrige mon texte.",
 }
 
-ACCUEIL = ["Garder le cap analyse un ordre avant que vous le passiez.",
-           "Il le regarde sous cinq angles, face à votre propre politique de placement.",
-           "Il renseigne, il ne conseille pas. Vous décidez."]
-BOUTON_ESSAI = "Essayer avec un exemple"
+# L'introduction, montrée une fois à l'ouverture : un titre et deux lignes par panneau.
+INTRODUCTION = [
+    ("verdict", "Un service de gestion des risques, pour l'investisseur particulier.",
+     ["Vous préparez un ordre. Avant de le passer, le service le vérifie face à votre propre politique de placement.",
+      "Il renseigne, il ne conseille jamais."]),
+    ("politique", "Votre fiche, puis votre politique de placement.",
+     ["Quatorze réponses : objectif, horizon, risque, contraintes, préférences.",
+      "Le service en tire un profil, une répartition et des limites, chacune avec sa source."]),
+    ("angles", "Cinq angles, une note chacun.",
+     ["Objectif, risque, liquidité, diversification, préférences.",
+      "L'angle le plus bas décide du verdict : compatible, en tension ou incompatible."]),
+    ("agents", "Le code calcule. Deux agents expliquent.",
+     ["Chaque note et chaque piste testée vient du moteur de calcul, jamais d'un modèle de langage.",
+      "Un agent lit votre cas et rédige l'explication ; l'autre cherche et teste des pistes."]),
+    ("limites", "Une simulation, et ses limites.",
+     ["Aucune transaction réelle, aucun conseil personnalisé : un garde-fou les refuse.",
+      "Les notes de risque rejouent le passé. Ce n'est pas une prévision. Vous décidez."]),
+]
+BOUTON_PASSER_INTRO = "Passer l'introduction"
+BOUTON_ESSAI = "Analyser tout de suite un ordre d'exemple"
 # Comment le service fonctionne, en mots simples. Rien n'est dit ici qui ne soit construit.
 FONCTIONNEMENT = [
     ("Votre fiche", "Quatorze réponses : votre objectif, votre horizon, le risque que vous acceptez et celui que "
@@ -84,8 +101,6 @@ EXEMPLES_ENREGISTRES = [
 ]
 NOUVEAU = "nouveau"
 VALEUR_NOUVEAU = 100_000
-REPONSES_PAR_DEFAUT = {"objectif": "croissance_equilibree", "horizon": "5_8", "fluctuations": "moderees",
-                       "capacite_perte": "moderees", "besoin_liquidite": "aucun", "experience": "debutante"}
 
 # Opérations et types d'ordre. Ajouter une opération revient à ajouter une entrée ici.
 OPERATIONS = {

@@ -6,7 +6,7 @@ import streamlit as st
 
 from interface import composants as C
 from interface import etat
-from interface.textes import (CHAMPS_Q, CLASSES, GROUPES_Q, PHRASE_LIMITES, QUESTIONNAIRE, RUBRIQUES, THEMES, annees,
+from interface.textes import (CHAMPS_Q, CLASSES, GROUPES_Q, PAGES, PHRASE_LIMITES, QUESTIONNAIRE, RUBRIQUES, THEMES, annees,
                               charger_reference, francais, libelle_option, libelle_theme_reponse, nombre, pct, source_courte)
 
 
@@ -16,8 +16,8 @@ def fiche(persona: str, fiche_session: dict) -> None:
     enregistre = etat.client_enregistre(persona)
     with st.container(key="carte_fiche"):
         sur = "Changez une réponse : votre politique de placement suit."
-        if not enregistre["exemple"]:
-            sur = "Les choix affichés au départ sont des réponses par défaut. Choisissez les vôtres."
+        if not etat.fiche_complete(fiche_session):
+            sur = "Répondez à chaque question : votre politique de placement apparaît dès que la fiche est complète."
         C.montrer(C.h2("Votre fiche", sur))
         groupes = [(r, list(champs)) for r, champs in GROUPES_Q]
         restants = [c for c in CHAMPS_Q if not any(c in champs for _, champs in groupes)]
@@ -39,7 +39,7 @@ def fiche(persona: str, fiche_session: dict) -> None:
                 rubrique(cle)
                 for champ in champs:
                     st.selectbox(QUESTIONNAIRE[champ]["libelle"], list(QUESTIONNAIRE[champ]["options"]),
-                                 key=etat.cle_q(persona, champ),
+                                 key=etat.cle_q(persona, champ), index=None, placeholder="Choisir",
                                  format_func=lambda o, c=champ: libelle_option(c, o))
         rubrique("preferences")
         C.montrer(f'<p class="glc-sur">{C.e(PHRASE_LIMITES)} « Exclure » et « Obligatoire » sont des règles strictes ; '
@@ -198,10 +198,28 @@ def politique(persona: str, fiche_client: dict) -> None:
                       + "".join(f"<li>{C.e(francais(s['libelle']))}</li>" for s in conventions) + "</ul>")
 
 
-def afficher(persona: str, fiche_session: dict, fiche_client: dict) -> None:
+def fiche_a_completer(page: str) -> None:
+    """Le portefeuille et l'ordre attendent la fiche : sans elle, pas de politique de placement à respecter."""
+    C.montrer(C.titre_page(PAGES.get(page, ""), "Cette page s'ouvre quand votre fiche est complète."))
+    with st.container(key="carte_a_completer"):
+        gauche, droite = st.columns([3, 1], vertical_alignment="center")
+        with gauche:
+            C.montrer('<p class="glc-h2">Commencez par votre fiche</p><p class="glc-sur">Six questions, puis vos '
+                      "préférences. Le service en tire votre politique de placement.</p>")
+        droite.button("Remplir ma fiche", key="vers_fiche", type="primary", width="stretch",
+                      on_click=etat.aller, args=("profil",))
+
+
+def afficher(persona: str, fiche_session: dict, fiche_client: dict | None) -> None:
     C.montrer(C.titre_page("Profil", "Votre fiche, puis la politique de placement qui en découle."))
     fiche(persona, fiche_session)
+    if fiche_client is None:
+        manquantes = [QUESTIONNAIRE[c]["libelle"] for c in CHAMPS_Q if fiche_session["questionnaire"].get(c) is None]
+        C.montrer('<div class="glc-vide"><h3>Politique de placement</h3><p>Elle apparaîtra ici dès que la fiche '
+                  f'sera complète. Il reste : {C.e(", ".join(manquantes).lower())}.</p></div>')
+        return
     if "erreur" in fiche_client:
         st.error(fiche_client["erreur"])
         return
     politique(persona, fiche_client)
+    C.suite("Continuer vers le portefeuille", "portefeuille", "suite_profil")

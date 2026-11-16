@@ -14,7 +14,7 @@ import streamlit as st
 
 from moteur import api, references
 from interface.textes import (CHAMPS_Q, EXEMPLES_ENREGISTRES, NOUVEAU, OPERATIONS, PAGES, PERSONAS, QUESTIONNAIRE,
-                              REPONSES_PAR_DEFAUT, THEMES, VALEUR_NOUVEAU, dollars, libelle_option,
+                              THEMES, VALEUR_NOUVEAU, dollars, libelle_option,
                               libelle_theme_reponse)
 
 
@@ -30,10 +30,10 @@ def cle_q(persona: str, champ: str) -> str:
 # ---------------------------------------------------------------- clients
 
 def nouveau_client() -> dict:
-    """Un profil neutre et un portefeuille entièrement en liquidités, à composer à l'écran."""
-    return {"id": NOUVEAU, "nom": "Nouveau client", "exemple": False, "valeur": VALEUR_NOUVEAU,
-            "description": "profil et portefeuille à composer",
-            "questionnaire": {**REPONSES_PAR_DEFAUT, "themes": {t: "neutre" for t in THEMES}},
+    """Une fiche vide et un portefeuille entièrement en liquidités, à remplir et à composer à l'écran."""
+    return {"id": NOUVEAU, "nom": "Nouveau compte", "exemple": False, "valeur": VALEUR_NOUVEAU,
+            "description": "fiche et portefeuille à remplir",
+            "questionnaire": {**{c: None for c in CHAMPS_Q}, "themes": {t: "neutre" for t in THEMES}},
             "portefeuille_pct": {references.encaisse(): 100.0}, "ordre_demo": None}
 
 
@@ -67,9 +67,14 @@ def valeur_pf(persona: str) -> float:
 def garder_les_choix() -> None:
     """Streamlit oublie l'état d'un champ non affiché : on garde les choix des autres pages et des autres clients."""
     s = st.session_state
-    if "page" not in s:  # la page d'arrivée peut venir de l'adresse (?page=negocier)
+    if "etape" not in s:
+        # À l'ouverture : l'introduction, puis le choix d'un compte. Une adresse qui nomme une page
+        # (?page=negocier) mène droit au service, avec le premier compte enregistré.
         demandee = st.query_params.get("page", "")
+        s["etape"] = "service" if demandee in PAGES else "introduction"
         s["page"] = demandee if demandee in PAGES else next(iter(PAGES))
+        s["compte_choisi"] = demandee in PAGES
+    s.setdefault("page", next(iter(PAGES)))
     s.setdefault("persona", next(iter(clients())))
     for cle in list(s.keys()):
         if not isinstance(cle, str):
@@ -83,14 +88,46 @@ def fermer_le_menu() -> None:
     st.session_state["menu_compte"] = st.session_state.get("menu_compte", 0) + 1
 
 
-def essayer_avec_un_exemple() -> None:
-    """Ouvre le billet d'ordre d'un client enregistré, déjà rempli : celui du compte s'il en a un, sinon le premier."""
+def aller(page: str) -> None:
+    """Ouvre une page du service."""
+    st.session_state["page"] = page
+
+
+def avancer_introduction(pas: int, dernier: int) -> None:
+    """Panneau suivant ou précédent ; après le dernier, l'introduction se termine."""
+    n = st.session_state.get("intro_n", 0) + pas
+    if n > dernier:
+        finir_introduction()
+    else:
+        st.session_state["intro_n"] = max(0, n)
+
+
+def finir_introduction() -> None:
+    """Après l'introduction : le choix d'un compte, ou le retour au service si un compte est déjà choisi."""
     s = st.session_state
+    s["intro_n"] = 0
+    s["etape"] = "service" if s.get("compte_choisi") else "comptes"
+
+
+def revoir_introduction() -> None:
+    st.session_state["etape"], st.session_state["intro_n"] = "introduction", 0
+
+
+def choisir_compte(cid: str, page: str = "profil") -> None:
+    """Ouvre un compte : on arrive sur son profil, la fiche puis la politique de placement qui en découle."""
+    s = st.session_state
+    s["persona"], s["page"], s["etape"], s["compte_choisi"] = cid, page, "service", True
+
+
+def essayer_avec_un_exemple() -> None:
+    """Ouvre le billet d'ordre d'un compte enregistré, déjà rempli."""
     tous = clients()
-    if not tous[s["persona"]].get("ordre_demo"):
-        s["persona"] = next((cid for cid, c in tous.items() if c.get("ordre_demo")), s["persona"])
-    s["page"] = "negocier"
-    s["accueil_vu"] = True
+    choisir_compte(next((cid for cid, c in tous.items() if c.get("ordre_demo")), next(iter(tous))), "negocier")
+
+
+def fiche_complete(fiche: dict) -> bool:
+    """Vrai quand chaque question de la fiche a sa réponse : le moteur peut alors en tirer la politique."""
+    return all(fiche["questionnaire"].get(c) is not None for c in CHAMPS_Q)
 
 
 def initialiser(persona: str) -> None:
@@ -140,7 +177,7 @@ def fiche_modifiee(persona: str, fiche: dict) -> list[str]:
     q = fiche["questionnaire"]
     ecarts = []
     for champ in CHAMPS_Q:
-        if q[champ] != q0[champ]:
+        if q[champ] != q0[champ] and q[champ] is not None:
             ecarts.append(f"{QUESTIONNAIRE[champ]['libelle']} : {libelle_option(champ, q[champ])}")
     for t in THEMES:
         if q["themes"][t] != q0["themes"].get(t, "neutre"):
@@ -151,7 +188,7 @@ def fiche_modifiee(persona: str, fiche: dict) -> list[str]:
 def ecarts_questionnaire(q_avant: dict, q_apres: dict) -> list[str]:
     ecarts = []
     for champ in CHAMPS_Q:
-        if q_avant[champ] != q_apres[champ]:
+        if q_avant[champ] != q_apres[champ] and None not in (q_avant[champ], q_apres[champ]):
             ecarts.append(f"{QUESTIONNAIRE[champ]['libelle']} : {libelle_option(champ, q_avant[champ])} "
                           f"→ {libelle_option(champ, q_apres[champ])}")
     for t in THEMES:

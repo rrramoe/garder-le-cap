@@ -8,7 +8,7 @@ from moteur import api, references
 from interface import composants as C
 from interface import etat
 from interface.theme import COULEUR_AUTRE, COULEURS_CLASSES
-from interface.textes import (ACCUEIL, AIDE_ANGLES, BOUTON_ESSAI, CLASSES, LIMITE, angles_du_bloc, dollars, instruments,
+from interface.textes import (AIDE_ANGLES, CLASSES, LIMITE, angles_du_bloc, dollars, instruments,
                               libelle_mesure, nom_angle, pct)
 
 
@@ -118,21 +118,8 @@ def _positions(persona: str, fiche_client: dict) -> None:
             C.montrer(C.h2("Ordres simulés", "Aucune transaction réelle n'a eu lieu.") + C.tableau(colonnes, lignes))
 
 
-def accueil() -> None:
-    """Le premier écran dit en trois lignes ce que fait le service, et offre de l'essayer tout de suite."""
-    if st.session_state.get("accueil_vu"):
-        return
-    with st.container(key="accueil"):
-        gauche, droite = st.columns([3.2, 1], vertical_alignment="center")
-        with gauche:
-            C.montrer(C.accueil(ACCUEIL))
-        droite.button(BOUTON_ESSAI, type="primary", key="essayer", on_click=etat.essayer_avec_un_exemple,
-                      width="stretch")
-
-
 def afficher(persona: str, fiche: dict, fiche_client: dict) -> None:
     client = etat.client_enregistre(persona)
-    accueil()
     C.montrer(C.titre_page("Portefeuille", f"{client['nom']} · {client['description']}"))
     nouveau = not client["exemple"]
     if nouveau:
@@ -145,3 +132,4 @@ def afficher(persona: str, fiche: dict, fiche_client: dict) -> None:
     _positions(persona, fiche_client)
     if not nouveau:
         composer(persona)
+    C.suite("Continuer vers Négocier", "negocier", "suite_portefeuille")

@@ -134,10 +134,36 @@ div[class*="st-key-carte"] {{ background: var(--surface); border: 1px solid var(
 .stApp .glc-faits div span {{ display: block; font-size: var(--t1); color: var(--gris); }}
 .stApp .glc-faits div b {{ font-size: var(--t2); font-weight: 600; color: var(--encre); font-variant-numeric: tabular-nums; }}
 
-/* ---------- accueil ---------- */
-div[class*="st-key-accueil"] {{ background: var(--voile); border-radius: var(--rayon); padding: 22px 24px; }}
-.stApp .glc-accueil p {{ margin: 0; font-size: var(--t2); color: var(--encre); }}
-.stApp .glc-accueil p:first-child {{ font-size: var(--t3); font-weight: 700; margin-bottom: 4px; }}
+/* ---------- introduction et choix du compte ---------- */
+div[class*="st-key-introduction"] {{ max-width: 1040px; margin: 16px auto 0 auto; }}
+.stApp .glc-pas-intro {{ display: flex; align-items: center; gap: 6px; }}
+.stApp .glc-pas-intro span {{ font-size: var(--t1); font-weight: 600; color: var(--gris); margin-right: 8px;
+  font-variant-numeric: tabular-nums; }}
+.stApp .glc-pas-intro i {{ width: 22px; height: 4px; border-radius: 4px; background: var(--piste); }}
+.stApp .glc-pas-intro i.ici {{ background: var(--encre); }}
+.stApp .glc-intro h1 {{ font-size: var(--t4); font-weight: 700; line-height: 1.25; margin: 0 0 14px 0;
+  letter-spacing: -0.02em; }}
+.stApp .glc-intro p {{ font-size: var(--t3); line-height: 1.5; color: var(--encre); margin: 0 0 8px 0; }}
+.stApp .glc-intro p:last-child {{ margin-bottom: 20px; color: var(--gris); }}
+.stApp .glc-intro {{ min-height: 270px; padding-top: 34px; }}
+.stApp .glc-vue {{ background: var(--voile); border-radius: 20px; padding: 28px; height: 440px; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: center; position: relative; }}
+.stApp .glc-vue:has(.glc-doc) {{ justify-content: flex-start; }}
+.stApp .glc-vue:has(.glc-doc)::after {{ content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 90px;
+  background: linear-gradient(to bottom, rgba(246,244,240,0), var(--voile)); }}
+.stApp .glc-vue .glc-angles {{ grid-template-columns: repeat(5, 1fr); gap: 2px; }}
+.stApp .glc-vue .glc-angle svg {{ width: 66px; height: 66px; }}
+.stApp .glc-vue .glc-angle .tag {{ white-space: normal; line-height: 1.25; }}
+.stApp .glc-vue .glc-carte {{ padding: 22px 16px; }}
+.stApp .glc-vue > * {{ box-shadow: 0 10px 30px rgba(34,34,34,0.07); }}
+.stApp .glc-vue .glc-doc {{ padding: 22px 24px 10px 24px; }}
+.stApp .glc-vue .glc-doc .tete h2 {{ font-size: var(--t3); }}
+.stApp .glc-vue .glc-article {{ grid-template-columns: 26px 1fr; }}
+.stApp .glc-vue .glc-article .corps {{ grid-column: 2; }}
+div[class*="st-key-introduction"] .stButton > button[kind="tertiary"] {{ float: right; }}
+div[class*="st-key-carte_compte"] .glc-faits {{ margin: 14px 0 6px 0; }}
+
+/* ---------- étapes numérotées ---------- */
 .stApp .glc-pas {{ display: grid; grid-template-columns: 28px 1fr; gap: 4px 12px; padding: 10px 0;
   border-bottom: 1px solid var(--filet); }}
 .stApp .glc-pas:last-child {{ border-bottom: 0; }}

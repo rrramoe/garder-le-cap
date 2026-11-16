@@ -56,3 +56,5 @@ def afficher(persona: str) -> None:
     fonctionnement()
     comprendre()
     question(persona)
+    _, droite = st.columns([2.2, 1])
+    droite.button("Revoir l'introduction", key="revoir_intro", width="stretch", on_click=etat.revoir_introduction)
