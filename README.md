@@ -7,7 +7,11 @@
 Les professionnels ont un département de risque. Le particulier n'a que son enthousiasme. Sigma lui donne le sien : un vrai service pour un vrai besoin, dont les agents sont la valeur ajoutée.
 
 - **Une équipe de deux agents IA sur Amazon Bedrock** analyse chaque ordre avant qu'il soit passé. Le chef de dossier instruit le cas, confie un mandat, juge les pistes et rédige l'explication ; l'explorateur cherche ce qui serait possible et teste chaque piste.
-- **Un modèle de notation** mesure l'écart de l'ordre à la politique de placement du client lui-même : une note sur 100 sous cinq angles, chaque limite rattachée à sa source (document publié ou hypothèse déclarée), chaque chiffre calculé par le code, jamais par le modèle.
+- **Un modèle de notation** mesure l'écart de l'ordre à la politique de placement du client lui-même : une note sur 100 sous cinq angles, chaque limite rattachée à sa source (document publié ou hypothèse déclarée).
+
+Chaque chiffre est calculé par le code, jamais par le modèle ; le code vérifie que chaque chiffre de l'explication vient d'un calcul, et le garde-fou Bedrock contrôle son ancrage.
+
+Pour un courtier en ligne, Sigma s'ajoute à l'écran de courtage existant : il part de la fiche « Connaître son client » que le courtier tient déjà, analyse chaque ordre avant son exécution, et garde une trace de chaque analyse.
 
 **Application en ligne :** https://d2401bv4b6xo7h.cloudfront.net/
 
@@ -96,7 +100,7 @@ Quand `GLC_BUCKET` est configuré, les fichiers de référence sont lus dans le 
 .venv/bin/streamlit run app.py --server.address localhost
 ```
 
-L'application s'ouvre sur http://localhost:8501, par une courte introduction qu'on peut passer d'un clic (« Passer l'introduction »), puis par le choix d'un compte : trois comptes prêts, Robert, Mateo et Amira, ou « Nouveau compte », dont la fiche se remplit d'abord (six questions). « Analyser tout de suite un ordre d'exemple » mène directement à un ordre déjà rempli.
+L'application s'ouvre sur http://localhost:8501, par une courte introduction qu'on peut passer d'un clic (« Passer l'introduction »), puis par le choix d'un compte : trois comptes prêts, Robert, Mateo et Amira, ou « Nouveau compte », dont la fiche se remplit d'abord (six questions et huit thèmes de préférence). « Analyser tout de suite un ordre d'exemple » mène directement à un ordre déjà rempli.
 
 Un compte s'ouvre sur son profil (la fiche, puis la politique de placement qui en découle) ; la barre du haut mène ensuite au portefeuille, à « Négocier » et à l'aide, et le menu du compte permet d'en changer. Dans « Négocier », préparez un ordre (instrument, achat ou vente, montant, opération), puis cliquez sur « Analyser l'ordre ». L'analyse donne le verdict, la note de chaque angle et l'angle déterminant, l'explication et les pistes testées.
 
@@ -152,7 +156,7 @@ flowchart LR
 | **Strands Agents** | Le kit qui fait des deux agents des agents à outils : appels au moteur, envoi de l'explorateur, suivi des étapes en direct dans l'interface. |
 | **Amazon Bedrock Guardrails** | Le garde-fou, appelé dans sa version publiée, refuse le conseil financier personnalisé et les demandes de transaction réelle, et mesure l'ancrage de l'explication dans les résultats des outils (vérification d'ancrage contextuel). Sa configuration est dans `docs/configuration/guardrail-config.json`, identifiants masqués. |
 | **Amazon S3** | Un bucket privé (accès public bloqué, chiffrement par défaut, accès refusé hors TLS) garde les fichiers de référence (`reference/*.json`), que l'application lit et qui reviennent au dossier local si S3 ne répond pas ; et, sous le préfixe `deploiement/`, les objets du déploiement : l'archive du code de chaque commit déployé, les données non publiées et la configuration. Sous le préfixe `traces/`, la trace JSON de chaque analyse réellement faite (pas un rejeu de la mémoire) : les étapes des agents, chaque appel d'outil et la réponse du moteur, les contrôles, le verdict et l'angle déterminant, sans les réponses de la fiche ni les poids du portefeuille. La machine y écrit seulement : elle ne peut ni lire, ni lister, ni supprimer une trace. |
-| **Amazon CloudWatch Logs** | Une ligne compacte par analyse (identifiant, verdict, angle déterminant, durée, modèles, repli) dans le journal `/garder-le-cap/analyses`, conservé 7 jours, un flux par jour ; la machine peut seulement y écrire. Réglages : `GLC_TRACES=0` éteint les traces (sans bucket, aucune trace), `GLC_JOURNAL_GROUPE` nomme le journal (vide, aucune ligne). La trace s'écrit en fond : si elle échoue, l'analyse n'est ni retardée ni changée. |
+| **Amazon CloudWatch Logs** | Une ligne compacte par analyse (identifiant, verdict, angle déterminant, durée, modèles, repli) dans le journal `/garder-le-cap/analyses` (nom d'origine du projet), conservé 7 jours, un flux par jour ; la machine peut seulement y écrire. Réglages : `GLC_TRACES=0` éteint les traces (sans bucket, aucune trace), `GLC_JOURNAL_GROUPE` nomme le journal (vide, aucune ligne). La trace s'écrit en fond : si elle échoue, l'analyse n'est ni retardée ni changée. |
 | **Amazon CloudFront** | L'adresse publique en HTTPS (certificat par défaut de CloudFront), devant l'instance : le visiteur en HTTP est redirigé vers HTTPS, CloudFront joint l'instance en HTTP sur le port 80, ne garde rien en cache et transmet tout ce que le visiteur envoie, y compris le passage au WebSocket de Streamlit. |
 | **Amazon EC2** | L'application publique tourne sur une petite instance Graviton (Amazon Linux 2023), Streamlit en service systemd sur le port 80, le seul port ouvert. Une IP élastique garde la même adresse d'une mise à jour à l'autre. |
 | **AWS IAM** | Un rôle propre à l'instance donne ses droits : appel des deux modèles et du garde-fou, lecture du bucket privé (références et déploiement), écriture seule des traces dans S3 et CloudWatch Logs, Systems Manager. Aucune clé n'est posée sur la machine. |

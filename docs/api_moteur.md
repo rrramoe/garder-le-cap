@@ -35,7 +35,7 @@ api.simuler_ordre("robert", "TSLA", "achat", 15)
 
 `symbole`, `identifiant_univers`, `nom`, `classe_actif`, `classe_politique`, `secteur`, `marche`, `devise`, `statistiques_cad` (`volatilite_annualisee`, `pire_baisse`, `temps_sous_l_eau_annees`, `non_recupere`, dates), `premiere_cotation` (actions individuelles : `date`, `recupere_le`), `etiquettes`, `faits_marche`, `periode`, `seuil_speculatif`, `fiches_generees_le`.
 
-`faits_marche` : des faits sur le passé, calculés par `scripts/construire_fiches.py` (module `moteur/faits_marche.py`) sur les fichiers des organisateurs ; aucun n'entre dans un score. En CAD sur le calendrier du moteur, sauf mention. Une donnée absente ou trop courte vaut `"indetermine"`.
+`faits_marche` : des faits sur le passé, calculés par `scripts/construire_fiches.py` (module `moteur/faits_marche.py`) sur les fichiers des organisateurs ; aucun n'entre dans une note. En CAD sur le calendrier du moteur, sauf mention. Une donnée absente ou trop courte vaut `"indetermine"`.
 
 | Bloc | Contenu |
 |---|---|
@@ -58,7 +58,7 @@ Sources : `donnees_marche`, `donnees_dividendes`, `donnees_taux`, conventions `h
 
 ## Modèle de notation en cinq familles
 
-Les contraintes strictes d'abord ; puis chaque famille prend sa mesure la plus faible ; le verdict suit la famille la plus faible (« une chaîne n'est qu'aussi solide que son maillon le plus faible »). Échelle commune : 100 sur la cible, 70 exactement à la limite (note de passage, fixée en un seul endroit : `notation.NOTE_DE_PASSAGE`, aussi `api.NOTE_DE_PASSAGE`), 0 au double de la distance, une droite de chaque côté de la limite : la même distance coûte 30 points dans la politique et 70 au-delà. Les formules des mesures donnent une note brute (limite à 50, `notation.note_lineaire`, `note_classe`…) que `notation.convertir` porte sur cette échelle ; la conversion est croissante et envoie la limite sur la limite, donc aucun verdict, direction ou taille compatible ne change (`tests/test_note_de_passage.py`). « Compatible » quand la note la plus faible vaut 70 ou plus. Une mesure ou une famille qui ne peut pas être calculée vaut `note: null` avec `statut` (`indetermine` ou `sans_objet`) et ne décide pas. Le champ `score` reste la note la plus faible ; l'interface ne l'affiche pas comme un chiffre global.
+Les contraintes strictes d'abord ; puis chaque famille prend sa mesure la plus faible ; le verdict suit la famille la plus faible (« rien ne se compense : l'angle le plus faible décide »). Échelle commune : 100 sur la cible, 70 exactement à la limite (note de passage, fixée en un seul endroit : `notation.NOTE_DE_PASSAGE`, aussi `api.NOTE_DE_PASSAGE`), 0 au double de la distance, une droite de chaque côté de la limite : la même distance coûte 30 points dans la politique et 70 au-delà. Les formules des mesures donnent une note brute (limite à 50, `notation.note_lineaire`, `note_classe`…) que `notation.convertir` porte sur cette échelle ; la conversion est croissante et envoie la limite sur la limite, donc aucun verdict, direction ou taille compatible ne change (`tests/test_note_de_passage.py`). « Compatible » quand la note la plus faible vaut 70 ou plus. Une mesure ou une famille qui ne peut pas être calculée vaut `note: null` avec `statut` (`indetermine` ou `sans_objet`) et ne décide pas. Le champ `score` reste la note la plus faible ; l'interface ne l'affiche pas comme un chiffre global.
 
 `notes` : une entrée par famille, dans l'ordre de `familles`, chacune `{note, mesure_min, mesures, question}` (+ `sans_objet`). Chaque mesure porte `note`, `libelle`, et selon le cas `valeur`, `cible`, `limite`, `unite`, `phrase`, `source`, `hypothese`. Une famille ou une mesure ajoutée apparaît sans changement côté agents ou interface.
 
@@ -95,14 +95,14 @@ Notes du portefeuille actuel, sans ordre : `score`, `dimension_min`, `mesure_min
 | `direction` | `{cas, libelle, score_avant, score_apres, revient_dans_la_politique}` ; `cas` = `reste_dans_la_politique`, `fait_sortir_de_la_politique`, `revient_dans_la_politique` (hors politique avant, note de passage atteinte après), `hors_politique_rapproche`, `hors_politique_inchange` (note la plus faible identique), `hors_politique_aggrave` ; `remarque` si une contrainte stricte est violée |
 | `contribution_risque_apres` | `{ticker, poids_pct, part_du_risque_pct}` : affiché, non noté |
 | `operation` | `{code, libelle, levier_avant, levier_apres, exposition_brute_apres_pct, exposition_empruntee_apres_pct, hypotheses, limites, controle_experience}` (voir plus bas) |
-| `solidite` | Voir `solidite` ci-dessous : le score après l'ordre sur 2022 seule et sur la période sans 2022 |
+| `solidite` | Voir `solidite` ci-dessous : la note la plus faible (`score`) après l'ordre sur 2022 seule et sur la période sans 2022 |
 | `cause` | Ce qui décide du verdict, lu dans les notes déjà calculées (voir `cause` ci-dessous) |
 | `points_attention` | Des faits, sans note : `{type, texte}` avec `type` = `operation` (opération avancée, son risque et le levier après l'ordre), `profil_declare` (expérience, objectif et horizon déclarés, avec leurs codes) et `limite` (les limites déjà dites dans `operation.limites`). Aussi dans `simuler_scenario`. |
 | `periode` | Période des données, devise CAD |
 
 ### `cause`
 
-Ce qui décide du verdict, sans aucune note nouvelle : `dimension`, `mesure`, `note` (le score), `sous_le_seuil`, `porte_par_l_ordre` (un instrument de l'ordre est-il en cause ?), `autres_mesures_sous_le_seuil` (`{dimension, mesure, note}`), et selon `type` :
+Ce qui décide du verdict, sans aucune note nouvelle : `dimension`, `mesure`, `note` (la note la plus faible, `score`), `sous_le_seuil`, `porte_par_l_ordre` (un instrument de l'ordre est-il en cause ?), `autres_mesures_sous_le_seuil` (`{dimension, mesure, note}`), et selon `type` :
 
 | `type` | Ce qui fait la mesure |
 |---|---|
@@ -126,7 +126,7 @@ Chaque mesure fondée sur l'historique est recalculée sur deux fenêtres, **dé
 |---|---|
 | `statut`, `libelle` | `solide` (la note la plus faible est du même côté de 70 dans les deux fenêtres) ou `fragile` |
 | `explication`, `regle` | La règle et son résultat, en français |
-| `score_principal` | Le score de la période complète |
+| `score_principal` | La note la plus faible sur la période complète |
 | `fenetres` | `defavorable` et `favorable` : `{libelle, debut, fin, score, dimension_min, dans_la_politique, note_risque, note_objectif, mesures_indeterminees}` ; `note_risque` = `{note, mesure_min, mesures}` (`ampleur`, `duree`, `fluctuations`, `pire_annee`) ; `note_objectif` = l'angle Objectif recalculé, ou `null` si sa mesure ne dépend pas de l'historique |
 | `ordre`, `verdict` | Rappel de l'ordre et du verdict |
 

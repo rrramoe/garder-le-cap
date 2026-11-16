@@ -5,7 +5,7 @@ Une équipe de deux agents Strands sur Amazon Bedrock, et du code autour. **Le c
 ## Agent principal : le chef de dossier
 
 - **Mission** : monter le dossier d'analyse de cet ordre pour ce client, de A à Z, diriger la recherche et l'expliquer.
-- **Objectif** : que le client comprenne, avec des mots de tous les jours, si l'ordre le garde sur le cap qu'il s'est fixé, pourquoi, et ce qui est possible.
+- **Objectif** : que le client comprenne, avec des mots de tous les jours, si l'ordre le garde dans la politique de placement qu'il s'est donnée, pourquoi, et ce qui est possible.
 - **Quand il agit** : à chaque analyse.
 - **Outils** : `lire_fiche_client`, `lire_fiche_instrument`, `decrire_apport`, `simuler_ordre` (appelés ensemble au premier tour), puis `envoyer_explorateur` et `juger_pistes`.
 - **Ce qu'il comprend, lui seul** : le cas des deux côtés. Le client : sa fiche, sa politique, son portefeuille et où il se tient déjà face à ses limites. L'ordre : l'instrument, son profil financier, ce qu'il ajouterait à ce portefeuille. Il en tire la **finalité supposée** de l'ordre (une hypothèse, montrée comme telle dans le rapport) et juge la **cohérence** de l'ordre avec l'objectif, l'horizon et l'expérience déclarés.
