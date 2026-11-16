@@ -132,8 +132,15 @@ def textes(at: AppTest) -> str:
     return "\n".join(str(m) for m in morceaux)
 
 
+def aller(at: AppTest, page: str) -> None:
+    """Change de page par la barre du haut : portefeuille, negocier, profil ou aide."""
+    at.radio(key="page").set_value(page).run()
+
+
 def choisir_client(at: AppTest, cid: str) -> None:
-    at.sidebar.radio(key="persona").set_value(cid).run()
+    """Choisit le client dans le menu du compte et ouvre la page « Négocier »."""
+    at.radio(key="persona").set_value(cid).run()
+    aller(at, "negocier")
 
 
 def analyser(at: AppTest, cid: str, ticker=None, operation=None, montant=None) -> tuple[dict, float]:
@@ -153,15 +160,18 @@ def analyser(at: AppTest, cid: str, ticker=None, operation=None, montant=None) -
 
 def composer_nouveau(at: AppTest, reponses: dict, themes: dict, valeur: float, positions: list) -> None:
     choisir_client(at, "nouveau")
+    aller(at, "profil")
     for champ, v in reponses.items():
         at.selectbox(key=f"q_nouveau_{champ}").set_value(v).run()
     for t, v in themes.items():
         at.radio(key=f"q_nouveau_theme_{t}").set_value(v).run()
+    aller(at, "portefeuille")
     at.number_input(key="nc_nouveau_valeur").set_value(float(valeur)).run()
     for titre, montant in positions:
         at.selectbox(key="nc_nouveau_titre").set_value(titre).run()
         at.number_input(key="nc_nouveau_montant").set_value(float(montant)).run()
         at.button(key="nc_nouveau_ajouter").click().run()
+    aller(at, "negocier")
 
 
 # ---------------------------------------------------------------- cas
@@ -229,7 +239,9 @@ def cas_nouveau_client(at: AppTest) -> None:
 
 def cas_incompatible(at: AppTest) -> None:
     choisir_client(at, "amira")
+    aller(at, "profil")
     at.radio(key="q_amira_theme_crypto").set_value("exclure").run()
+    aller(at, "negocier")
     rapport, duree = analyser(at, "amira", ticker="ETH-USD", montant=1_000)
     ligne = ligne_analyse("Incompatible : Amira exclut la crypto, 1 000 $ d'ETH-USD", rapport, duree)
     attendre(ligne.get("Verdict") == "Incompatible", f"Ordre incompatible : verdict « {ligne.get('Verdict')} ».")

@@ -1,4 +1,4 @@
-"""Tests de l'interface avec AppTest : démarrage et les trois ordres de la démo, sans l'agent."""
+"""Tests de l'interface avec AppTest : démarrage, les quatre pages et les trois ordres de la démo, sans l'agent."""
 
 import sys
 import time
@@ -8,7 +8,7 @@ import pytest
 from streamlit.testing.v1 import AppTest
 
 APP = str(Path(__file__).resolve().parents[1] / "app.py")
-AVIS = "Explication de l'agent indisponible : le rapport ci-dessous vient directement du moteur de calcul"
+AVIS = "Explication de l'agent indisponible : l'analyse ci-dessous vient directement du moteur de calcul"
 
 
 @pytest.fixture
@@ -32,15 +32,27 @@ def _textes(at: AppTest) -> str:
 
 
 def _verdict(at: AppTest) -> str:
-    """Le texte de la carte du verdict, en tête du rapport."""
-    cartes = [m.value for m in at.markdown if "1.9rem" in m.value]
+    """Le texte de la carte du verdict, en tête de l'analyse."""
+    cartes = [m.value for m in at.markdown if 'class="glc-verdict"' in m.value]
     assert len(cartes) == 1
     return cartes[0]
 
 
-def _inspecter(at: AppTest, persona: str) -> str:
-    at.sidebar.radio(key="persona").set_value(persona).run()
+def _aller(at: AppTest, page: str) -> None:
+    """Change de page par la barre du haut : portefeuille, negocier, profil ou aide."""
+    at.radio(key="page").set_value(page).run()
     assert not at.exception, at.exception
+
+
+def _client(at: AppTest, persona: str, page: str = "negocier") -> None:
+    """Choisit le client dans le menu du compte, puis ouvre une page."""
+    at.radio(key="persona").set_value(persona).run()
+    assert not at.exception, at.exception
+    _aller(at, page)
+
+
+def _inspecter(at: AppTest, persona: str) -> str:
+    _client(at, persona)
     at.button(key="inspecter").click().run()
     assert not at.exception, at.exception
     return _textes(at)
@@ -49,7 +61,28 @@ def _inspecter(at: AppTest, persona: str) -> str:
 def test_demarre_avec_bandeau(sans_agent):
     at = _demarrer()
     assert "Simulation à but éducatif. Aucune transaction réelle." in _textes(at)
-    assert [t.label for t in at.tabs] == ["Fiche", "Portefeuille", "Ordre"]
+    assert list(at.radio(key="page").options) == ["Portefeuille", "Négocier", "Profil", "Aide"]
+    assert not at.sidebar.radio  # plus de volet à gauche : le client se choisit dans le menu du compte
+    for page in ("negocier", "profil", "aide", "portefeuille"):
+        _aller(at, page)
+        assert "Simulation à but éducatif. Aucune transaction réelle." in _textes(at)  # le bandeau reste
+
+
+def test_vocabulaire_de_l_interface(sans_agent):
+    """Un mot pour une chose : ni « maillon », ni « chaîne », ni « score », ni « dimension » à l'écran."""
+    import re
+    at = _demarrer()
+    ecrans = []
+    for persona in ("robert", "mateo"):
+        _inspecter(at, persona)
+        for page in ("negocier", "profil", "aide", "portefeuille"):
+            _aller(at, page)
+            ecrans.append(re.sub(r"<style>.*?</style>", "", _textes(at), flags=re.S))
+    texte = re.sub(r"<[^>]+>", " ", "\n".join(ecrans)).lower()
+    for mot in ("maillon", "chaîne", "score", "dimension", "famille", "inspection", "rapport", "persona",
+                "hypothèse du projet"):
+        assert not re.search(rf"\b{mot}", texte), mot
+    assert "angle déterminant" in texte and "note de passage" in texte and "politique de placement" in texte
 
 
 def test_robert_tsla_en_tension(sans_agent):
@@ -59,11 +92,11 @@ def test_robert_tsla_en_tension(sans_agent):
     assert "En tension" in carte and "120 000 $" in carte and "15,0 %" in carte
     assert "L'angle déterminant : la pire année. Votre portefeuille aurait perdu" in carte
     assert "pire année publiée" not in carte  # les chiffres complets restent dans les mesures repliées
-    assert "sans objet (aucun besoin déclaré)" in texte
+    assert "sans objet" in texte
     assert "0,5 ans" not in texte and "du 30 sept." not in texte
     assert "56 000 $" in texte and "7,0 %" in texte  # taille compatible, en dollars et en %
     assert AVIS in texte
-    assert "chercher_taille_compatible" in texte  # étapes : appels du moteur faits par l'interface
+    assert "Je cherche le montant compatible." in texte  # étapes : appels du moteur faits par le service
 
 
 def test_mateo_xom_incompatible(sans_agent):
@@ -71,7 +104,7 @@ def test_mateo_xom_incompatible(sans_agent):
     texte = _inspecter(at, "mateo")
     carte = _verdict(at)
     assert "Incompatible" in carte and "20 000 $" in carte
-    assert "Aucune taille n'est proposée" in texte
+    assert "Aucun autre montant n'est proposé" in texte
     assert AVIS in texte
 
 
@@ -80,14 +113,16 @@ def test_amira_nvda_hors_politique_aggrave(sans_agent):
     texte = _inspecter(at, "amira")
     carte = _verdict(at)
     assert "En tension" in carte and "3 500 $" in carte
-    assert "Hors politique et aggrave" in texte
+    assert "l'ordre creuse l'écart" in carte
     assert AVIS in texte
 
 
 def test_horizon_change_la_note_de_duree(sans_agent):
     at = _demarrer()
     _inspecter(at, "robert")
+    _aller(at, "profil")
     at.selectbox(key="q_robert_horizon").set_value("15_plus").run()
+    _aller(at, "negocier")
     at.button(key="inspecter").click().run()
     assert not at.exception, at.exception
     texte = _textes(at)
@@ -98,7 +133,7 @@ def test_horizon_change_la_note_de_duree(sans_agent):
 
 def test_passer_ordre_simule(sans_agent):
     at = _demarrer()
-    at.sidebar.radio(key="persona").set_value("robert").run()
+    _client(at, "robert")
     at.button(key="passer").click().run()
     assert not at.exception, at.exception
     assert "Aucune transaction réelle n'a eu lieu" in _textes(at)
@@ -107,7 +142,7 @@ def test_passer_ordre_simule(sans_agent):
 
 def test_montant_en_dollars_et_type_d_ordre(sans_agent):
     at = _demarrer()
-    at.sidebar.radio(key="persona").set_value("robert").run()
+    _client(at, "robert")
     at.number_input(key="o_robert_montant").set_value(56_000.0).run()
     assert "7,0 %" in _textes(at)  # part du portefeuille affichée à côté du montant
     at.selectbox(key="o_robert_type").set_value("limite").run()
@@ -128,8 +163,9 @@ def test_portefeuille_en_dollars_avec_anneaux(sans_agent):
 
 def test_vente_a_decouvert_debutante_puis_avancee(sans_agent):
     at = _demarrer()
-    at.sidebar.radio(key="persona").set_value("robert").run()
+    _client(at, "robert", "profil")
     at.selectbox(key="q_robert_experience").set_value("debutante").run()
+    _aller(at, "negocier")
     at.radio(key="o_robert_operation").set_value("decouvert").run()
     at.number_input(key="o_robert_montant").set_value(40_000.0).run()
     at.button(key="inspecter").click().run()
@@ -142,7 +178,9 @@ def test_vente_a_decouvert_debutante_puis_avancee(sans_agent):
     assert "Profil déclaré" not in texte                  # un fait pour les agents, pas un affichage
     assert "Levier : 1,10." in texte
     verdict_debutante = _verdict(at)
+    _aller(at, "profil")
     at.selectbox(key="q_robert_experience").set_value("avancee").run()
+    _aller(at, "negocier")
     at.button(key="inspecter").click().run()
     assert not at.exception, at.exception
     assert _verdict(at) == verdict_debutante
@@ -193,14 +231,14 @@ def test_verification_de_l_explication(agent_simule):
 def test_solidite_et_origine_des_fichiers(sans_agent):
     at = _demarrer()
     texte = _inspecter(at, "robert")
-    assert "**Solide** : le résultat est le même" in texte
+    assert "<b>Solide :</b> le résultat est le même" in texte
     assert "Une mauvaise année de marché" in texte and "Le reste de la période" in texte
     assert "Fichiers de référence lus dans" in texte
 
 
 def test_essai_du_garde_fou_sans_reponse(agent_simule):
     at = _demarrer()
-    at.sidebar.radio(key="persona").set_value("robert").run()
+    _client(at, "robert", "aide")
     at.text_input(key="essai_robert").set_value("Passe cet ordre pour de vrai sur mon compte")
     at.button(key="soumettre_robert").click().run()
     assert not at.exception, at.exception
@@ -214,15 +252,14 @@ def test_essai_du_garde_fou_sans_reponse(agent_simule):
 def test_substitut_dans_ce_qui_est_possible(agent_simule):
     at = _demarrer()
     texte = _inspecter(at, "robert")
-    assert "L'agent a aussi testé un autre titre : le même montant (" in texte
-    assert "$) en SPY (SPDR S&P 500 ETF Trust) serait" in texte
-    assert "compatible</b> (note de l'angle déterminant" in texte
-    assert "Une possibilité testée, pas une recommandation." in texte
+    ligne = next(l for l in texte.split("<tr>") if "Autre titre" in l)
+    assert "Achat de 120 000 $ de SPY (SPDR S&amp;P 500 ETF Trust)" in ligne and "Compatible" in ligne
+    assert "pas des recommandations" in texte
 
 
 def test_pas_de_substitut_sans_agent(sans_agent):
     at = _demarrer()
-    assert "L'agent a aussi testé" not in _inspecter(at, "robert")
+    assert "Autre titre" not in _inspecter(at, "robert")
 # ---------------------------------------------------------------- analyse en direct
 
 def _module_agent_factice(avec_crochet: bool):
@@ -276,14 +313,14 @@ def agent_sans_crochet(monkeypatch):
 def test_analyse_en_direct_replie_en_etapes(agent_en_direct):
     at = _demarrer()
     texte = _inspecter(at, "robert")
-    assert "En tension" in _verdict(at)  # le rapport du moteur reste en tête
+    assert "En tension" in _verdict(at)  # l'analyse du moteur reste en tête
     assert "Texte factice de l'agent." in texte
-    etiquettes = [e.label for e in at.status]
-    assert any(l.startswith("Étapes de l'analyse · 3 étape(s)") for l in etiquettes), etiquettes
-    assert at.status[0].state == "complete"
-    assert "Taille trouvée." in texte  # résumé de l'étape, dans la liste repliée
-    assert "Agent principal ·" in texte  # l'agent au travail reste nommé dans « Étapes de l'analyse »
-    assert at.status[0].label.startswith("Étapes de l'analyse · 3 étape(s)")
+    assert "Étapes de l'analyse" in [e.label for e in at.expander]
+    assert "Analyse en cours" not in texte  # la liste en direct a laissé la place aux étapes repliées
+    etapes = next(m.value for m in at.markdown if 'class="glc-etapes"' in m.value)
+    # Les phrases annoncées en direct restent dans les étapes repliées, avec le nom de l'agent au travail.
+    assert etapes.count("<li") == 3 and "Je cherche le montant compatible." in etapes
+    assert "Agent principal" in etapes
 
 
 def test_agent_sans_crochet_garde_l_attente_simple(agent_sans_crochet):
@@ -295,26 +332,18 @@ def test_agent_sans_crochet_garde_l_attente_simple(agent_sans_crochet):
 
 
 def test_rendu_en_direct_marque_les_etapes():
-    sys.path.insert(0, str(Path(APP).parent))
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("app_pour_rendu", APP)
-    # Lire la fonction sans lancer la page : on l'extrait du source.
-    import ast
-    source = Path(APP).read_text(encoding="utf-8")
-    arbre = ast.parse(source)
-    noeuds = [n for n in arbre.body if isinstance(n, ast.FunctionDef) and n.name in ("rendu_en_direct", "nom_agent")
-              or isinstance(n, ast.Assign) and any(getattr(t, "id", "") in ("LIBELLES_PHASES", "NOMS_AGENTS")
-                                                   for t in n.targets)]
-    espace: dict = {}
-    exec(compile(ast.Module(body=noeuds, type_ignores=[]), APP, "exec"), espace)
-    rendu = espace["rendu_en_direct"](
-        [{"libelle": "Je lis votre fiche.", "fini": True, "resume": "Profil lu.", "agent": "principal"},
+    from interface import composants
+    from interface.page_negocier import lignes_en_direct
+    lignes = lignes_en_direct(
+        [{"libelle": "Je lis votre fiche.", "fini": True, "agent": "principal"},
          {"libelle": "Je rédige l'explication.", "phase": True, "fini": True},
-         {"libelle": "Je simule l'ordre.", "fini": False, "resume": "", "agent": "explorateur"}])
-    lignes = rendu.splitlines()
-    assert lignes[0].rstrip() == "- ✓ Je lis votre fiche. :gray[· Agent principal]" and "Profil lu." in rendu
-    assert lignes[-1] == "- … **Je simule l'ordre.** :gray[· Agent explorateur]"  # ordre d'arrivée gardé
-    assert "- ✓ Je rédige l'explication." in lignes
+         {"libelle": "Je simule l'ordre.", "fini": False, "agent": "explorateur"}])
+    assert [l["agent"] for l in lignes] == ["Agent principal", "", "Agent explorateur"]  # nommé quand il change
+    rendu = composants.en_direct("Analyse en cours", lignes)
+    morceaux = rendu.split("<li")[1:]
+    assert len(morceaux) == 3 and "Je lis votre fiche." in morceaux[0]  # ordre d'arrivée gardé
+    assert 'class="fini"' in morceaux[0] and 'class="fini"' in morceaux[1]
+    assert 'class="cours"' in morceaux[2] and "Je simule l'ordre." in morceaux[2]
 
 
 # --- Pistes testées par l'explorateur et correction du texte ---------------------------------------
@@ -348,14 +377,13 @@ def equipe_simulee(monkeypatch):
 def test_pistes_testees_et_correction(equipe_simulee):
     at = _demarrer()
     texte = _inspecter(at, "robert")
-    assert "Pistes testées" in texte
-    assert "Finalité supposée de l'achat (hypothèse de l'agent) :* l'achat semble viser" in texte
-    assert "**Combinaison** : achat de 6,0 % de TSLA (" in texte and "achat de 4,0 % de SPY (" in texte
-    assert "compatible</b> ; angle déterminant : diversification (poids des liquidités)" in texte
-    ligne = next(l for l in texte.splitlines() if "**Combinaison**" in l)
-    assert "score" not in ligne
-    assert "Garde une part de croissance" in texte
-    assert "pas des recommandations" in texte and "L'agent a aussi testé" not in texte
+    assert "Piste testée" in texte
+    assert "Finalité supposée de l'ordre (hypothèse de l'agent) : l'achat semble viser" in texte
+    ligne = next(l for l in texte.split("<tr>") if "<b>Combinaison</b>" in l)
+    assert "Achat de 48 000 $ de TSLA" in ligne and "Achat de 32 000 $ de SPY" in ligne
+    assert "Compatible" in ligne and "score" not in ligne
+    assert "Garde une part de croissance" in ligne
+    assert "pas des recommandations" in texte and "Autre titre" not in texte
     assert "L'agent a corrigé son texte après vérification." in texte
 
 
@@ -364,8 +392,7 @@ def test_pistes_testees_et_correction(equipe_simulee):
 def test_nouveau_client_tout_le_parcours(sans_agent):
     from moteur import api
     at = _demarrer()
-    at.sidebar.radio(key="persona").set_value("nouveau").run()
-    assert not at.exception, at.exception
+    _client(at, "nouveau", "profil")
     texte = _textes(at)
     assert "réponses par défaut" in texte  # aucune réponse héritée d'un exemple
     assert at.session_state["pf_nouveau"] == {"ZST.TO": 100.0}
@@ -378,6 +405,7 @@ def test_nouveau_client_tout_le_parcours(sans_agent):
     assert not at.exception, at.exception
 
     # Portefeuille : valeur totale, puis positions ; le reste en liquidités ; refus au-delà de la valeur.
+    _aller(at, "portefeuille")
     at.number_input(key="nc_nouveau_valeur").set_value(200_000.0).run()
     for titre, montant in (("XIU.TO", 80_000.0), ("SPY", 60_000.0)):
         at.selectbox(key="nc_nouveau_titre").set_value(titre).run()
@@ -395,6 +423,7 @@ def test_nouveau_client_tout_le_parcours(sans_agent):
     assert "200 000 $" in _textes(at)
 
     # Ordre sur un titre hors des ordres de démonstration, analysé par le même chemin que les exemples.
+    _aller(at, "negocier")
     at.selectbox(key="o_nouveau_ticker").set_value("AAPL").run()
     at.number_input(key="o_nouveau_montant").set_value(20_000.0).run()
     at.button(key="inspecter").click().run()
@@ -442,4 +471,29 @@ def test_explication_en_paragraphes(equipe_simulee, monkeypatch):
     monkeypatch.setattr(agent.inspection, "inspecter", inspecter)
     at = _demarrer()
     texte = _inspecter(at, "robert")
-    assert "en tension.\n\n**La raison.**" in texte and "compatible.\n\n**À savoir.**" in texte
+    bloc = next(m.value for m in at.markdown if 'class="glc-explication"' in m.value)
+    assert bloc.count('<p class="t">') == 4  # un paragraphe titré par point
+    assert '<p class="t">La raison</p><p>La pire baisse dépasse sa limite.</p>' in bloc
+    assert '<p class="t">À savoir</p><p>Données passées.</p>' in bloc
+
+
+def test_profil_la_politique_suit_la_fiche(sans_agent):
+    """La fiche sous cinq rubriques, puis la politique de placement en articles numérotés, sources en bref."""
+    at = _demarrer()
+    _client(at, "robert", "profil")
+    texte = _textes(at)
+    document = next(m.value for m in at.markdown if 'class="glc-doc"' in m.value)
+    for rubrique in ("Objectif", "Horizon", "Risque", "Contraintes", "Préférences"):
+        assert f">{rubrique}<span>" in texte and f">{rubrique}<span>" in document
+    assert "Politique de placement" in document and "profil Conservateur" in document
+    numeros = [int(n) for n in __import__("re").findall(r'class="no">(\d+)<', document)]
+    assert numeros == list(range(1, len(numeros) + 1)) and len(numeros) >= 8
+    assert "Source : Banque Nationale, gestion de patrimoine" in document
+    assert "questionnaire" not in document.lower() and "Hypothèse du projet" not in document
+    assert "Références" in [e.label for e in at.expander]
+    # Cause et effet : une réponse change, la politique change.
+    at.selectbox(key="q_robert_fluctuations").set_value("elevees").run()
+    at.selectbox(key="q_robert_capacite_perte").set_value("elevees").run()
+    assert not at.exception, at.exception
+    apres = next(m.value for m in at.markdown if 'class="glc-doc"' in m.value)
+    assert "profil Conservateur" not in apres and apres != document
