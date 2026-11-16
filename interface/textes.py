@@ -47,24 +47,31 @@ LIBELLES_PHASES = {
     "correction": "Je corrige mon texte.",
 }
 
-# L'introduction, montrée une fois à l'ouverture : un titre et deux lignes par panneau.
+# L'introduction, montrée une fois à l'ouverture : une présentation du produit, pas un mode d'emploi.
+# Tous ses mots sont ici. Par panneau : la vue, le titre, une ou deux phrases, et au plus un essentiel
+# technique, dit à voix basse. {nom}, {montant} et {titre} sont remplis avec l'ordre prêt d'un compte enregistré.
 INTRODUCTION = [
-    ("verdict", "Un service de gestion des risques, pour l'investisseur particulier.",
-     ["Vous préparez un ordre. Avant de le passer, le service le vérifie face à votre propre politique de placement.",
-      "Il renseigne, il ne conseille jamais."]),
-    ("politique", "Votre fiche, puis votre politique de placement.",
-     ["Quatorze réponses : objectif, horizon, risque, contraintes, préférences.",
-      "Le service en tire un profil, une répartition et des limites, chacune avec sa source."]),
-    ("angles", "Cinq angles, une note chacun.",
-     ["Objectif, risque, liquidité, diversification, préférences.",
-      "L'angle le plus bas décide du verdict : compatible, en tension ou incompatible."]),
-    ("agents", "Le code calcule. Deux agents expliquent.",
-     ["Chaque note et chaque piste testée vient du moteur de calcul, jamais d'un modèle de langage.",
-      "Un agent lit votre cas et rédige l'explication ; l'autre cherche et teste des pistes."]),
-    ("limites", "Une simulation, et ses limites.",
-     ["Aucune transaction réelle, aucun conseil personnalisé : un garde-fou les refuse.",
-      "Les notes de risque rejouent le passé. Ce n'est pas une prévision. Vous décidez."]),
+    ("cap", "Les institutions ont un département de risque. Le particulier n'a que son enthousiasme.",
+     ["Garder le cap vous donne le vôtre : à chaque ordre, il mesure l'écart avec votre politique de placement "
+      "et vos objectifs, avant que vous ne le passiez."],
+     ""),
+    ("fiche", "Quelques réponses. Une politique de placement.",
+     ["Votre objectif, votre horizon, la perte que vous pouvez absorber : votre fiche devient des limites claires, "
+      "chacune avec sa source."],
+     ""),
+    ("issues", "Avant de passer l'ordre, mettez-le à l'épreuve.",
+     ["Il respecte votre politique, il vous en fait sortir, ou il vous en rapproche : vous le savez avant d'acheter."],
+     ""),
+    ("resultat", "Cinq angles. Un verdict. Et le pourquoi.",
+     ["Objectif, risque, liquidité, diversification, préférences : l'angle le plus bas décide.",
+      "Deux agents expliquent le résultat et testent ce qui serait possible."],
+     "Chaque chiffre est calculé par le code, jamais par le modèle."),
+    ("billet", "{nom} veut {montant} de {titre}. Qu'en dit sa politique ?",
+     ["Choisissez un compte et tentez un ordre.",
+      "Le service renseigne, il ne conseille jamais ; c'est une simulation, sans transaction réelle."],
+     ""),
 ]
+INTRO_SUIVANT, INTRO_RETOUR, INTRO_FIN, INTRO_REPRENDRE = "Suivant", "Retour", "Choisir un compte", "Reprendre"
 BOUTON_PASSER_INTRO = "Passer l'introduction"
 BOUTON_ESSAI = "Analyser tout de suite un ordre d'exemple"
 # Comment le service fonctionne, en mots simples. Rien n'est dit ici qui ne soit construit.
@@ -89,6 +96,7 @@ SERVICES_AWS = [
     ("Amazon Bedrock Guardrails", "Le garde-fou : refus du conseil et des transactions, contrôle de l'explication."),
     ("Amazon S3", "Un espace privé qui garde les fichiers de référence."),
     ("Amazon EC2", "La machine qui sert cette application."),
+    ("Amazon CloudFront", "L'adresse sécurisée (HTTPS) par laquelle on atteint l'application."),
 ]
 MISSION = "Un placement est un moyen. Pas un objectif. Garder le cap renseigne, il ne conseille pas."
 
@@ -174,6 +182,16 @@ DIRECTIONS_TEXTE = {
     "hors_politique_inchange": "Votre portefeuille est déjà hors de votre politique de placement ; "
                                "l'ordre ne change pas son angle déterminant.",
 }
+# Où l'ordre mène, en quelques mots (introduction) ; un cas inconnu garde le libellé du moteur.
+ISSUES = {
+    "reste_dans_la_politique": "Il reste dans la politique",
+    "fait_sortir_de_la_politique": "Il fait sortir de la politique",
+    "hors_politique_rapproche": "Il rapproche de la politique",
+    "hors_politique_aggrave": "Il éloigne encore de la politique",
+    "revient_dans_la_politique": "Il ramène dans la politique",
+    "hors_politique_inchange": "Il ne change pas l'écart",
+}
+ISSUE_REGLE = "Il touche une règle stricte"
 STATUTS_REGLE = {"violee": "non respectée", "respectee": "respectée", "signalee": "signalée",
                  "ignoree": "ignorée", "non_applicable": "sans objet"}
 SOLIDITE_TEXTE = {

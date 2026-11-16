@@ -550,13 +550,19 @@ def test_introduction_puis_choix_du_compte(sans_agent):
     at = _ouvrir()
     assert at.session_state["etape"] == "introduction" and not at.radio  # ni navigation ni compte avant le choix
     assert "Simulation à but éducatif. Aucune transaction réelle." in _textes(at)
-    assert 1 < len(INTRODUCTION) <= 5
-    for n, (_, titre, _) in enumerate(INTRODUCTION):
+    assert len(INTRODUCTION) == 5
+    assert INTRODUCTION[0][1].startswith("Les institutions ont un département de risque.")  # la phrase du projet
+    for n, (_, titre, lignes, note) in enumerate(INTRODUCTION):
         texte = _textes(at)
-        assert titre in texte and f"{n + 1} / {len(INTRODUCTION)}" in texte
-        assert 'class="glc-vue"' in texte  # chaque panneau montre une vraie vue du service
+        assert f"{n + 1} / {len(INTRODUCTION)}" in texte and lignes[0] in texte and note in texte
+        assert "{" not in texte.split("</style>")[-1]  # les titres qui nomment un ordre sont remplis
+        vue = next(m.value for m in at.markdown if 'class="glc-vue"' in m.value)
+        assert len(vue.split('class="glc-vue">', 1)[1]) > 200  # chaque panneau montre une vraie vue du service
+        assert "inspect" not in texte.lower()  # le mot du produit est « analyser »
         at.button(key="intro_suivant").click().run()
         assert not at.exception, at.exception
+        if n == len(INTRODUCTION) - 1:  # le dernier panneau nomme le vrai ordre prêt d'un compte enregistré
+            assert "Robert veut 120 000 $ de Tesla." in texte and "TSLA — Tesla" in texte
     # Après le dernier panneau : le choix d'un compte, les comptes prêts d'abord, puis le nouveau compte.
     assert at.session_state["etape"] == "comptes"
     assert [b.key for b in at.button][:4] == ["compte_robert", "compte_mateo", "compte_amira", "compte_nouveau"]

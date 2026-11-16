@@ -43,6 +43,7 @@ CSS = f"""<style>
   --encre: {ENCRE}; --gris: {GRIS}; --bord: {BORD}; --fond: {FOND}; --surface: {SURFACE};
   --voile: {VOILE}; --accent: {ACCENT}; --filet: {FILET}; --piste: {PISTE}; --marine: {MARINE};
   --t1: 13px; --t2: 15px; --t3: 18px; --t4: 26px;
+  --t5: 36px;  /* la phrase d'ouverture de l'introduction, et elle seule */
   --rayon: 12px;
 }}
 
@@ -135,31 +136,59 @@ div[class*="st-key-carte"] {{ background: var(--surface); border: 1px solid var(
 .stApp .glc-faits div b {{ font-size: var(--t2); font-weight: 600; color: var(--encre); font-variant-numeric: tabular-nums; }}
 
 /* ---------- introduction et choix du compte ---------- */
-div[class*="st-key-introduction"] {{ max-width: 1040px; margin: 16px auto 0 auto; }}
+div[class*="st-key-introduction"] {{ max-width: 1080px; margin: 16px auto 0 auto; }}
 .stApp .glc-pas-intro {{ display: flex; align-items: center; gap: 6px; }}
 .stApp .glc-pas-intro span {{ font-size: var(--t1); font-weight: 600; color: var(--gris); margin-right: 8px;
   font-variant-numeric: tabular-nums; }}
 .stApp .glc-pas-intro i {{ width: 22px; height: 4px; border-radius: 4px; background: var(--piste); }}
 .stApp .glc-pas-intro i.ici {{ background: var(--encre); }}
-.stApp .glc-intro h1 {{ font-size: var(--t4); font-weight: 700; line-height: 1.25; margin: 0 0 14px 0;
-  letter-spacing: -0.02em; }}
+.stApp .glc-intro {{ min-height: 404px; padding-top: 26px; }}
+.stApp .glc-intro h1 {{ font-size: var(--t5); font-weight: 700; line-height: 1.18; margin: 0 0 18px 0;
+  letter-spacing: -0.03em; color: var(--encre); }}
+.stApp .glc-intro h1 span {{ display: block; }}
+.stApp .glc-intro h1 span.avant {{ color: var(--gris); }}
 .stApp .glc-intro p {{ font-size: var(--t3); line-height: 1.5; color: var(--encre); margin: 0 0 8px 0; }}
-.stApp .glc-intro p:last-child {{ margin-bottom: 20px; color: var(--gris); }}
-.stApp .glc-intro {{ min-height: 270px; padding-top: 34px; }}
-.stApp .glc-vue {{ background: var(--voile); border-radius: 20px; padding: 28px; height: 440px; overflow: hidden;
+.stApp .glc-intro p.fort {{ font-weight: 700; }}
+.stApp .glc-intro p.note {{ font-size: var(--t1); color: var(--gris); margin: 16px 0 20px 0; padding-left: 12px;
+  border-left: 2px solid var(--bord); }}
+.stApp .glc-vue {{ background: var(--voile); border-radius: 20px; padding: 28px; height: 480px; overflow: hidden;
   display: flex; flex-direction: column; justify-content: center; position: relative; }}
-.stApp .glc-vue:has(.glc-doc) {{ justify-content: flex-start; }}
-.stApp .glc-vue:has(.glc-doc)::after {{ content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 90px;
-  background: linear-gradient(to bottom, rgba(246,244,240,0), var(--voile)); }}
+.stApp .glc-vue > .glc-carte, .stApp .glc-vue > .glc-paire > div {{ box-shadow: 0 10px 30px rgba(34,34,34,0.07); }}
 .stApp .glc-vue .glc-angles {{ grid-template-columns: repeat(5, 1fr); gap: 2px; }}
-.stApp .glc-vue .glc-angle svg {{ width: 66px; height: 66px; }}
+.stApp .glc-vue .glc-angle {{ padding: 8px 0; }}
+.stApp .glc-vue .glc-angle svg {{ width: 62px; height: 62px; }}
 .stApp .glc-vue .glc-angle .tag {{ white-space: normal; line-height: 1.25; }}
-.stApp .glc-vue .glc-carte {{ padding: 22px 16px; }}
-.stApp .glc-vue > * {{ box-shadow: 0 10px 30px rgba(34,34,34,0.07); }}
-.stApp .glc-vue .glc-doc {{ padding: 22px 24px 10px 24px; }}
-.stApp .glc-vue .glc-doc .tete h2 {{ font-size: var(--t3); }}
-.stApp .glc-vue .glc-article {{ grid-template-columns: 26px 1fr; }}
-.stApp .glc-vue .glc-article .corps {{ grid-column: 2; }}
+.stApp .glc-vue .glc-carte {{ padding: 20px 20px; }}
+.stApp .glc-vue svg.cap {{ width: 100%; height: auto; }}
+.stApp .glc-vue svg.cap text {{ font-family: inherit; font-size: 13px; fill: var(--gris); }}
+.stApp .glc-vue svg.cap text.fort {{ fill: var(--encre); font-weight: 600; }}
+.stApp .glc-paire {{ display: grid; grid-template-columns: 1fr 22px 1fr; gap: 8px; align-items: center; }}
+.stApp .glc-paire > div {{ background: var(--surface); border: 1px solid var(--bord); border-radius: var(--rayon);
+  padding: 18px 18px 8px 18px; }}
+.stApp .glc-paire > svg {{ justify-self: center; }}
+.stApp .glc-paire .tete {{ font-size: var(--t1); font-weight: 600; color: var(--gris); margin: 0 0 8px 0; }}
+.stApp .glc-paire dl {{ margin: 0; }}
+.stApp .glc-paire dt {{ font-size: var(--t1); color: var(--gris); }}
+.stApp .glc-paire dd {{ margin: 0 0 12px 0; font-size: var(--t2); font-weight: 600; color: var(--encre);
+  line-height: 1.35; }}
+.stApp .glc-issue {{ display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 12px 0;
+  border-bottom: 1px solid var(--filet); align-items: center; }}
+.stApp .glc-issue:last-child {{ border-bottom: 0; padding-bottom: 0; }}
+.stApp .glc-issue:first-child {{ padding-top: 0; }}
+.stApp .glc-issue .qui {{ font-size: var(--t1); color: var(--gris); grid-column: 1 / -1; }}
+.stApp .glc-issue .ou {{ font-size: var(--t2); font-weight: 600; color: var(--encre); }}
+.stApp .glc-resume p {{ margin: 0; font-size: var(--t2); }}
+.stApp .glc-resume .ligne {{ border-top: 1px solid var(--filet); padding: 10px 0 0 0; margin-top: 10px; }}
+.stApp .glc-resume .ligne span {{ display: block; font-size: var(--t1); color: var(--gris); }}
+.stApp .glc-resume .ligne {{ display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }}
+.stApp .glc-resume .piste {{ display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding: 5px 0 0 0; font-weight: 600; }}
+.stApp .glc-billet .champ {{ padding: 10px 0; border-bottom: 1px solid var(--filet); }}
+.stApp .glc-billet .champ span {{ display: block; font-size: var(--t1); color: var(--gris); }}
+.stApp .glc-billet .champ b {{ font-size: var(--t2); font-weight: 600; color: var(--encre); }}
+.stApp .glc-billet .bouton {{ margin-top: 16px; background: var(--accent); color: #fff; border-radius: 999px;
+  text-align: center; font-size: var(--t2); font-weight: 600; padding: 10px 0; opacity: .55; }}
+.stApp .glc-vue:has(.glc-billet) {{ padding: 28px 84px; }}
 div[class*="st-key-introduction"] .stButton > button[kind="tertiary"] {{ float: right; }}
 div[class*="st-key-carte_compte"] .glc-faits {{ margin: 14px 0 6px 0; }}
 
@@ -208,6 +237,7 @@ div[class*="st-key-deja_faite"] .stButton {{ display: flex; justify-content: fle
 .stApp .glc-legende {{ font-size: var(--t1); color: var(--gris); margin: 10px 0 0 0; }}
 
 /* ---------- tableaux ---------- */
+.stApp .glc-defile {{ overflow-x: auto; max-width: 100%; }}
 .stApp table.glc-table {{ width: 100%; border-collapse: collapse; font-size: var(--t2); margin: 0; border: 0; }}
 .stApp table.glc-table th, .stApp table.glc-table td {{ border: 0; }}
 .stApp table.glc-table tr {{ border: 0; background: transparent; }}
@@ -399,7 +429,12 @@ hr {{ border-color: var(--bord); }}
 @media (max-width: 640px) {{
   .stApp .glc-barre {{ display: none; }}
   .stApp .glc-intro {{ min-height: 0; padding-top: 4px; }}
-  .stApp .glc-vue {{ height: auto; min-height: 220px; padding: 16px; }}
+  .stApp .glc-intro h1 {{ font-size: var(--t4); }}
+  .stApp .glc-vue, .stApp .glc-vue:has(.glc-billet) {{ height: auto; min-height: 220px; padding: 14px; }}
+  .stApp .glc-paire {{ grid-template-columns: 1fr; }}
+  .stApp .glc-paire > svg {{ transform: rotate(90deg); }}
+  .stApp table.glc-table .nb {{ white-space: normal; }}
+  .stApp table.glc-table th, .stApp table.glc-table td {{ padding-right: 8px; }}
   .stMainBlockContainer {{ padding: 0 14px 56px 14px; }}
   .glc-marque .sous {{ display: none; }}
   .st-key-page div[role="radiogroup"] {{ margin: 0; overflow-x: auto; max-width: 100%; }}

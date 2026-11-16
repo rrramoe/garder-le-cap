@@ -112,7 +112,8 @@ def tableau(colonnes: list[tuple[str, str]], lignes: list[list[str]]) -> str:
     tete = "".join(f'<th class="{c}">{e(t)}</th>' for t, c in colonnes)
     corps = "".join("<tr>" + "".join(f'<td class="{colonnes[i][1]}">{cell}</td>' for i, cell in enumerate(l)) + "</tr>"
                     for l in lignes)
-    return f'<table class="glc-table"><thead><tr>{tete}</tr></thead><tbody>{corps}</tbody></table>'
+    return (f'<div class="glc-defile"><table class="glc-table"><thead><tr>{tete}</tr></thead>'
+            f'<tbody>{corps}</tbody></table></div>')
 
 
 def barre(pct: float, maximum: float = 100.0) -> str:
