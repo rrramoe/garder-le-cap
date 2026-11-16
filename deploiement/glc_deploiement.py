@@ -7,6 +7,7 @@
     python deploiement/glc_deploiement.py verifier [--analyse] [--distant]
                                                             # état, commit, page vue de l'extérieur, vraies analyses
     python deploiement/glc_deploiement.py commit             # commit qui tourne
+    python deploiement/glc_deploiement.py creer-traces       # journal CloudWatch et droit d'écrire les traces
     python deploiement/glc_deploiement.py creer-cloudfront   # adresse HTTPS : distribution CloudFront devant l'instance
     python deploiement/glc_deploiement.py supprimer-cloudfront  # la désactive puis la supprime (10 à 15 min)
     python deploiement/glc_deploiement.py supprimer          # retire toutes les ressources créées (CloudFront compris)
@@ -49,6 +50,10 @@ PREFIXE = "deploiement/"
 DONNEES_PRIVEES = ("prices_daily.csv", "corporate_actions.csv", "macro_rates.csv")
 MODELES = ("amazon.nova-2-lite-v1:0", "anthropic.claude-sonnet-5*")
 POLITIQUE_SSM = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+POLITIQUE_TRACES = "glc-deploiement-traces"
+GROUPE_JOURNAUX = "/garder-le-cap/analyses"   # un journal CloudWatch Logs pour le projet
+RETENTION_JOURS = 7
+PREFIXE_TRACES = "traces/"
 ETATS_VIVANTS = ["pending", "running", "stopping", "stopped"]
 # Règle des organisateurs : aucune modification de l'outil après le dimanche 15 novembre 2026, 23 h 59 (heure de l'Est).
 GEL = datetime(2026, 11, 16, 4, 59, tzinfo=timezone.utc)
@@ -81,6 +86,36 @@ def compte() -> str:
     return client("sts").get_caller_identity()["Account"]
 
 
+def politique_traces(compte_id: str, bucket_nom: str) -> dict:
+    """Écriture seule des traces d'analyse : un objet sous `traces/` du bucket, une ligne dans le journal du projet.
+    Ni lecture, ni liste, ni suppression ; rien hors de ce préfixe et de ce journal."""
+    groupe = f"arn:aws:logs:{REGION}:{compte_id}:log-group:{GROUPE_JOURNAUX}"
+    return {"Version": "2012-10-17", "Statement": [
+        {"Sid": "TracesEcritureSeule", "Effect": "Allow", "Action": ["s3:PutObject"],
+         "Resource": [f"arn:aws:s3:::{bucket_nom}/{PREFIXE_TRACES}*"]},
+        {"Sid": "JournalAnalyses", "Effect": "Allow", "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+         "Resource": [f"{groupe}:*", f"{groupe}:log-stream:*"]},
+    ]}
+
+
+def creer_traces(args=None) -> None:
+    """Journal CloudWatch du projet (rétention 7 jours) et droit d'écrire les traces, sur le rôle de l'instance."""
+    verifier_gel()
+    logs = client("logs")
+    try:
+        logs.create_log_group(logGroupName=GROUPE_JOURNAUX, tags={e["Key"]: e["Value"] for e in ETIQUETTES})
+        print(f"Journal CloudWatch {GROUPE_JOURNAUX} créé.")
+    except logs.exceptions.ResourceAlreadyExistsException:
+        print(f"Journal CloudWatch {GROUPE_JOURNAUX} existant réutilisé.")
+    logs.put_retention_policy(logGroupName=GROUPE_JOURNAUX, retentionInDays=RETENTION_JOURS)
+    boto3.client("iam").put_role_policy(RoleName=ROLE, PolicyName=POLITIQUE_TRACES,
+                                        PolicyDocument=json.dumps(politique_traces(compte(), bucket())))
+    print(f"Politique {POLITIQUE_TRACES} posée sur le rôle {ROLE}.")
+    configuration.ecrire_valeurs({"GLC_JOURNAL_GROUPE": GROUPE_JOURNAUX})
+    print(f"GLC_JOURNAL_GROUPE écrit dans {configuration.chemin_fichier().name} (déposé sur la machine par "
+          "`mettre-a-jour --fichiers`).")
+
+
 def politique_instance(compte_id: str, bucket_nom: str) -> dict:
     """Droits minimaux de l'instance : les deux modèles (profils d'inférence globaux), le garde-fou, le bucket."""
     gid = configuration.valeur("GLC_GARDE_FOU_ID") or "*"
@@ -93,7 +128,8 @@ def politique_instance(compte_id: str, bucket_nom: str) -> dict:
          "Resource": [f"arn:aws:bedrock:{REGION}:{compte_id}:guardrail/{gid}"]},
         {"Sid": "BucketLecture", "Effect": "Allow", "Action": ["s3:GetObject"],
          "Resource": [f"arn:aws:s3:::{bucket_nom}/reference/*", f"arn:aws:s3:::{bucket_nom}/{PREFIXE}*"]},
-        {"Sid": "BucketListe", "Effect": "Allow", "Action": ["s3:ListBucket"], "Resource": [f"arn:aws:s3:::{bucket_nom}"]},
+        {"Sid": "BucketListe", "Effect": "Allow", "Action": ["s3:ListBucket"], "Resource": [f"arn:aws:s3:::{bucket_nom}"],
+         "Condition": {"StringLike": {"s3:prefix": ["reference/*", f"{PREFIXE}*"]}}},
     ]}
 
 
@@ -227,6 +263,7 @@ def deposer_fichiers() -> None:
 def creer(args) -> None:
     verifier_gel()
     creer_role()
+    creer_traces()
     gid = creer_groupe()
     deposer_fichiers()
     i = instance()
@@ -539,6 +576,15 @@ def supprimer(args) -> None:
     except Exception:
         pass
     try:
+        iam.delete_role_policy(RoleName=ROLE, PolicyName=POLITIQUE_TRACES)
+    except Exception:
+        pass
+    try:
+        client("logs").delete_log_group(logGroupName=GROUPE_JOURNAUX)
+        print(f"Journal CloudWatch {GROUPE_JOURNAUX} supprimé.")
+    except Exception:
+        pass
+    try:
         iam.delete_role(RoleName=ROLE)
         print("Rôle IAM supprimé.")
     except Exception:
@@ -570,6 +616,7 @@ def main() -> int:
                    help="lancer aussi une vraie analyse par l'adresse publique, depuis ce poste (1 à 4 min)")
     v.set_defaults(f=verifier)
     sous.add_parser("commit").set_defaults(f=commit)
+    sous.add_parser("creer-traces").set_defaults(f=creer_traces)
     sous.add_parser("creer-cloudfront").set_defaults(f=creer_cloudfront)
     sous.add_parser("supprimer-cloudfront").set_defaults(f=supprimer_cloudfront)
     sous.add_parser("supprimer").set_defaults(f=supprimer)

@@ -51,3 +51,18 @@ def test_distribution_https_sans_cache_et_tout_l_en_tete():
     assert (b["CachePolicyId"], b["OriginRequestPolicyId"]) == (d.CACHING_DISABLED, d.ALL_VIEWER)
     assert c["ViewerCertificate"] == {"CloudFrontDefaultCertificate": True} and c["PriceClass"] == "PriceClass_100"
     assert "Logging" not in c
+
+
+def test_traces_ecriture_seule():
+    p = d.politique_traces("000000000000", "bucket-essai")
+    actions = sorted(a for s in p["Statement"] for a in s["Action"])
+    assert actions == ["logs:CreateLogStream", "logs:PutLogEvents", "s3:PutObject"]
+    ressources = [r for s in p["Statement"] for r in s["Resource"]]
+    assert "arn:aws:s3:::bucket-essai/traces/*" in ressources
+    assert all(d.GROUPE_JOURNAUX in r for r in ressources if r.startswith("arn:aws:logs"))
+
+
+def test_liste_du_bucket_limitee_aux_prefixes_utiles():
+    p = d.politique_instance("000000000000", "bucket-essai")
+    liste = next(s for s in p["Statement"] if s["Action"] == ["s3:ListBucket"])
+    assert liste["Condition"]["StringLike"]["s3:prefix"] == ["reference/*", "deploiement/*"]
