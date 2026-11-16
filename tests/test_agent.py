@@ -870,3 +870,22 @@ def test_chef_ne_cherche_pas_pour_un_ordre_compatible():
     r = inspection.inspecter("robert", "XIU.TO", "achat", 2, modele=ModeleSimule(principal), equipe=True, chef=True,
                              modele_explorateur=explorateur)
     assert explorateur.appels == 0 and "déjà compatible" in r["trace"][1]["resultat"]["erreur"]
+
+
+def test_second_tour_borne_par_le_budget(monkeypatch):
+    monkeypatch.setattr(inspection, "BUDGET_ANALYSE_S", 0)
+    principal = [LECTURES_ROBERT, [("envoyer_explorateur", MANDAT)],
+                 [("juger_pistes", {"client_id": "robert", "decision": "a_completer", "critique": "Plus de pistes."})],
+                 "**Le verdict.** En tension."]
+    explorateur = ModeleSimule([[("simuler_scenario", {"client_id": "robert", "ordres": PARTAGE, "raison": "Partage."})],
+                                "Pistes retenues : 1\nBilan : un partage."])
+    r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(principal), equipe=True, chef=True,
+                             modele_explorateur=explorateur)
+    assert explorateur.appels == 2 and "Plus assez de temps" in r["trace"][-1]["resultat"]["erreur"]
+
+
+def test_pistes_permises_dites_d_avance():
+    from agent.explorateur import pistes_permises
+    assert "au comptant" in pistes_permises({"operation": "decouvert"}, False, "ajuster")
+    assert "autre instrument" in pistes_permises({"operation": "comptant"}, True, "remplacer")
+    assert pistes_permises({"operation": "comptant"}, True, "ajuster") == "toutes les familles"

@@ -91,6 +91,18 @@ def operations_avancees_permises(fiche: dict) -> bool:
     return (fiche.get("questionnaire") or {}).get("experience") != "debutante"
 
 
+def pistes_permises(ordre: dict, avancees: bool, mode: str) -> str:
+    """Les familles de pistes que les outils accepteront, dites d'avance pour ne pas gaspiller d'essais."""
+    if mode == "remplacer":
+        return "seulement un autre instrument (seul, ou payé par une vente) : pas de montant plus petit de l'ordre"
+    if not avancees and (ordre.get("operation") or "comptant") != "comptant":
+        return ("seulement des pistes au comptant : ni montant plus petit de cette opération avancée, ni vente d'un "
+                "titre non détenu ; un achat ou une vente au comptant de positions détenues")
+    if not avancees:
+        return "toutes les familles, au comptant seulement"
+    return "toutes les familles"
+
+
 def entete(client, ordre: dict, mission: str, simulation: dict, mode: str = "ajuster") -> str:
     """Message de l'explorateur : les faits lus par le code (client, instrument, apport, résultat de l'ordre), puis
     la mission écrite par le chef de dossier. L'explorateur n'a pas à relire ce que le chef de dossier a déjà lu."""
@@ -111,6 +123,7 @@ def entete(client, ordre: dict, mission: str, simulation: dict, mode: str = "aju
         "resultat_de_l_ordre": resultat,
         "client": faits_client(fiche),
         "operations_avancees_permises": avancees,
+        "pistes_permises": pistes_permises(ordre, avancees, mode),
         "mandat": ("remplacer : l'ordre viole une règle stricte, aucun montant ne la répare ; seules les pistes qui "
                    "remplacent l'instrument (seules, ou payées par une vente) sont acceptées, et aucune ne viole une "
                    "règle stricte" if mode == "remplacer" else "ajuster : l'ordre est en tension"),
@@ -181,6 +194,7 @@ def repli(client, ordre: dict, simulation: dict, raison: str, mode: str = "ajust
 
 
 ESSAIS_SECOND_TOUR = 3          # essais de plus quand le chef de dossier renvoie le travail, une seule fois
+TOURS_SECOND_TOUR = 3           # un tour d'essais en parallèle, un ajustement, le compte rendu
 
 
 class Explorateur:
@@ -227,15 +241,15 @@ class Explorateur:
                      callback_handler=self.suivi.rappel, hooks=[self.suivi], name="explorateur",
                      retry_strategy=ModelRetryStrategy(max_attempts=3, initial_delay=2, max_delay=16))
 
-    def _executer(self, message: str):
+    def _executer(self, message: str, delai_s: float | None = None, tours: int | None = None):
         """Un tour de travail dans un fil à part, borné par le délai ; lève DelaiDepasse ou l'erreur du modèle."""
-        delai = DELAI_EXPLORATEUR_S if self.delai_s is None else self.delai_s
+        delai = delai_s if delai_s is not None else (DELAI_EXPLORATEUR_S if self.delai_s is None else self.delai_s)
 
         def travailler():
             if self.agent is None:
                 self.agent = self._creer_agent()
             avant = len(self.agent.messages)
-            r = self.agent(message, limits={"turns": LIMITE_TOURS_EXPLORATEUR})
+            r = self.agent(message, limits={"turns": tours or LIMITE_TOURS_EXPLORATEUR})
             return r, avant
 
         pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="explorateur")
@@ -252,7 +266,7 @@ class Explorateur:
             mission = "\n".join(f"- {cle.replace('_', ' ')} : {valeur}" for cle, valeur in mission.items() if valeur)
         return self._tour(entete(self.client, self.ordre, mission, self.simulation, mode=self.mode), 1)
 
-    def reprendre(self, critique: str) -> dict:
+    def reprendre(self, critique: str, delai_s: float | None = None) -> dict:
         """Le second et dernier tour : la critique du chef de dossier, au plus trois essais de plus."""
         if self.renvois >= 1:
             return {"erreur": "Le travail de l'explorateur a déjà été renvoyé une fois : rédige le rapport."}
@@ -264,18 +278,18 @@ class Explorateur:
                    f"\n\nFais au plus {ESSAIS_SECOND_TOUR} essais de plus pour y répondre, dans les mêmes règles, puis "
                    "rends un nouveau compte rendu en quatre lignes (les pistes retenues peuvent venir des deux tours).")
         precedent = self.dernier
-        r = self._tour(message, 2)
+        r = self._tour(message, 2, delai_s=delai_s, tours=TOURS_SECOND_TOUR)
         if r.get("statut") != "termine":    # le second tour a échoué : le premier compte rendu reste valable
             precedent = dict(precedent, avis_second_tour="Le second tour de l'explorateur n'a pas abouti.")
             self.dernier = precedent
             return precedent
         return r
 
-    def _tour(self, message: str, numero: int) -> dict:
+    def _tour(self, message: str, numero: int, delai_s: float | None = None, tours: int | None = None) -> dict:
         from .inspection import extraire_trace, message_erreur, resume_etape, texte_final
 
         try:
-            resultat, avant = self._executer(message)
+            resultat, avant = self._executer(message, delai_s, tours)
         except DelaiDepasse:
             self.suivi.sur_etape = None     # l'explorateur abandonné ne parle plus à l'interface
             self.dernier = repli(self.client, self.ordre, self.simulation, "délai dépassé", self.mode)

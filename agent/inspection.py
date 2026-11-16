@@ -33,6 +33,9 @@ EQUIPE = os.environ.get("GLC_EQUIPE", "1").strip() != "0"
 # Le chef de dossier décide s'il faut chercher (ordre incompatible compris) et juge les pistes, avec un renvoi au plus.
 # GLC_CHEF=0 revient à l'équipe d'avant (envoi pour un ordre en tension seulement, sans jugement des pistes).
 CHEF = os.environ.get("GLC_CHEF", "1").strip() != "0"
+BUDGET_ANALYSE_S = 60          # la recherche complémentaire du chef tient dans ce budget de toute l'analyse
+TEMPS_REDACTION_S = 10         # gardés pour la rédaction et la vérification
+MINIMUM_SECOND_TOUR_S = 12     # en dessous, pas de second tour
 # Profondeur de raisonnement (output_config.effort) : « medium » garde les preuves de l'équipe et divise le temps
 # de chaque tour ; GLC_EFFORT=high revient au défaut du modèle.
 EFFORT = os.environ.get("GLC_EFFORT", "medium").strip() or None
@@ -523,7 +526,12 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
         envoi["jugements"].append({"decision": decision, "critique": critique or None})
         if decision == "suffisant":
             return {"decision": "suffisant", "message": "Pistes jugées suffisantes : rédige le rapport."}
-        r = envoi["explorateur"].reprendre(critique)
+        # Le second tour tient dans le budget de l'analyse : sinon, le chef de dossier rédige avec ce qu'il a.
+        reste = BUDGET_ANALYSE_S - (time.monotonic() - debut) - TEMPS_REDACTION_S
+        if reste < MINIMUM_SECOND_TOUR_S:
+            envoi["jugements"][-1]["refuse"] = True
+            return {"erreur": "Plus assez de temps pour une recherche complémentaire : rédige le rapport avec ces pistes."}
+        r = envoi["explorateur"].reprendre(critique, delai_s=reste)
         if "erreur" in r:
             envoi["jugements"][-1]["refuse"] = True
             return r
