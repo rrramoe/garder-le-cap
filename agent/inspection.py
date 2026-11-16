@@ -593,7 +593,10 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
     requete = consigne(identifiant_client(client), T, S, pourcentage)
     ancrage = _verifier(explication, trace, requete, simule, suivi)
     correction = {"faite": False, "motifs": []}
-    motifs = motifs_de_correction(ancrage, explication) if explication else []
+    sim = next((e.get("resultat") for e in trace if e.get("outil") == "simuler_ordre" and e.get("agent") == "principal"
+                and isinstance(e.get("resultat"), dict)), None) or {}
+    direction = None if (sim.get("contraintes_strictes") or {}).get("violee") else sim.get("direction")
+    motifs = motifs_de_correction(ancrage, explication, direction) if explication else []
     if motifs and agent is not None and not etat_garde_fou["intervenu"]:
         # Une seule réécriture, vérifiée à son tour ; si elle échoue aussi, l'avis de la vérification reste.
         suivi.emettre("correction")
@@ -605,7 +608,7 @@ def inspecter(client, ticker, sens, pourcentage, modele=None, operation="comptan
                 explication = nouveau
                 trace = fusionner_traces(extraire_trace(agent.messages, T), (explo or {}).get("trace") or [])
                 ancrage = _verifier(explication, trace, requete, simule, suivi)
-                correction["reussie"] = not motifs_de_correction(ancrage, explication)
+                correction["reussie"] = not motifs_de_correction(ancrage, explication, direction)
         except Exception:
             pass
         trace = trace + [{"etape": len(trace) + 1, "agent": "principal", "outil": "corriger_le_texte",
@@ -644,10 +647,19 @@ LIMITE_MOTS = 180
 
 
 def nombre_de_mots(texte: str | None) -> int:
-    return len(re.findall(r"[\w’'-]*\w", texte or ""))
+    """Le plus strict de deux comptes (mots du texte, morceaux séparés par des espaces) : la limite tient pour les deux."""
+    return max(len(re.findall(r"[\w’'-]*\w", texte or "")), len((texte or "").split()))
 
 
-def motifs_de_correction(ancrage: dict, explication: str | None = None) -> list:
+CONTRAIRES_DIRECTION = {
+    "reste_dans_la_politique": r"fait sortir|faire sortir|sort de la politique|hors politique",
+    "fait_sortir_de_la_politique": r"aggrave|rapproche|déjà hors|reste dans la politique",
+    "hors_politique_rapproche": r"fait sortir|faire sortir|aggrave|reste dans la politique",
+    "hors_politique_aggrave": r"fait sortir|faire sortir|vous fait sortir|rapproche|reste dans la politique",
+}
+
+
+def motifs_de_correction(ancrage: dict, explication: str | None = None, direction: dict | None = None) -> list:
     """Les problèmes trouvés par les contrôles (chiffres non sourcés, passage non appuyé, longueur), en français."""
     motifs = []
     if (ancrage or {}).get("statut") == "non_appuyee":
@@ -663,6 +675,14 @@ def motifs_de_correction(ancrage: dict, explication: str | None = None) -> list:
     if explication and re.search(r"\bscores?\b", explication, flags=re.IGNORECASE):
         motifs.append("Le texte parle d'un score : parle plutôt des angles évalués par le moteur et nomme le plus "
                       "faible, celui qui décide, avec sa mesure et sa limite.")
+    if explication and re.search(r"\b(19|20)\d{2}\b", explication):
+        motifs.append("Le texte cite une année ou une date : n'en écris aucune ; dis « dans sa pire année », « sur "
+                      "cinq ans de données ».")
+    cas = (direction or {}).get("cas")
+    if explication and cas in CONTRAIRES_DIRECTION and re.search(CONTRAIRES_DIRECTION[cas], explication,
+                                                                   flags=re.IGNORECASE):
+        motifs.append(f"La direction écrite contredit celle du moteur, « {(direction or {}).get('libelle')} » : "
+                      "reprends-la telle quelle.")
     mots = nombre_de_mots(explication)
     if mots > LIMITE_MOTS:
         motifs.append(f"Le texte compte {mots} mots ; la limite absolue est de {LIMITE_MOTS} mots.")
@@ -672,8 +692,8 @@ def motifs_de_correction(ancrage: dict, explication: str | None = None) -> list:
 def consigne_correction(motifs: list) -> str:
     return ("Vérification de ton rapport par le code et le garde-fou : des problèmes ont été trouvés.\n- "
             + "\n- ".join(motifs) +
-            "\nRéécris le rapport complet une fois, dans la même structure et la même limite de mots, sans appeler "
-            "d'outil. N'écris que des chiffres présents dans les résultats des outils ; retire ou remplace les autres.")
+            "\nRéécris le rapport complet une fois, dans la même structure, en 120 mots au plus, sans appeler d'outil. "
+            "N'écris que des chiffres présents dans les résultats des outils ; retire ou remplace les autres.")
 
 
 def fusionner_traces(trace_principal: list, trace_explorateur: list) -> list:

@@ -943,3 +943,16 @@ def test_etiquette_autre_operation_pour_une_vente_a_decouvert():
 def test_resume_de_decrire_apport():
     texte = inspection.resumer("decrire_apport", api.decrire_apport("robert", "TSLA", 15))
     assert texte.startswith("Apport de TSLA au portefeuille") and texte != "Résultat reçu."
+
+
+def test_correction_date_direction_et_longueur():
+    from agent.inspection import motifs_de_correction
+    ok = {"statut": "appuyee"}
+    assert any("année ou une date" in m for m in motifs_de_correction(ok, "Surtout l'année 2022."))
+    assert not motifs_de_correction(ok, "Dans sa pire année, sur cinq ans de données.")
+    aggrave = {"cas": "hors_politique_aggrave", "libelle": "Hors politique et aggrave"}
+    motifs = motifs_de_correction(ok, "Il vous fait sortir de la politique et aggrave l'écart.", aggrave)
+    assert any("Hors politique et aggrave" in m for m in motifs)
+    assert not motifs_de_correction(ok, "Hors politique et aggrave : l'écart grandit.", aggrave)
+    texte_181 = " ".join(["mot"] * 179 + ["**Le", "verdict.**"])      # 181 morceaux séparés par des espaces
+    assert any("181 mots" in m for m in motifs_de_correction(ok, texte_181))
