@@ -23,7 +23,7 @@ from . import profils as _profils
 SOURCES_FICHE_CLIENT = ("fbngp_profils_2024", "fbngp_politique_2022", "fidelity_crypto_2026", "hypothese_personas",
                         "hypothese_crypto_correspondance", "hypothese_plafonds_tous_profils", "hypothese_classes",
                         "hypothese_coherence_objectif", "acvm_capacite_perte", "hypothese_capacite_libelles")
-SOURCES_NOTATION = ("donnees_marche", "acvm_81_102_annexe_f", "hypothese_risque_familles", "donnees_dividendes", "hypothese_objectif", "fbngp_pire_annee_2024", "hypothese_conventions_calcul", "fbngp_profils_2024", "fbngp_politique_2022",
+SOURCES_NOTATION = ("donnees_marche", "hypothese_besoin_liquidite", "acvm_81_102_annexe_f", "hypothese_risque_familles", "donnees_dividendes", "hypothese_objectif", "fbngp_pire_annee_2024", "hypothese_conventions_calcul", "fbngp_profils_2024", "fbngp_politique_2022",
                     "fidelity_crypto_2026", "hypothese_etalons", "hypothese_echelle", "hypothese_classes",
                     "hypothese_crypto_correspondance", "hypothese_plafonds_tous_profils", "hypothese_mecanique_ordre")
 

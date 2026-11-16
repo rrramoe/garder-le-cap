@@ -74,16 +74,19 @@ def test_besoin_aucun_ne_change_rien():
 
 
 @pytest.mark.parametrize("choix,besoin", [("jusqu_10", 10), ("10_25", 25), ("25_40", 40)])
-def test_besoin_decale_la_seule_classe_liquidites(choix, besoin):
+def test_besoin_ne_decale_plus_la_diversification(choix, besoin):
+    """Modèle en cinq familles : le besoin est compté par la famille Liquidité seulement."""
     r = api.lire_fiche_client({"persona": "amira", "questionnaire": {"besoin_liquidite": choix}})
-    f, f0 = r["deduit"]["fourchettes_pct"]["valeur"], PROFILS["croissance_maximale"]["fourchettes"]
-    liq, liq0 = f["liquidites"], f0["liquidites"]
-    assert (liq["min"], liq["cible"], liq["max"]) == (liq0["min"] + besoin, liq0["cible"] + besoin,
-                                                      min(100, liq0["max"] + besoin))
-    assert {c: v for c, v in f.items() if c != "liquidites"} == {c: v for c, v in f0.items() if c != "liquidites"}
+    assert r["deduit"]["fourchettes_pct"]["valeur"] == PROFILS["croissance_maximale"]["fourchettes"]
+    assert r["deduit"]["besoin_liquidite_pct"]["valeur"] == besoin
     assert r["deduit"]["besoin_liquidite_pct"]["phrase"] == \
         f"Vous gardez au moins {besoin} % en liquidités pour vos besoins de l'année."
     assert "hypothese_besoin_liquidite" in {s["id"] for s in r["sources"]}
+
+
+def test_famille_liquidite_sans_objet_sans_besoin():
+    n = api.etat_des_lieux("mateo")["notes"]["liquidite"]
+    assert n["note"] is None and n["sans_objet"]
 
 
 def test_besoin_achat_paye_par_l_encaisse_passe_en_tension():
@@ -91,7 +94,12 @@ def test_besoin_achat_paye_par_l_encaisse_passe_en_tension():
     avec = api.simuler_ordre(BESOIN_10, "AGG", "achat", 2)
     assert sans["verdict"]["code"] == "compatible"
     assert avec["verdict"]["code"] == "en_tension"
-    assert avec["mesure_min"] == "classe_liquidites"
-    m = avec["apres"]["notes"]["diversification"]["mesures"]["classe_liquidites"]
-    assert (m["poids"], m["min"], m["cible"]) == (8, 10, 15)
-    assert m["note"] == pytest.approx(30.0)  # formule de classe inchangée : 100 - 50 x (15 - 8) / (15 - 10)
+    assert (avec["dimension_min"], avec["mesure_min"]) == ("liquidite", "liquidites_besoin")
+    m = avec["apres"]["notes"]["liquidite"]["mesures"]["liquidites_besoin"]
+    cible_profil = PROFILS["equilibre"]["fourchettes"]["liquidites"]["cible"]
+    assert (m["valeur"], m["limite"], m["cible"]) == (8, 10, 10 + cible_profil)
+    # échelle commune : 100 - 50 x (cible - valeur) / (cible - limite)
+    assert m["note"] == pytest.approx(100 - 50 * (15 - 8) / (15 - 10))
+    # la diversification garde la fourchette du profil pour les liquidités
+    d = avec["apres"]["notes"]["diversification"]["mesures"]["classe_liquidites"]
+    assert (d["min"], d["cible"]) == (0, 5)

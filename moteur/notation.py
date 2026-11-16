@@ -487,12 +487,29 @@ def note_objectif(port: dict, fiche: dict) -> dict:
                                "valeur": w, "cible": c, "limite": b, "max": hmax, "unite": "%", "phrase": phrase}})
 
 
+def note_liquidite(port: dict, fiche: dict) -> dict:
+    """Liquidités gardées face au besoin de l'année : limite (50) = le besoin, cible (100) = besoin + cible du profil."""
+    besoin = float(fiche["deduit"].get("besoin_liquidite_pct", {}).get("valeur", 0) or 0)
+    if not besoin:
+        return {"note": None, "mesure_min": None, "sans_objet": True, "mesures": {},
+                "libelle": "Aucun besoin de liquidités déclaré : sans objet."}
+    cible_profil = fiche["deduit"]["fourchettes_pct"]["valeur"]["liquidites"]["cible"]
+    cash = float(port.get(references.encaisse(), 0.0))
+    cible, limite = besoin + cible_profil, besoin
+    return _noter({"liquidites_besoin": {
+        "libelle": "Liquidités gardées face au besoin de l'année", "note": note_lineaire(cash, cible, limite),
+        "valeur": cash, "cible": cible, "limite": limite, "besoin": besoin, "unite": "%",
+        "source": "hypothese_besoin_liquidite",
+        "phrase": f"liquidités {_fr(cash)} % ; besoin {_fr(besoin, 0)} %, cible {_fr(cible, 0)} %"}})
+
+
 # ---------------------------------------------------------------- score
 
 def evaluer(port: dict, fiche: dict, ordre: dict | None = None) -> dict:
     notes = {
         "objectif": note_objectif(port, fiche),
         "risque": note_risque(port, fiche),
+        "liquidite": note_liquidite(port, fiche),
         "diversification": note_diversification(port, fiche),
         "preferences": note_preferences(port, fiche, ordre),
     }
