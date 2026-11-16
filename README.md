@@ -8,7 +8,7 @@ L'outil renseigne, il ne conseille pas : le client propose, l'outil met l'idée 
 Rien ne se compense : chaque angle de l'analyse reçoit une note, et l'angle déterminant, le plus faible, décide du verdict.
 Projet réalisé par Rami Houheche pour le Datathon PolyFinances 2026, défi AlphaForge AI.
 
-**Application en ligne :** http://ec2-18-211-136-210.compute-1.amazonaws.com/
+**Application en ligne :** https://d2401bv4b6xo7h.cloudfront.net/
 
 ## Guide d'installation
 
@@ -145,6 +145,7 @@ flowchart LR
 | **Strands Agents** | Le kit qui fait des deux agents des agents à outils : appels au moteur, envoi de l'explorateur, suivi des étapes en direct dans l'interface. |
 | **Amazon Bedrock Guardrails** | Le garde-fou, appelé dans sa version publiée, refuse le conseil financier personnalisé et les demandes de transaction réelle, et mesure l'ancrage de l'explication dans les résultats des outils (vérification d'ancrage contextuel). Sa configuration est dans `docs/configuration/guardrail-config.json`, identifiants masqués. |
 | **Amazon S3** | Un bucket privé (accès public bloqué, chiffrement par défaut, accès refusé hors TLS) garde les fichiers de référence (`reference/*.json`), que l'application lit et qui reviennent au dossier local si S3 ne répond pas ; et, sous le préfixe `deploiement/`, les objets du déploiement : l'archive du code de chaque commit déployé, les données non publiées et la configuration. |
+| **Amazon CloudFront** | L'adresse publique en HTTPS (certificat par défaut de CloudFront), devant l'instance : le visiteur en HTTP est redirigé vers HTTPS, CloudFront joint l'instance en HTTP sur le port 80, ne garde rien en cache et transmet tout ce que le visiteur envoie, y compris le passage au WebSocket de Streamlit. |
 | **Amazon EC2** | L'application publique tourne sur une petite instance Graviton (Amazon Linux 2023), Streamlit en service systemd sur le port 80, le seul port ouvert. Une IP élastique garde la même adresse d'une mise à jour à l'autre. |
 | **AWS IAM** | Un rôle propre à l'instance donne ses droits : appel des deux modèles et du garde-fou, lecture du bucket privé, Systems Manager. Aucune clé n'est posée sur la machine. |
 | **AWS Systems Manager** | Run Command amorce l'instance et y passe les mises à jour et les vérifications ; aucun port SSH n'est ouvert. |
@@ -153,7 +154,8 @@ Le déploiement est décrit dans [`deploiement/README.md`](deploiement/README.md
 
 ```mermaid
 flowchart LR
-    N["Navigateur"] -->|"HTTP, port 80"| A
+    N["Navigateur"] -->|"HTTPS"| CF["Amazon CloudFront : aucun cache, WebSocket transmis"]
+    CF -->|"HTTP, port 80"| A
     subgraph EC2["Amazon EC2 (IP élastique)"]
         A["Application Streamlit : interface, moteur, deux agents (Strands)"]
     end
