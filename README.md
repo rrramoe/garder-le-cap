@@ -4,13 +4,18 @@
 
 > Simulation à but éducatif. Aucune transaction réelle. Ceci n'est pas un conseil financier personnalisé.
 
-Les professionnels ont un département de risque. Le particulier n'a que son enthousiasme. Sigma est le prototype d'un service de gestion des risques pour l'investisseur particulier, débutant ou avancé.
-Sur un écran de courtage simulé, le client prépare un ordre et clique sur « Analyser l'ordre ». Un moteur de calcul et une équipe de deux agents sur Amazon Bedrock lui disent si l'ordre est compatible avec sa politique de placement, pourquoi, et ce qui est possible.
+Les professionnels ont un département de risque. Le particulier n'a que son enthousiasme. Sigma lui donne le sien : un vrai service pour un vrai besoin, dont les agents sont la valeur ajoutée.
+
+- **Une équipe de deux agents IA sur Amazon Bedrock** analyse chaque ordre avant qu'il soit passé. Le chef de dossier instruit le cas, confie un mandat, juge les pistes et rédige l'explication ; l'explorateur cherche ce qui serait possible et teste chaque piste.
+- **Un modèle de notation** mesure l'écart de l'ordre à la politique de placement du client lui-même : une note sur 100 sous cinq angles, chaque limite rattachée à sa source (document publié ou hypothèse déclarée), chaque chiffre calculé par le code, jamais par le modèle.
+
+**Application en ligne :** https://d2401bv4b6xo7h.cloudfront.net/
+
+Sigma est le prototype d'un service de gestion des risques pour l'investisseur particulier, débutant ou avancé.
+Sur un écran de courtage simulé, le client prépare un ordre et clique sur « Analyser l'ordre ». Le moteur de notation et l'équipe d'agents lui disent si l'ordre est compatible avec sa politique de placement, pourquoi, et ce qui est possible.
 L'outil renseigne, il ne conseille pas : le client propose, l'outil met l'idée à l'épreuve de ses propres objectifs. Un placement n'est pas une fin en soi, mais un moyen.
 Rien ne se compense : chaque angle de l'analyse reçoit une note, et l'angle déterminant, le plus faible, décide du verdict.
 Projet réalisé par Rami Houheche pour le Datathon PolyFinances 2026, défi AlphaForge AI.
-
-**Application en ligne :** https://d2401bv4b6xo7h.cloudfront.net/
 
 ## Guide d'installation
 
