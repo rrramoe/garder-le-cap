@@ -1062,7 +1062,7 @@ def section_possible(taille: dict | None, valeur: float) -> None:
                     "l'ordre serait compatible.")
     else:
         st.markdown(f"Aucun montant jusqu'à {dollars(taille['taille_demandee_pct'] * valeur / 100)} "
-                    f"({pct(taille['taille_demandee_pct'])}) ne garde le score à {LIMITE} ou plus.")
+                    f"({pct(taille['taille_demandee_pct'])}) ne garde tous les angles à {LIMITE:g} ou plus.")
     if taille.get("courbe"):
         st.altair_chart(graphique_courbe(taille, valeur), width="stretch")
         st.caption(f"Note la plus faible selon le montant. La zone ombrée est sous la limite de {LIMITE:g}.")
@@ -1352,7 +1352,7 @@ def afficher_rapport(persona: str, rapport: dict, fiche_actuelle: dict) -> None:
                    "Ouvrez une section pour la lire.")
     with st.expander("Règles strictes", expanded=ouvert or sim["verdict"]["code"] == "incompatible"):
         section_contraintes(sim)
-    with st.expander("Les trois notes, avant → après", expanded=ouvert):
+    with st.expander("Les cinq angles, avant → après", expanded=ouvert):
         section_notes(sim, niveau)
     if sim["verdict"]["code"] != "incompatible":
         with st.expander("Solidité du résultat", expanded=False):

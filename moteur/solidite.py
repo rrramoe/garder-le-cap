@@ -4,8 +4,8 @@ La note de risque est recalculée sur deux fenêtres de l'historique :
 - défavorable : l'année 2022 seule ;
 - favorable : toute la période sans 2022.
 Le score de chaque fenêtre est le minimum de cette note de risque et des notes de diversification et de
-préférences, qui ne dépendent pas de l'historique. `solide` si le score est du même côté de 50 dans les
-deux fenêtres, sinon `fragile`. Le score principal reste celui de la période complète.
+préférences, qui ne dépendent pas de l'historique. `solide` si le score est du même côté de la note de passage dans
+les deux fenêtres, sinon `fragile`. Le score principal reste celui de la période complète.
 
 Les formules sont celles de `notation` (note_ampleur, note_duree) ; seuls les rendements changent. Les
 portefeuilles étalons du profil sont recalculés sur la même fenêtre que le portefeuille, pour que
@@ -113,11 +113,12 @@ def solidite(port: dict, fiche: dict, evaluation: dict) -> dict:
     return {
         "statut": "solide" if solide else "fragile",
         "libelle": "Solide" if solide else "Fragile",
-        "explication": ("Le score reste du même côté de 50 dans les deux fenêtres." if solide else
-                        "Le score passe d'un côté à l'autre de 50 selon la fenêtre : le verdict dépend de la "
+        "explication": ("Le verdict est le même dans les deux périodes." if solide else
+                        "Le verdict change selon la période : il dépend de la "
                         "période retenue."),
         "score_principal": evaluation["score"],
         "fenetres": fenetres,
-        "regle": ("Note de risque recalculée sur 2022 seule et sur la période sans 2022 ; solide si le score est du "
-                  "même côté de 50 dans les deux, sinon fragile. Le score principal reste celui de la période complète."),
+        "regle": (f"Note de risque recalculée sur 2022 seule et sur la période sans 2022 ; solide si la note la plus faible "
+                  f"est du même côté de la note de passage ({notation.NOTE_DE_PASSAGE:g}) dans les deux, sinon fragile. "
+                  "La note principale reste celle de la période complète."),
     }
