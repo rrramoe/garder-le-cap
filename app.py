@@ -1181,8 +1181,10 @@ def section_pistes(rapport: dict, valeur: float) -> None:
         code = (p.get("verdict") or {}).get("code")
         couleur = COULEURS_VERDICT.get(code, MARINE)
         jambes = " ; ".join(jambe_txt(o, valeur) for o in p.get("ordres") or [])
+        angle = (p.get("angle_le_plus_faible") or {}).get("libelle")
         ligne = (f"- **{p.get('libelle_famille', '')}** : {jambes} → <b style=\"color:{couleur}\">"
-                 f"{(p.get('verdict') or {}).get('libelle', '').lower()}</b> (note la plus faible {note_txt(p.get('score'))})")
+                 f"{(p.get('verdict') or {}).get('libelle', '').lower()}</b>"
+                 + (f" ; angle le plus faible : {angle}" if angle else ""))
         if p.get("raison"):
             ligne += f"<br><span style=\"color:#6E6E71\">{p['raison']}</span>"
         lignes.append(ligne)

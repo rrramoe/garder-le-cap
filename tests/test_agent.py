@@ -413,8 +413,10 @@ def test_pistes_construites_depuis_les_resultats_des_outils():
         assert p["score"] == s["score"] and p["verdict"]["code"] == s["verdict"]["code"]
         assert [o["ticker"] for o in p["ordres"]] == [o["ticker"] for o in ordres]
     assert "payé en partie par la vente de 10 % de XBB.TO" in pistes[3]["description"]
-    assert all(set(p) == {"famille", "libelle_famille", "description", "ordres", "raison", "verdict", "score",
-                          "direction", "etape"} for p in pistes)
+    assert all(set(p) == {"famille", "libelle_famille", "description", "ordres", "raison", "angle_le_plus_faible",
+                          "verdict", "score", "direction", "etape"} for p in pistes)
+    assert pistes[1]["angle_le_plus_faible"]["famille"] == spy["dimension_min"]
+    assert "_" not in pistes[1]["angle_le_plus_faible"]["libelle"]
     assert r["substitut"]["ticker"] == "SPY"                     # le champ existant reste cohérent
     assert r["trace"][6]["resultat_resume"].startswith("Scénario : achat de 7,5 % de TSLA, achat de 7,5 % de XIU.TO.")
     json.dumps(r)
@@ -624,14 +626,14 @@ def test_redaction_annoncee_au_texte_final_seulement():
 # --- Correction de son texte après vérification --------------------------------------------------
 
 def test_correction_apres_un_chiffre_faux():
-    scenario = SCENARIO_ROBERT + ["**Verdict** : en tension, avec un score de 22,6."]
-    scenario[4] = "**Verdict** : en tension, avec un score de 97,3."
+    scenario = SCENARIO_ROBERT + ["**Verdict** : en tension ; l'angle le plus faible vaut 22,6."]
+    scenario[4] = "**Verdict** : en tension ; l'angle le plus faible vaut 97,3."
     evenements = []
     r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(scenario), equipe=False,
                              sur_etape=evenements.append)
     assert r["correction"]["faite"] and r["correction"]["reussie"]
     assert r["correction"]["motifs"] == ["Le chiffre 97,3 ne figure dans aucun résultat d'outil."]
-    assert r["explication"] == "**Verdict** : en tension, avec un score de 22,6."
+    assert r["explication"] == "**Verdict** : en tension ; l'angle le plus faible vaut 22,6."
     assert r["ancrage"]["chiffres_non_sources"] == []
     assert r["trace"][-1]["outil"] == "corriger_le_texte" and r["trace"][-1]["agent"] == "principal"
     assert r["trace"][-1]["resultat_resume"] == "L'agent a corrigé son texte après vérification."
@@ -774,3 +776,10 @@ def test_resume_d_une_famille_inconnue():
     r = {**r, "dimension_min": "nouvelle_famille", "mesure_min": "nouvelle_mesure"}
     texte = inspection.resumer("simuler_ordre", r)
     assert "nouvelle famille / nouvelle mesure" in texte and "_" not in texte.split("note la plus basse")[1].split(";")[0]
+
+
+
+def test_correction_quand_le_texte_parle_d_un_score():
+    from agent.inspection import motifs_de_correction
+    assert motifs_de_correction({"statut": "appuyee"}, "Le score passe de 56,25 à 39,6.")
+    assert not motifs_de_correction({"statut": "appuyee"}, "L'angle du risque décide : la pire baisse dépasse sa limite.")

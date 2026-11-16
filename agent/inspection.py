@@ -324,8 +324,11 @@ def _ordre(ticker, sens, pourcentage, operation=None) -> dict:
 def _piste(famille, description, ordres, r, etape) -> dict:
     v = r.get("verdict") or {}
     d = r.get("direction") or {}
+    angle = {"famille": r.get("dimension_min"), "mesure": r.get("mesure_min"),
+             "libelle": f"{libelle_famille(r, r.get('dimension_min'))} ({_mesure(r.get('mesure_min'))})"
+             if r.get("dimension_min") else None}
     return {"famille": famille, "libelle_famille": FAMILLES[famille], "description": description, "ordres": ordres,
-            "raison": None,
+            "raison": None, "angle_le_plus_faible": angle,
             "verdict": {"code": v.get("code"), "libelle": v.get("libelle")}, "score": r.get("score"),
             "direction": {"cas": d.get("cas"), "libelle": d.get("libelle")} if d else None, "etape": etape}
 
@@ -399,7 +402,9 @@ def extraire_pistes(trace: list, ticker, sens, pourcentage, operation="comptant"
                 description = f"Aucun montant compatible jusqu'à {_taille(r.get('taille_demandee_pct'))} % ({t})"
             pistes.append(_piste("montant_reduit", description,
                                  [_ordre(t, demande["sens"], point["taille_pct"], r.get("operation"))],
-                                 {"verdict": v, "score": point["score"], "direction": d}, e.get("etape")))
+                                 {"verdict": v, "score": point["score"], "direction": d,
+                                  "dimension_min": point.get("dimension_min"), "mesure_min": point.get("mesure_min")},
+                                 e.get("etape")))
             pistes[-1]["raison"] = (e.get("arguments") or {}).get("raison")
     return pistes
 
@@ -568,6 +573,9 @@ def motifs_de_correction(ancrage: dict, explication: str | None = None) -> list:
                                  flags=re.IGNORECASE):
         motifs.append("Le texte dit qu'une opération est exclue à cause de l'expérience : c'est faux, l'expérience ne "
                       "change pas le verdict, seules les pistes de l'explorateur restent au comptant.")
+    if explication and re.search(r"\bscores?\b", explication, flags=re.IGNORECASE):
+        motifs.append("Le texte parle d'un score : parle plutôt des angles évalués par le moteur et nomme le plus "
+                      "faible, celui qui décide, avec sa mesure et sa limite.")
     mots = nombre_de_mots(explication)
     if mots > LIMITE_MOTS:
         motifs.append(f"Le texte compte {mots} mots ; la limite absolue est de {LIMITE_MOTS} mots.")

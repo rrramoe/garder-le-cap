@@ -327,6 +327,8 @@ def equipe_simulee(monkeypatch):
                                        {"ticker": "SPY", "sens": "achat", "pourcentage": 4.0}],
                             "raison": "Garde une part de croissance avec moins de risque.",
                             "verdict": {"code": "compatible", "libelle": "Compatible"}, "score": 50.0,
+                            "angle_le_plus_faible": {"famille": "diversification", "mesure": "classe_liquidites",
+                                                     "libelle": "diversification (poids des liquidités)"},
                             "direction": {"cas": "reste_dans_la_politique"}, "etape": 6}],
                 "agents": [{"nom": "principal"}, {"nom": "explorateur", "statut": "termine"}],
                 "correction": {"faite": True, "motifs": ["Le chiffre 97,3 ne figure dans aucun résultat d'outil."],
@@ -343,7 +345,9 @@ def test_pistes_testees_et_correction(equipe_simulee):
     assert "Pistes testées" in texte
     assert "Finalité supposée de l'achat (hypothèse de l'agent) :* l'achat semble viser" in texte
     assert "**Combinaison** : achat de 6,0 % de TSLA (" in texte and "achat de 4,0 % de SPY (" in texte
-    assert "compatible</b> (note la plus faible" in texte and "Garde une part de croissance" in texte
+    assert "compatible</b> ; angle le plus faible : diversification (poids des liquidités)" in texte
+    assert "score" not in texte.split("Pistes testées")[1].split("Des possibilités testées par le moteur")[0]
+    assert "Garde une part de croissance" in texte
     assert "pas des recommandations" in texte and "L'agent a aussi testé" not in texte
     assert "L'agent a corrigé son texte après vérification." in texte
 
