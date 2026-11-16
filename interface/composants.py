@@ -180,8 +180,19 @@ def article(numero: int, nom: str, corps: str, source: str = "") -> str:
             f'<div class="corps">{corps}{bas}</div></div>')
 
 
-def document(titre: str, sous: str, articles: list[str]) -> str:
-    return (f'<div class="glc-doc"><div class="tete"><h2>{e(titre)}</h2><p>{e(sous)}</p></div>'
+def etape_du_chemin(numero: int, mot: str) -> str:
+    """Le repère d'une étape du chemin : son rang, et ce qui s'y passe."""
+    return f'<p class="glc-etape"><b>{numero}</b>{e(mot)}</p>'
+
+
+def passage(fils: int = 5) -> str:
+    """Le passage d'une carte à l'autre : des fils où la lumière court de gauche à droite, sans fin."""
+    return ('<div class="glc-passage">' + "".join(f'<span class="fil"><i style="animation-delay:-{k * 0.37:.2f}s"></i></span>'
+                                                  for k in range(fils)) + "</div>")
+
+
+def document(titre: str, sous: str, articles: list[str], tete: str = "") -> str:
+    return (f'<div class="glc-doc"><div class="tete">{tete}<h2>{e(titre)}</h2><p>{e(sous)}</p></div>'
             + "".join(articles) + "</div>")
 
 

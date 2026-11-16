@@ -8,7 +8,7 @@ import streamlit as st
 
 from interface import composants as C
 from interface import etat
-from interface.textes import (CHAMPS_Q, CLASSES, GROUPES_Q, PAGES, PHRASE_LIMITES, QUESTIONNAIRE, RUBRIQUES, THEMES, annees,
+from interface.textes import (CHAMPS_Q, CLASSES, GROUPES_Q, NOM, PAGES, PHRASE_LIMITES, QUESTIONNAIRE, RUBRIQUES, THEMES, annees,
                               charger_reference, francais, libelle_option, libelle_theme_reponse, nombre, pct, source_courte)
 
 
@@ -17,10 +17,10 @@ from interface.textes import (CHAMPS_Q, CLASSES, GROUPES_Q, PAGES, PHRASE_LIMITE
 def fiche(persona: str, fiche_session: dict) -> None:
     enregistre = etat.client_enregistre(persona)
     with st.container(key="carte_fiche"):
-        sur = "Changez une réponse : votre politique de placement suit."
+        sur = "Changez une réponse : votre politique de placement suit, à droite."
         if not etat.fiche_complete(fiche_session):
-            sur = "Répondez à chaque question : votre politique de placement apparaît dès que la fiche est complète."
-        C.montrer(C.h2("Votre fiche", sur))
+            sur = "Répondez à chaque question : votre politique de placement s'écrit dès que la fiche est complète."
+        C.montrer(C.etape_du_chemin(1, "Vous répondez") + C.h2("Votre fiche", sur))
         groupes = [(r, list(champs)) for r, champs in GROUPES_Q]
         restants = [c for c in CHAMPS_Q if not any(c in champs for _, champs in groupes)]
         groupes[-1][1].extend(restants)
@@ -34,27 +34,24 @@ def fiche(persona: str, fiche_session: dict) -> None:
                          key=etat.cle_q(persona, champ), index=None, placeholder="Choisir",
                          format_func=lambda o, c=champ: libelle_option(c, o))
 
-        def largeur(champ: str) -> int:
-            """La place que demande une liste : son libellé ou sa plus longue réponse, en caractères."""
-            return max([len(QUESTIONNAIRE[champ]["libelle"]), 18]
-                       + [len(libelle_option(champ, o)) + 6 for o in QUESTIONNAIRE[champ]["options"]])
-
-        # Chaque liste a la largeur que demande sa plus longue réponse. Les rubriques à une question vont
-        # deux par rangée ; une rubrique à plusieurs questions a sa rangée, ses listes côte à côte.
+        # La fiche tient dans sa colonne : deux listes par rangée, rubrique par rubrique, puis les thèmes,
+        # serrés, une ligne chacun.
         seules = [g for g in groupes if len(g[1]) == 1]
         for debut in range(0, len(seules), 2):
-            for colonne, (cle, champs) in zip(st.columns(2, gap="large"), seules[debut:debut + 2]):
+            for colonne, (cle, champs) in zip(st.columns(2, gap="small"), seules[debut:debut + 2]):
                 with colonne:
                     rubrique(cle)
                     liste(champs[0])
         for cle, champs in [g for g in groupes if len(g[1]) > 1]:
             rubrique(cle)
-            for colonne, champ in zip(st.columns([largeur(c) for c in champs], gap="large"), champs):
-                with colonne:
-                    liste(champ)
+            for debut in range(0, len(champs), 2):
+                colonnes = st.columns(2, gap="small", vertical_alignment="bottom")
+                for colonne, champ in zip(colonnes, champs[debut:debut + 2]):
+                    with colonne:
+                        liste(champ)
         rubrique("preferences")
-        C.montrer(f'<p class="glc-sur">{C.e(PHRASE_LIMITES)} « Exclure » et « Obligatoire » sont des règles strictes ; '
-                  "« Éviter » et « Rechercher », des préférences.</p>")
+        C.montrer(f'<p class="glc-sur">« Exclure » et « Obligatoire » sont des règles strictes ; les autres choix, '
+                  "des préférences.</p>")
         echelle = list(QUESTIONNAIRE["echelle_themes"]["options"])
         for t, lib in THEMES.items():
             st.radio(lib, echelle, key=etat.cle_q(persona, "theme_" + t), horizontal=True,
@@ -192,16 +189,14 @@ def articles_de_la_politique(fiche_client: dict) -> tuple[list[str], list[str], 
     return articles, utilisees, connues
 
 
-def politique(persona: str, fiche_client: dict) -> None:
+def politique(persona: str, fiche_client: dict, empreinte: str) -> None:
     nom = etat.client_enregistre(persona)["nom"]
     articles, utilisees, connues = articles_de_la_politique(fiche_client)
     profil = fiche_client["deduit"]["profil"]["libelle"]
-    C.montrer(C.lien("Votre fiche devient votre politique de placement"))
     # La carte change de clé quand la politique change : elle se redessine alors avec une courte pulsation.
-    empreinte = hashlib.md5("".join(articles).encode("utf-8")).hexdigest()[:8]
     with st.container(key=f"politique_{empreinte}"):
-        C.montrer(C.document("Politique de placement",
-                             f"Établie pour {nom} à partir de sa fiche · profil {profil}", articles))
+        C.montrer(C.document("Politique de placement", f"Écrite pour {nom}, sur mesure · profil {profil}", articles,
+                             C.etape_du_chemin(2, f"{NOM} écrit")))
     publiees = [connues[i] for i in utilisees if connues[i].get("nature") == "publie"]
     conventions = [connues[i] for i in utilisees if connues[i].get("nature") != "publie"]
     with st.expander("Références"):
@@ -211,6 +206,13 @@ def politique(persona: str, fiche_client: dict) -> None:
         if conventions:
             C.montrer('<p class="glc-etiquette">Conventions du service, marquées « hypothèse »</p><ul>'
                       + "".join(f"<li>{C.e(francais(s['libelle']))}</li>" for s in conventions) + "</ul>")
+
+
+def empreinte_de(fiche_client: dict | None) -> str:
+    """Ce qui change quand la politique de placement change : la clé de sa carte et du passage qui y mène."""
+    if not fiche_client or "erreur" in fiche_client:
+        return "attente"
+    return hashlib.md5(repr(sorted(fiche_client["questionnaire"].items(), key=str)).encode("utf-8")).hexdigest()[:8]
 
 
 def fiche_a_completer(page: str) -> None:
@@ -226,15 +228,25 @@ def fiche_a_completer(page: str) -> None:
 
 
 def afficher(persona: str, fiche_session: dict, fiche_client: dict | None) -> None:
-    C.montrer(C.titre_page("Profil", "Votre fiche, puis la politique de placement qui en découle."))
-    fiche(persona, fiche_session)
-    if fiche_client is None:
-        manquantes = [QUESTIONNAIRE[c]["libelle"] for c in CHAMPS_Q if fiche_session["questionnaire"].get(c) is None]
-        C.montrer('<div class="glc-vide"><h3>Politique de placement</h3><p>Elle apparaîtra ici dès que la fiche '
-                  f'sera complète. Il reste : {C.e(", ".join(manquantes).lower())}.</p></div>')
-        return
-    if "erreur" in fiche_client:
-        st.error(fiche_client["erreur"])
-        return
-    politique(persona, fiche_client)
-    C.suite("Continuer vers le portefeuille", "portefeuille", "suite_profil")
+    """Un chemin, visible dès l'arrivée : la fiche à gauche, le passage, la politique de placement à droite."""
+    C.montrer(C.titre_page("Profil", "Vous répondez à gauche. Votre politique de placement s'écrit à droite, "
+                                     f"sur mesure : tout ce que fait {NOM} s'appuie sur elle."))
+    empreinte = empreinte_de(fiche_client)
+    gauche, milieu, droite = st.columns([1, 0.085, 1.02], gap="small")
+    with gauche:
+        fiche(persona, fiche_session)
+    with milieu, st.container(key=f"passage_{empreinte}"):
+        # Le passage change de clé avec la politique : la lumière y court plus fort quand une réponse change.
+        C.montrer(C.passage(len(RUBRIQUES)) + C.lien("Votre fiche devient votre politique de placement"))
+    with droite:
+        if fiche_client is None:
+            manquantes = [QUESTIONNAIRE[c]["libelle"] for c in CHAMPS_Q if fiche_session["questionnaire"].get(c) is None]
+            C.montrer(f'<div class="glc-vide">{C.etape_du_chemin(2, f"{NOM} écrit")}<h3>Politique de placement</h3>'
+                      f'<p>Elle apparaîtra ici dès que la fiche sera complète. Il reste : '
+                      f'{C.e(", ".join(manquantes).lower())}.</p></div>')
+        elif "erreur" in fiche_client:
+            st.error(fiche_client["erreur"])
+        else:
+            politique(persona, fiche_client, empreinte)
+    if fiche_client is not None and "erreur" not in fiche_client:
+        C.suite("Continuer vers le portefeuille", "portefeuille", "suite_profil")

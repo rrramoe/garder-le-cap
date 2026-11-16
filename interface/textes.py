@@ -464,10 +464,15 @@ def phrase_execution(type_ordre: str, prix: float | None) -> str:
     return f"L'analyse suppose que l'ordre est exécuté à {dollars(prix, 2)}."
 
 
+# Le nom court d'un organisme, tel qu'on le cite après un article de la politique de placement.
+NOMS_COURTS = {"Financière Banque Nationale – Gestion de patrimoine": "Banque Nationale",
+               "FBN Gestion de patrimoine": "Banque Nationale",
+               "Autorités canadiennes en valeurs mobilières": "ACVM"}
+
+
 def source_courte(s: dict | None) -> str:
     """Le nom d'une source en quelques mots : l'organisme, sans le détail du document."""
     if not s:
         return ""
     nom = str(s.get("source", "")).split(",")[0].split("(")[0].strip()
-    return nom.replace("Financière Banque Nationale – Gestion de patrimoine", "Banque Nationale, gestion de patrimoine") \
-              .replace("FBN Gestion de patrimoine", "Banque Nationale, gestion de patrimoine")
+    return NOMS_COURTS.get(nom, nom)

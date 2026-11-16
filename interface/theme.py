@@ -279,7 +279,59 @@ div[class*="st-key-zone_sigma"]:has(.glc-direct) {{ animation-duration: {LUEUR_V
   background-size: 260% 100%; animation: glc-balaye 5.5s linear infinite;
   box-shadow: 0 8px 22px -6px rgba(26, 97, 169, .45), 0 0 18px -4px rgba(127, 86, 217, .35); }}
 .st-key-inspecter button[kind="primary"]:hover {{ background-color: {LUEUR_A}; border-color: transparent; }}
-/* le lien de la fiche à la politique de placement : un canal où la lumière descend, sans fin */
+/* le chemin du profil : la fiche, le passage où la lumière court, la politique de placement */
+@keyframes glc-court {{ 0% {{ transform: translateX(-24px); opacity: 0; }} 20% {{ opacity: 1; }} 80% {{ opacity: 1; }}
+  100% {{ transform: translateX(var(--course, 64px)); opacity: 0; }} }}
+@keyframes glc-eclair {{ 0% {{ opacity: 1; transform: scaleY(3.2); }} 100% {{ opacity: 1; transform: none; }} }}
+.stApp .glc-etape {{ display: flex; align-items: center; gap: 8px; margin: 0 0 6px 0; font-size: var(--t1);
+  font-weight: 700; color: var(--violet); letter-spacing: .01em; }}
+.stApp .glc-etape b {{ display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px;
+  border-radius: 50%; background: {LUEUR_B}; color: {BLANC}; font-size: var(--t1); font-weight: 700; }}
+.stApp .glc-passage {{ display: flex; flex-direction: column; justify-content: space-around; height: 520px;
+  position: sticky; top: 130px; margin: 60px -14px 0 -14px; }}
+.stApp .glc-passage .fil {{ position: relative; display: block; height: 2px; border-radius: 2px; overflow: hidden;
+  background: linear-gradient(90deg, {BORD}, {LUEUR_A} 60%, {LUEUR_B}); }}
+.stApp .glc-passage .fil i {{ position: absolute; top: 0; left: 0; width: 26px; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, transparent, {BLANC}, {LUEUR_B}); --course: 96px;
+  animation: glc-court 1.9s linear infinite; }}
+div[class*="st-key-passage_"] .glc-passage .fil {{ animation: glc-eclair .9s ease-out 1; }}
+div[class*="st-key-passage_"] .glc-lien {{ display: none; }}
+@media (max-width: 640px) {{
+  .stApp .glc-passage {{ display: none; }}
+  div[class*="st-key-passage_"] .glc-lien {{ display: flex; }}
+}}
+/* la fiche et la politique, serrées pour tenir côte à côte */
+div[class*="st-key-carte_fiche"] {{ padding: 18px 20px; gap: 0.35rem; }}
+div[class*="st-key-carte_fiche"] .glc-rubrique {{ margin: 6px 0 0 0; font-size: var(--t1); }}
+div[class*="st-key-carte_fiche"] .glc-rubrique span {{ display: inline; margin-left: 8px; }}
+div[class*="st-key-carte_fiche"] .stSelectbox div[role="group"] {{ min-height: 38px; }}
+div[class*="st-key-carte_fiche"] .stSelectbox button:not([aria-label="Open"]) {{ display: none; }}
+div[class*="st-key-carte_fiche"] div[class*="_theme_"] div[data-testid="stRadio"] {{ grid-template-columns: minmax(0, 1fr) auto;
+  padding: 2px 0; gap: 8px; }}
+div[class*="st-key-carte_fiche"] div[class*="_theme_"] label[data-testid="stWidgetLabel"] p {{ font-size: var(--t1); }}
+div[class*="st-key-carte_fiche"] div[class*="_theme_"] label[data-testid="stRadioOption"] {{ padding: 3px 7px; }}
+div[class*="st-key-carte_fiche"] div[class*="_theme_"] label[data-testid="stRadioOption"] p {{ font-size: 12px; }}
+div[class*="st-key-politique_"] .glc-doc {{ padding: 18px 22px 10px 22px; }}
+div[class*="st-key-politique_"] .glc-doc .tete {{ padding-bottom: 10px; }}
+div[class*="st-key-politique_"] .glc-doc .tete h2 {{ font-size: var(--t3); }}
+div[class*="st-key-politique_"] .glc-doc .tete p {{ font-size: var(--t1); }}
+div[class*="st-key-politique_"] .glc-article {{ grid-template-columns: 22px 132px minmax(0, 1fr); gap: 2px 10px; padding: 7px 0; }}
+div[class*="st-key-politique_"] .glc-article .nom {{ font-size: var(--t1); }}
+div[class*="st-key-politique_"] .glc-article .corps p, div[class*="st-key-politique_"] .glc-article .corps li {{
+  font-size: var(--t1); line-height: 1.45; margin-bottom: 1px; }}
+div[class*="st-key-politique_"] .glc-article .source {{ margin: 2px 0 0 0; }}
+div[class*="st-key-politique_"] .glc-rubrique-doc {{ padding: 10px 0 4px 0; }}
+div[class*="st-key-politique_"] .glc-article table.glc-table td {{ padding: 3px 10px 3px 0; font-size: var(--t1); }}
+div[class*="st-key-carte_fiche"] .glc-rubrique {{ text-transform: uppercase; letter-spacing: .06em; font-size: 12px;
+  color: var(--encre); }}
+div[class*="st-key-carte_fiche"] .glc-rubrique span {{ display: none; }}
+div[class*="st-key-carte_fiche"] div[class*="_theme_"] label[data-testid="stRadioOption"] {{ padding: 2px 6px; }}
+div[class*="st-key-politique_"] .glc-article:has(table) {{ grid-template-columns: 22px minmax(0, 1fr); }}
+div[class*="st-key-politique_"] .glc-article:has(table) .corps {{ grid-column: 2; }}
+div[class*="st-key-politique_"] .glc-article table.glc-table {{ max-width: none; }}
+.stApp .glc-doc .tete p.glc-etape {{ color: var(--violet); font-size: var(--t1); margin: 0 0 6px 0; }}
+div[class*="st-key-politique_"] .glc-article .source {{ font-size: 12px; }}
+/* le lien vertical, quand les deux cartes s'empilent : un canal où la lumière descend, sans fin */
 .stApp .glc-lien {{ display: flex; flex-direction: column; align-items: center; gap: 6px; margin: -6px 0 -6px 0; }}
 .stApp .glc-lien .canal {{ position: relative; width: 3px; height: 64px; border-radius: 3px; overflow: hidden;
   background: linear-gradient({BORD}, {LUEUR_A}); }}

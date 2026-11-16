@@ -507,9 +507,12 @@ def test_profil_la_politique_suit_la_fiche(sans_agent):
     for rubrique in ("Objectif", "Horizon", "Risque", "Contraintes", "Préférences"):
         assert f">{rubrique}<span>" in texte and f">{rubrique}<span>" in document
     assert "Politique de placement" in document and "profil Conservateur" in document
+    # Le chemin se lit d'un coup d'œil : la fiche (1), le passage où la lumière court, la politique (2).
+    assert 'class="glc-etape"><b>1</b>' in texte and 'class="glc-etape"><b>2</b>' in document
+    assert 'class="glc-passage"' in texte
     numeros = [int(n) for n in __import__("re").findall(r'class="no">(\d+)<', document)]
     assert numeros == list(range(1, len(numeros) + 1)) and len(numeros) >= 8
-    assert "Source : Banque Nationale, gestion de patrimoine" in document
+    assert "Source : Banque Nationale" in document
     assert "questionnaire" not in document.lower() and "Hypothèse du projet" not in document
     assert "Références" in [e.label for e in at.expander]
     # Cause et effet : une réponse change, la politique change.
@@ -576,7 +579,7 @@ def test_introduction_puis_choix_du_compte(sans_agent):
     assert not at.exception, at.exception
     assert (at.session_state["etape"], at.session_state["persona"], at.session_state["page"]) == \
         ("service", "mateo", "profil")
-    assert "Établie pour Mateo à partir de sa fiche" in _textes(at)
+    assert "Écrite pour Mateo, sur mesure" in _textes(at)
 
 
 def test_introduction_se_passe_d_un_clic_et_se_revoit_depuis_l_aide(sans_agent):
