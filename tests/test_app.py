@@ -59,6 +59,8 @@ def test_robert_tsla_en_tension(sans_agent):
     assert "En tension" in carte and "120 000 $" in carte and "15,0 %" in carte
     assert "Le maillon le plus faible : la pire année. Votre portefeuille aurait perdu" in carte
     assert "pire année publiée" not in carte  # les chiffres complets restent dans les mesures repliées
+    assert "sans objet (aucun besoin déclaré)" in texte
+    assert "0,5 ans" not in texte and "du 30 sept." not in texte
     assert "56 000 $" in texte and "7,0 %" in texte  # taille compatible, en dollars et en %
     assert AVIS in texte
     assert "chercher_taille_compatible" in texte  # étapes : appels du moteur faits par l'interface
@@ -192,7 +194,7 @@ def test_solidite_et_origine_des_fichiers(sans_agent):
     at = _demarrer()
     texte = _inspecter(at, "robert")
     assert "**Solide** : le résultat est le même" in texte
-    assert "fenêtre défavorable" in texte and "fenêtre favorable" in texte
+    assert "Une mauvaise année de marché" in texte and "Le reste de la période" in texte
     assert "Fichiers de référence lus dans" in texte
 
 

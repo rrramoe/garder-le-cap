@@ -397,9 +397,9 @@ def titre_famille(dim: str, n: dict) -> str:
     return n.get("question") or DIMENSIONS.get(dim, dim)
 
 
-def ligne_note(titre: str, note: float | None, avant: float | None = None, aide: str = "") -> None:
+def ligne_note(titre: str, note: float | None, avant: float | None = None, aide: str = "", raison: str = "") -> None:
     if note is None:
-        st.markdown(f"**{titre}** · sans objet")
+        st.markdown(f"**{titre}** · sans objet" + (f" ({raison})" if raison else ""))
         return
     valeur = f"{note_txt(avant)} → **{note_txt(note)}**" if avant is not None else f"**{note_txt(note)}**"
     st.markdown(f"**{titre}** · {valeur} / 100", help=aide or None)
@@ -928,7 +928,7 @@ def onglet_portefeuille(persona: str, fiche: dict, fiche_client: dict) -> None:
             n = e["notes"][dim]
             with st.container():
                 if n.get("sans_objet") or n.get("note") is None:
-                    ligne_note(titre_famille(dim, n), None)
+                    ligne_note(titre_famille(dim, n), None, raison=n.get("raison", ""))
                     continue
                 ligne_note(titre_famille(dim, n), n["note"], aide=AIDE_DIMENSIONS.get(dim, ""))
                 m = n["mesures"].get(n["mesure_min"], {})
@@ -980,7 +980,7 @@ def angles(sim: dict) -> None:
         if dim == apres.get("dimension_min"):
             titre += " · maillon le plus faible"
         if n1.get("sans_objet") or n1.get("note") is None:
-            ligne_note(titre, None)
+            ligne_note(titre, None, raison=n1.get("raison", ""))
         else:
             ligne_note(titre, n1["note"], n0.get("note"), aide=AIDE_DIMENSIONS.get(dim, ""))
     st.caption(f"{CHAINE} À partir de {LIMITE:g}, chaque angle respecte votre politique.")
@@ -1157,7 +1157,8 @@ def section_contraintes(sim: dict) -> None:
         texte = f"- **{libelle_theme_reponse(d['reponse'])} : {theme}** — {statut}."
         decl = d.get("declencheur") or {}
         if isinstance(decl, dict) and decl.get("preuve"):
-            texte += f" Preuve : {decl['preuve']}"
+            # La date de la preuve reste dans les sources repliées.
+            texte += " Preuve : " + re.sub(r",? (?:fiche )?du \d{1,2} \S+ \d{4}", "", decl["preuve"])
         st.markdown(texte)
 
 
@@ -1168,7 +1169,7 @@ def section_notes(sim: dict, niveau: str) -> None:
         n0, n1 = sim["avant"]["notes"].get(dim, {}), sim["apres"]["notes"][dim]
         titre = titre_famille(dim, n1)
         if n1.get("sans_objet") or n1.get("note") is None:
-            ligne_note(titre, None)
+            ligne_note(titre, None, raison=n1.get("raison", ""))
             continue
         ligne_note(titre, n1["note"], n0.get("note"), aide=AIDE_DIMENSIONS.get(dim, ""))
         if niveau == "essentiel":

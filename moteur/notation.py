@@ -549,7 +549,7 @@ def note_liquidite(port: dict, fiche: dict) -> dict:
     """Liquidités gardées face au besoin de l'année : limite (50) = le besoin, cible (100) = besoin + cible du profil."""
     besoin = float(fiche["deduit"].get("besoin_liquidite_pct", {}).get("valeur", 0) or 0)
     if not besoin:
-        return {"note": None, "mesure_min": None, "sans_objet": True, "mesures": {},
+        return {"note": None, "mesure_min": None, "sans_objet": True, "mesures": {}, "raison": "aucun besoin déclaré",
                 "libelle": "Aucun besoin de liquidités déclaré : sans objet."}
     cible_profil = fiche["deduit"]["fourchettes_pct"]["valeur"]["liquidites"]["cible"]
     cash = float(port.get(references.encaisse(), 0.0))

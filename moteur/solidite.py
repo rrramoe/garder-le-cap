@@ -24,8 +24,8 @@ from . import donnees, notation, references
 
 ANNEE_DEFAVORABLE = 2022
 FENETRES = {
-    "defavorable": f"Année {ANNEE_DEFAVORABLE} seule (fenêtre défavorable)",
-    "favorable": f"Toute la période sans {ANNEE_DEFAVORABLE} (fenêtre favorable)",
+    "defavorable": "Une mauvaise année de marché",
+    "favorable": "Le reste de la période",
 }
 
 
