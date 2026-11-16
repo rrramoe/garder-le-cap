@@ -1000,15 +1000,11 @@ def bloc_operation(sim: dict) -> None:
 
 
 def section_points_attention(sim: dict) -> None:
-    """Les faits à garder en vue (calculés par le moteur, sans note) : opération avancée, profil déclaré, limites."""
-    points = sim.get("points_attention") or []
-    if not any(p.get("type") == "operation" for p in points):
-        profil = next((p["texte"] for p in points if p.get("type") == "profil_declare"), None)
-        if profil:
-            st.caption(profil)
-        return
-    st.markdown("**Points d'attention**")
-    st.markdown("\n".join(f"- {p['texte']}" for p in points))
+    """Le risque propre d'une opération avancée, en une ligne. Le profil déclaré et les limites restent des faits
+    pour les agents (`points_attention`), qui disent seulement ce qui sert le client : rien n'est affiché de plus."""
+    points = [p for p in sim.get("points_attention") or [] if p.get("type") == "operation"]
+    if points:
+        st.markdown(f"**Point d'attention.** {points[0]['texte']}")
 
 
 SOLIDITE_TEXTE = {
