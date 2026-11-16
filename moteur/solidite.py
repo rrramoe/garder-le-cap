@@ -118,7 +118,7 @@ def solidite(port: dict, fiche: dict, evaluation: dict) -> dict:
                         "période retenue."),
         "score_principal": evaluation["score"],
         "fenetres": fenetres,
-        "regle": (f"Note de risque recalculée sur 2022 seule et sur la période sans 2022 ; solide si la note la plus faible "
+        "regle": (f"Note de risque recalculée sur 2022 seule et sur la période sans 2022 ; solide si la note de l'angle déterminant "
                   f"est du même côté de la note de passage ({notation.NOTE_DE_PASSAGE:g}) dans les deux, sinon fragile. "
                   "La note principale reste celle de la période complète."),
     }

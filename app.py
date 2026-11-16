@@ -162,7 +162,7 @@ DIRECTIONS_TEXTE = {
     "hors_politique_rapproche": "Votre portefeuille est déjà hors politique ; l'ordre l'en rapproche.",
     "hors_politique_aggrave": "Votre portefeuille est déjà hors politique ; l'ordre aggrave l'écart.",
     "revient_dans_la_politique": "Votre portefeuille est hors politique ; l'ordre l'y ramène.",
-    "hors_politique_inchange": "Votre portefeuille est déjà hors politique ; l'ordre ne change pas son angle le plus faible.",
+    "hors_politique_inchange": "Votre portefeuille est déjà hors politique ; l'ordre ne change pas son angle déterminant.",
 }
 STATUTS_CONTRAINTE = {"violee": "non respectée", "respectee": "respectée", "signalee": "signalée",
                       "ignoree": "ignorée", "non_applicable": "sans objet"}
@@ -297,38 +297,38 @@ def annees(x: float, d: int = 1) -> str:
     return f"{nombre(x, d)} an" + ("s" if abs(x) >= 2 else "")
 
 
-def phrase_maillon(mes: str, m: dict) -> str | None:
-    """Une phrase courte pour le maillon le plus faible ; les chiffres complets restent dans les mesures repliées."""
+def phrase_angle_determinant(mes: str, m: dict) -> str | None:
+    """Une phrase courte pour l'angle déterminant ; les chiffres complets restent dans les mesures repliées."""
     v, lim = m.get("valeur"), m.get("limite")
     if not isinstance(v, (int, float)):
         return None
     if mes == "pire_annee":
-        return (f"Le maillon le plus faible : la pire année. Votre portefeuille aurait perdu {pct_frac(abs(v))} "
+        return (f"L'angle déterminant : la pire année. Votre portefeuille aurait perdu {pct_frac(abs(v))} "
                 f"en un an, pour une limite de {pct_frac(abs(lim))}.") if v < 0 else None
     if mes == "fluctuations":
-        return (f"Le maillon le plus faible : les fluctuations. Elles seraient de {pct_frac(v)} par an, "
+        return (f"L'angle déterminant : les fluctuations. Elles seraient de {pct_frac(v)} par an, "
                 f"pour une limite de {pct_frac(lim)}.")
     if mes == "geographie_actions":
         quoi = "canadiennes" if m.get("decide") == "canada" else "hors du Canada"
-        return (f"Le maillon le plus faible : la répartition des actions. Les actions {quoi} feraient {pct(v)} "
+        return (f"L'angle déterminant : la répartition des actions. Les actions {quoi} feraient {pct(v)} "
                 f"du portefeuille, pour une zone de {pct(m['limite_basse'], 0)} à {pct(m['limite_haute'], 0)}.")
     if mes == "capital_preserve":
-        return (f"Le maillon le plus faible : préserver votre capital. Sur {annees(m['fenetre_annees'], 0)}, "
+        return (f"L'angle déterminant : préserver votre capital. Sur {annees(m['fenetre_annees'], 0)}, "
                 f"le pire résultat aurait été {pct_frac(v)}.")
     if mes == "revenu":
-        return (f"Le maillon le plus faible : le revenu. Votre portefeuille rapporterait {pct_frac(v, 2)} par an, "
+        return (f"L'angle déterminant : le revenu. Votre portefeuille rapporterait {pct_frac(v, 2)} par an, "
                 f"pour une limite de {pct_frac(lim, 2)}.")
     if mes == "actions":
-        return (f"Le maillon le plus faible : la part des actions pour votre objectif, {pct(v)}, "
+        return (f"L'angle déterminant : la part des actions pour votre objectif, {pct(v)}, "
                 f"pour un minimum de {pct(lim, 0)}.")
     if mes == "liquidites_besoin":
-        return (f"Le maillon le plus faible : vos liquidités, {pct(v)}, pour un besoin de "
+        return (f"L'angle déterminant : vos liquidités, {pct(v)}, pour un besoin de "
                 f"{pct(m.get('besoin', lim), 0)} dans l'année.")
     return None
 
 
 def pourquoi_simple(sim: dict) -> str:
-    """Une phrase claire qui dit pourquoi, à partir de la mesure qui donne le score."""
+    """Une phrase claire qui dit pourquoi, à partir de la mesure de l'angle déterminant."""
     if sim["verdict"]["code"] == "incompatible":
         detail = sim["contraintes_strictes"].get("detail", [])
         ce = (sim.get("operation") or {}).get("controle_experience", {})
@@ -351,12 +351,12 @@ def pourquoi_simple(sim: dict) -> str:
     if mes == "duree":
         return (f"Après une baisse, le portefeuille aurait mis {annees(m['temps_sous_l_eau_annees'])} "
                 f"à se remettre, pour un horizon de {annees(m['horizon_annees'], 0)}.")
-    phrase = phrase_maillon(mes, m)
+    phrase = phrase_angle_determinant(mes, m)
     if phrase:
         return phrase
     if dim == "preferences":
-        return f"Point le plus faible : {libelle_mesure(dim, mes)} — {decrire_mesure(dim, mes, m)}."
-    return f"Point le plus faible : {libelle_mesure(dim, mes)} — {decrire_mesure(dim, mes, m)}."
+        return f"L'angle déterminant : {libelle_mesure(dim, mes)} — {decrire_mesure(dim, mes, m)}."
+    return f"L'angle déterminant : {libelle_mesure(dim, mes)} — {decrire_mesure(dim, mes, m)}."
 
 
 def mesures_a_plat(bloc: dict) -> dict:
@@ -538,7 +538,7 @@ def resume_appel(outil: str, r: dict) -> str:
                 f"volatilité {pct_frac(r['statistiques_cad']['volatilite_annualisee'])} ; "
                 f"thèmes : {', '.join(vraies) if vraies else 'aucun'}.")
     if outil == "simuler_ordre":
-        return (f"« {r['verdict']['libelle']} », note la plus faible {note_txt(r['avant']['score'])} → "
+        return (f"« {r['verdict']['libelle']} », note de l'angle déterminant {note_txt(r['avant']['score'])} → "
                 f"{note_txt(r['apres']['score'])}, donné par {libelle_mesure(r['dimension_min'], r['mesure_min'])}.")
     if outil == "chercher_taille_compatible":
         if not r.get("lancee", True):
@@ -678,10 +678,10 @@ def graphique_courbe(taille: dict, valeur: float) -> alt.Chart:
     base = alt.Chart(df).encode(
         x=alt.X("taille_pct:Q", title="Taille de l'ordre (% du portefeuille)",
                 scale=alt.Scale(domainMin=0), axis=alt.Axis(tickMinStep=1, format="d")),
-        y=alt.Y("score:Q", title="Note la plus faible après l'ordre", scale=alt.Scale(domain=[0, haut])),
+        y=alt.Y("score:Q", title="Note de l'angle déterminant après l'ordre", scale=alt.Scale(domain=[0, haut])),
         tooltip=[alt.Tooltip("montant:N", title="Montant"),
                  alt.Tooltip("taille_pct:Q", title="Part (%)", format=".1f"),
-                 alt.Tooltip("score:Q", title="Note la plus faible", format=".0f"),
+                 alt.Tooltip("score:Q", title="Note de l'angle déterminant", format=".0f"),
                  alt.Tooltip("mesure:N", title="Donné par")])
     zone = alt.Chart(pd.DataFrame({"y": [0], "y2": [LIMITE]})).mark_rect(
         color=COULEURS_VERDICT["en_tension"], opacity=0.07).encode(y="y:Q", y2="y2:Q")
@@ -922,7 +922,7 @@ def onglet_portefeuille(persona: str, fiche: dict, fiche_client: dict) -> None:
         couleur = COULEURS_VERDICT["compatible"] if dans else COULEURS_VERDICT["en_tension"]
         statut = "Dans votre politique" if dans else "Hors de votre politique"
         st.markdown(f'<div style="font-size:1.15rem;"><span style="color:{couleur};font-weight:600;">{statut}</span>'
-                    f' · le maillon le plus faible : {DIMENSIONS.get(e["dimension_min"], e["dimension_min"]).lower()}</div>',
+                    f' · angle déterminant : {DIMENSIONS.get(e["dimension_min"], e["dimension_min"]).lower()}</div>',
                     unsafe_allow_html=True)
         for dim in familles(e):
             n = e["notes"][dim]
@@ -935,7 +935,7 @@ def onglet_portefeuille(persona: str, fiche: dict, fiche_client: dict) -> None:
                 if n["note"] >= 99.95:
                     st.caption("Sur la cible.")
                 else:
-                    st.caption(f"Point faible : {libelle_mesure(dim, n['mesure_min'])} — "
+                    st.caption(f"Mesure déterminante : {libelle_mesure(dim, n['mesure_min'])} — "
                                f"{decrire_mesure(dim, n['mesure_min'], m)}.")
         legende_jauge()
 
@@ -968,7 +968,6 @@ def onglet_portefeuille(persona: str, fiche: dict, fiche_client: dict) -> None:
 
 # ---------------------------------------------------------------- rendu : rapport
 
-CHAINE = "Une chaîne n'est qu'aussi solide que son maillon le plus faible."
 
 
 def angles(sim: dict) -> None:
@@ -978,12 +977,12 @@ def angles(sim: dict) -> None:
         n1, n0 = apres["notes"][dim], avant.get("notes", {}).get(dim, {})
         titre = titre_famille(dim, n1)
         if dim == apres.get("dimension_min"):
-            titre += " · maillon le plus faible"
+            titre += " · angle déterminant"
         if n1.get("sans_objet") or n1.get("note") is None:
             ligne_note(titre, None, raison=n1.get("raison", ""))
         else:
             ligne_note(titre, n1["note"], n0.get("note"), aide=AIDE_DIMENSIONS.get(dim, ""))
-    st.caption(f"{CHAINE} À partir de {LIMITE:g}, chaque angle respecte votre politique.")
+    st.caption(f"L'angle déterminant décide du verdict. À partir de {LIMITE:g}, chaque angle respecte votre politique.")
 
 
 def bloc_verdict(sim: dict, rapport: dict, valeur: float) -> None:
@@ -1065,7 +1064,7 @@ def section_solidite(solidite: dict | None) -> None:
         return
     for f in solidite["fenetres"].values():
         cote = "respecte la politique" if f["dans_la_politique"] else f"sous la limite de {LIMITE:g}"
-        st.markdown(f"- {f['libelle']} : note la plus faible {note_txt(f['score'])}, {cote}.")
+        st.markdown(f"- {f['libelle']} : note de l'angle déterminant {note_txt(f['score'])}, {cote}.")
     st.caption(f"{solidite['explication']} Les notes affichées plus haut restent celles de toute la période.")
 
 
@@ -1079,7 +1078,7 @@ def section_substitut(rapport: dict, valeur: float) -> None:
     pourcentage = s.get("pourcentage") or rapport["ordre"]["pourcentage"]
     st.markdown(f"L'agent a aussi testé un autre titre : le même montant ({dollars(pourcentage * valeur / 100)}) "
                 f"en {nom_instrument(s['ticker'])} serait <b style=\"color:{couleur}\">{s['verdict']['libelle'].lower()}</b> "
-                f"(note la plus faible {note_txt(s.get('score'))}).", unsafe_allow_html=True)
+                f"(note de l'angle déterminant {note_txt(s.get('score'))}).", unsafe_allow_html=True)
     st.caption("Une possibilité testée, pas une recommandation.")
 
 
@@ -1104,7 +1103,7 @@ def section_possible(taille: dict | None, valeur: float) -> None:
                     f"({pct(taille['taille_demandee_pct'])}) ne garde tous les angles à {LIMITE:g} ou plus.")
     if taille.get("courbe"):
         st.altair_chart(graphique_courbe(taille, valeur), width="stretch")
-        st.caption(f"Note la plus faible selon le montant. La zone ombrée est sous la limite de {LIMITE:g}.")
+        st.caption(f"Note de l'angle déterminant selon le montant. La zone ombrée est sous la limite de {LIMITE:g}.")
 
 
 def bloc_changements(rapport: dict, precedent: dict | None) -> None:
@@ -1128,12 +1127,12 @@ def bloc_changements(rapport: dict, precedent: dict | None) -> None:
     lignes = []
     for cle in a1:
         if cle in a0 and abs(a1[cle] - a0[cle]) >= 0.05:
-            lignes.append({"Note": DIMENSIONS[cle[0]], "Mesure": libelle_mesure(*cle),
+            lignes.append({"Angle": DIMENSIONS[cle[0]], "Mesure": libelle_mesure(*cle),
                            "Avant": round(a0[cle]), "Maintenant": round(a1[cle])})
     with st.container(border=True):
         st.markdown(f"**{DEPUIS_PRECEDENT}**")
         st.markdown("Changé : " + " ; ".join(changements) + ".")
-        st.markdown(f"{s0['verdict']['libelle']} → **{s1['verdict']['libelle']}** · note la plus faible "
+        st.markdown(f"{s0['verdict']['libelle']} → **{s1['verdict']['libelle']}** · note de l'angle déterminant "
                     f"{note_txt(s0['score'])} → **{note_txt(s1['score'])}**")
         if lignes:
             st.dataframe(pd.DataFrame(lignes), hide_index=True, width="stretch")
@@ -1164,7 +1163,7 @@ def section_contraintes(sim: dict) -> None:
 
 def section_notes(sim: dict, niveau: str) -> None:
     st.caption(f"Chaque angle répond à une question, de 0 à 100 ; {LIMITE:g} est la limite de votre politique. "
-               "Le plus faible décide.")
+               "L'angle déterminant décide du verdict.")
     for dim in familles(sim["apres"]):
         n0, n1 = sim["avant"]["notes"].get(dim, {}), sim["apres"]["notes"][dim]
         titre = titre_famille(dim, n1)
@@ -1174,7 +1173,7 @@ def section_notes(sim: dict, niveau: str) -> None:
         ligne_note(titre, n1["note"], n0.get("note"), aide=AIDE_DIMENSIONS.get(dim, ""))
         if niveau == "essentiel":
             st.caption("Sur la cible." if n1["note"] >= 99.95
-                       else f"Point faible : {libelle_mesure(dim, n1['mesure_min'])}.")
+                       else f"Mesure déterminante : {libelle_mesure(dim, n1['mesure_min'])}.")
             continue
         with st.expander("Mesures", expanded=False):
             lignes = []
@@ -1226,7 +1225,7 @@ def section_pistes(rapport: dict, valeur: float) -> None:
         angle = (p.get("angle_le_plus_faible") or {}).get("libelle")
         ligne = (f"- **{p.get('libelle_famille', '')}** : {jambes} → <b style=\"color:{couleur}\">"
                  f"{(p.get('verdict') or {}).get('libelle', '').lower()}</b>"
-                 + (f" ; angle le plus faible : {angle}" if angle else ""))
+                 + (f" ; angle déterminant : {angle}" if angle else ""))
         if p.get("raison"):
             ligne += f"<br><span style=\"color:#6E6E71\">{p['raison']}</span>"
         lignes.append(ligne)

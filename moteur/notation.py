@@ -590,7 +590,7 @@ def direction(score_avant: float, score_apres: float) -> dict:
     elif score_apres >= SEUIL_COMPATIBLE:
         cas, lib = "revient_dans_la_politique", "Revient dans la politique"
     elif abs(score_apres - score_avant) < 1e-9:
-        cas, lib = "hors_politique_inchange", "Hors politique, sans changement sur l'angle le plus faible"
+        cas, lib = "hors_politique_inchange", "Hors politique, sans changement de l'angle déterminant"
     elif score_apres > score_avant:
         cas, lib = "hors_politique_rapproche", "Hors politique et rapproche"
     else:
@@ -617,9 +617,9 @@ def verdict(contraintes: dict, score: float) -> dict:
         return {"code": "incompatible", "libelle": "Incompatible",
                 "raison": "Contrainte stricte violée : " + ", ".join(contraintes["themes_violes"]) + "."}
     if score >= SEUIL_COMPATIBLE:
-        return {"code": "compatible", "libelle": "Compatible", "raison": f"Note la plus faible de {NOTE_DE_PASSAGE:g} ou plus."}
+        return {"code": "compatible", "libelle": "Compatible", "raison": f"Note de l'angle déterminant de {NOTE_DE_PASSAGE:g} ou plus."}
     return {"code": "en_tension", "libelle": "En tension",
-            "raison": f"Note la plus faible sous {NOTE_DE_PASSAGE:g} : au-delà d'une limite de la politique."}
+            "raison": f"Note de l'angle déterminant sous {NOTE_DE_PASSAGE:g} : au-delà d'une limite de la politique."}
 
 
 def bloc_operation(port_avant: dict, port_apres: dict, operation: str, fiche: dict, apres: dict) -> dict:

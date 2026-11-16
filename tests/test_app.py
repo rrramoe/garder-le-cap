@@ -57,7 +57,7 @@ def test_robert_tsla_en_tension(sans_agent):
     texte = _inspecter(at, "robert")
     carte = _verdict(at)
     assert "En tension" in carte and "120 000 $" in carte and "15,0 %" in carte
-    assert "Le maillon le plus faible : la pire année. Votre portefeuille aurait perdu" in carte
+    assert "L'angle déterminant : la pire année. Votre portefeuille aurait perdu" in carte
     assert "pire année publiée" not in carte  # les chiffres complets restent dans les mesures repliées
     assert "sans objet (aucun besoin déclaré)" in texte
     assert "0,5 ans" not in texte and "du 30 sept." not in texte
@@ -216,7 +216,7 @@ def test_substitut_dans_ce_qui_est_possible(agent_simule):
     texte = _inspecter(at, "robert")
     assert "L'agent a aussi testé un autre titre : le même montant (" in texte
     assert "$) en SPY (SPDR S&P 500 ETF Trust) serait" in texte
-    assert "compatible</b> (note la plus faible" in texte
+    assert "compatible</b> (note de l'angle déterminant" in texte
     assert "Une possibilité testée, pas une recommandation." in texte
 
 
@@ -351,7 +351,7 @@ def test_pistes_testees_et_correction(equipe_simulee):
     assert "Pistes testées" in texte
     assert "Finalité supposée de l'achat (hypothèse de l'agent) :* l'achat semble viser" in texte
     assert "**Combinaison** : achat de 6,0 % de TSLA (" in texte and "achat de 4,0 % de SPY (" in texte
-    assert "compatible</b> ; angle le plus faible : diversification (poids des liquidités)" in texte
+    assert "compatible</b> ; angle déterminant : diversification (poids des liquidités)" in texte
     ligne = next(l for l in texte.splitlines() if "**Combinaison**" in l)
     assert "score" not in ligne
     assert "Garde une part de croissance" in texte
