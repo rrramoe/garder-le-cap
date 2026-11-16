@@ -6,7 +6,8 @@ import streamlit as st
 
 from interface import composants as C
 from interface import etat
-from interface.textes import AIDE_ANGLES, ANGLES_DEFAUT, LIMITE, MISSION, VERDICTS_AIDE, nom_angle
+from interface.textes import (AIDE_ANGLES, ANGLES_DEFAUT, FONCTIONNEMENT, LIMITE, MISSION, SERVICES_AWS,
+                              VERDICTS_AIDE, nom_angle)
 
 
 def question(persona: str) -> None:
@@ -41,7 +42,17 @@ def comprendre() -> None:
                                      "L'angle déterminant, le plus bas, décide du verdict.") + angles)
 
 
+def fonctionnement() -> None:
+    gauche, droite = st.columns(2, gap="large")
+    with gauche, st.container(key="carte_fonctionnement"):
+        C.montrer(C.h2("Comment ça marche") + C.pas(FONCTIONNEMENT))
+    with droite, st.container(key="carte_services"):
+        C.montrer(C.h2("Les services AWS", "Le rôle de chacun, en une ligne.")
+                  + C.definitions([(C.e(nom), role) for nom, role in SERVICES_AWS]))
+
+
 def afficher(persona: str) -> None:
     C.montrer(C.titre_page("Aide", MISSION))
-    question(persona)
+    fonctionnement()
     comprendre()
+    question(persona)

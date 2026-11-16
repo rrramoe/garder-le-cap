@@ -35,7 +35,7 @@ def entete() -> str:
             with droite.container(key="compte"):
                 with st.popover(tous[st.session_state["persona"]]["nom"], icon=":material/account_circle:"):
                     st.radio("Compte", list(tous), key="persona",
-                             format_func=lambda c: tous[c]["nom"] + (" · exemple" if tous[c]["exemple"] else ""))
+                             format_func=lambda c: f"**{tous[c]['nom']}** · {tous[c]['description']}")
     return st.session_state["persona"]
 
 

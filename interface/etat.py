@@ -32,7 +32,7 @@ def cle_q(persona: str, champ: str) -> str:
 def nouveau_client() -> dict:
     """Un profil neutre et un portefeuille entièrement en liquidités, à composer à l'écran."""
     return {"id": NOUVEAU, "nom": "Nouveau client", "exemple": False, "valeur": VALEUR_NOUVEAU,
-            "description": "Profil et portefeuille à composer",
+            "description": "profil et portefeuille à composer",
             "questionnaire": {**REPONSES_PAR_DEFAUT, "themes": {t: "neutre" for t in THEMES}},
             "portefeuille_pct": {references.encaisse(): 100.0}, "ordre_demo": None}
 
@@ -67,7 +67,9 @@ def valeur_pf(persona: str) -> float:
 def garder_les_choix() -> None:
     """Streamlit oublie l'état d'un champ non affiché : on garde les choix des autres pages et des autres clients."""
     s = st.session_state
-    s.setdefault("page", next(iter(PAGES)))
+    if "page" not in s:  # la page d'arrivée peut venir de l'adresse (?page=negocier)
+        demandee = st.query_params.get("page", "")
+        s["page"] = demandee if demandee in PAGES else next(iter(PAGES))
     s.setdefault("persona", next(iter(clients())))
     for cle in list(s.keys()):
         if not isinstance(cle, str):
@@ -75,6 +77,16 @@ def garder_les_choix() -> None:
         if cle in ("page", "persona") or cle.startswith(("q_", "o_")) or \
                 (cle.startswith("nc_") and cle.endswith(("_valeur", "_titre", "_montant"))):
             s[cle] = s[cle]
+
+
+def essayer_avec_un_exemple() -> None:
+    """Ouvre le billet d'ordre d'un client enregistré, déjà rempli : celui du compte s'il en a un, sinon le premier."""
+    s = st.session_state
+    tous = clients()
+    if not tous[s["persona"]].get("ordre_demo"):
+        s["persona"] = next((cid for cid, c in tous.items() if c.get("ordre_demo")), s["persona"])
+    s["page"] = "negocier"
+    s["accueil_vu"] = True
 
 
 def initialiser(persona: str) -> None:

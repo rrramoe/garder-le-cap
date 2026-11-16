@@ -81,6 +81,7 @@ def billet(persona: str, fiche: dict) -> None:
         details = {"operation": operation, "montant": montant, "type": type_ordre, "prix": prix_ordre,
                    "hypothese_execution": phrase_execution(type_ordre, prix_ordre)}
         if analyser:
+            st.session_state["accueil_vu"] = True
             ancien = st.session_state.get(f"rapport_{persona}")
             if ancien is not None:
                 st.session_state[f"precedent_{persona}"] = ancien
@@ -134,16 +135,18 @@ def bloc_verdict(sim: dict, rapport: dict, valeur: float) -> None:
 def bloc_angles(sim: dict) -> None:
     """Les angles, chacun avec sa note ; l'angle déterminant est marqué : c'est lui qui décide."""
     apres, avant = sim["apres"], sim.get("avant", {})
+    regle = sim["verdict"]["code"] == "incompatible"  # une règle stricte décide alors, pas un angle
     lignes = []
     for angle in angles_du_bloc(apres):
         n1, n0 = apres["notes"][angle], avant.get("notes", {}).get(angle, {})
         sans = n1.get("sans_objet") or n1.get("note") is None
         lignes.append({"nom": nom_angle(angle), "note": None if sans else n1["note"],
                        "avant": None if sans else n0.get("note"),
-                       "decide": angle == apres.get("dimension_min") and not sans,
+                       "decide": angle == apres.get("dimension_min") and not sans and not regle,
                        "aide": n1.get("question") or AIDE_ANGLES.get(angle, "")})
-    legende = (f"Le trait marque la note de passage ({LIMITE:g}). L'angle déterminant, le plus bas, "
-               "décide du verdict.")
+    legende = f"Le trait marque la note de passage ({LIMITE:g}). "
+    legende += ("Ici, une règle stricte décide du verdict, avant les notes." if regle
+                else "L'angle déterminant, le plus bas, décide du verdict.")
     with st.container(key="carte_angles"):
         C.montrer(C.h2("Les angles de l'analyse") + C.angles(lignes, LIMITE, legende))
 
@@ -233,7 +236,7 @@ def graphique_courbe(taille: dict, valeur: float) -> alt.Chart:
     haut = max(100.0, float(df["score"].max()))
     base = alt.Chart(df).encode(
         x=alt.X("montant_cad:Q", title="Montant de l'ordre ($ CA)", scale=alt.Scale(domainMin=0),
-                axis=alt.Axis(format="~s", grid=False)),
+                axis=alt.Axis(grid=False, tickCount=6, labelExpr="replace(format(datum.value, ',.0f'), /,/g, ' ')")),
         y=alt.Y("score:Q", title="Note de l'angle déterminant", scale=alt.Scale(domain=[0, haut])),
         tooltip=[alt.Tooltip("montant:N", title="Montant"),
                  alt.Tooltip("taille_pct:Q", title="Part (%)", format=".1f"),
@@ -268,8 +271,11 @@ def bloc_possible(rapport: dict, valeur: float) -> None:
         if issue == "compatible_tel_quel":
             phrase = f"L'ordre est compatible tel quel ({dollars(taille['taille_demandee_pct'] * valeur / 100)})."
         elif issue == "compatible_avec_ajustement" and tc is not None:
-            phrase = (f"Jusqu'à {dollars(tc * valeur / 100)} ({pct(tc)} du portefeuille), "
-                      "l'ordre serait compatible.")
+            phrase = f"Pour devenir compatible : {dollars(tc * valeur / 100)} ou moins ({pct(tc)} du portefeuille)."
+            cause = rapport["simulation"].get("cause") or {}
+            if cause.get("mesure") and cause.get("phrase"):
+                phrase += (f" La mesure qui décide : {libelle_mesure(cause.get('dimension'), cause['mesure'])} "
+                           f"({francais(cause['phrase'])}).")
             lignes.append(["<b>Montant réduit</b>", C.e(f"{nom_op} de {dollars(tc * valeur / 100)} de {o['ticker']}"),
                            C.pastille("Compatible", "compatible"), ""])
         else:
@@ -305,7 +311,9 @@ def bloc_possible(rapport: dict, valeur: float) -> None:
             with st.expander("La note selon le montant"):
                 st.altair_chart(graphique_courbe(taille, valeur), width="stretch")
                 st.caption(f"Note de l'angle déterminant selon le montant de l'ordre. La zone colorée est sous la "
-                           f"note de passage ({LIMITE:g}). Le trait vert marque le montant compatible.")
+                           f"note de passage ({LIMITE:g})."
+                           + (" Le trait vert marque le montant compatible."
+                              if taille.get("taille_compatible_pct") is not None else ""))
 
 
 # ---------------------------------------------------------------- l'analyse : explication et détails
@@ -343,21 +351,18 @@ def bloc_explication(rapport: dict) -> None:
         C.montrer(corps)
 
 
-def details_verification(agent: dict) -> list[str]:
-    """Le détail technique du contrôle, en français simple, pour les étapes repliées de l'analyse."""
+def controles(agent: dict) -> list[str]:
+    """Ce que les contrôles ont relevé sur l'explication, en français simple, pour les étapes repliées."""
     a = agent.get("ancrage") or {}
-    details = []
+    lignes = []
     if a.get("chiffres_non_sources"):
-        details.append("chiffres absents des calculs : " + ", ".join(a["chiffres_non_sources"]))
-    if (a.get("ancrage") or {}).get("score") is not None:
-        details.append(f"accord du passage le moins appuyé avec les calculs : {nombre(a['ancrage']['score'], 2)} "
-                       f"(minimum demandé {nombre(a['ancrage']['seuil'], 2)})")
+        lignes.append("chiffres absents des calculs : " + ", ".join(a["chiffres_non_sources"]))
     gf = agent.get("garde_fou") or {}
     if gf.get("actif"):
-        details.append(f"garde-fou Bedrock, version {gf.get('version')}")
+        lignes.append("garde-fou actif" + (", il est intervenu" if gf.get("intervenu") else ""))
     elif gf.get("avis"):
-        details.append(gf["avis"])
-    return details
+        lignes.append(gf["avis"])
+    return lignes
 
 
 def libelle_etape(t: dict) -> str:
@@ -384,15 +389,9 @@ def section_etapes(rapport: dict) -> None:
                        "detail": detail})
         dernier = qui
     C.montrer(C.etapes(lignes))
-    technique = []
-    if agent.get("trace") and not agent.get("erreur"):
-        if agent.get("modele"):
-            technique.append(f"modèle de langage : {agent['modele']}")
-        if agent.get("duree_s") is not None:
-            technique.append(f"durée de l'analyse : {nombre(agent['duree_s'])} s")
-        technique += details_verification(agent)
-    if technique:
-        st.caption("Détails techniques : " + " ; ".join(technique) + ".")
+    releves = controles(agent) if agent.get("trace") and not agent.get("erreur") else []
+    if releves:
+        st.caption("Contrôles : " + " ; ".join(releves) + ".")
 
 
 def section_regles(sim: dict) -> None:

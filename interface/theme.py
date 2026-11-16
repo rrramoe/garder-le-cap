@@ -98,6 +98,23 @@ div[data-testid="stCaptionContainer"] p, .stApp small {{ font-size: var(--t1); c
   min-height: 38px; border: 1px solid var(--bord); background: var(--surface); }}
 .st-key-compte div[data-testid="stPopover"] > div > button p {{ font-weight: 600; font-size: var(--t2); }}
 
+/* le menu du compte : une liste de clients, le client choisi sur fond gris chaud */
+div[data-testid="stPopoverBody"] {{ border-radius: var(--rayon); border: 1px solid var(--bord); padding: 14px;
+  box-shadow: 0 8px 24px rgba(34,34,34,0.10); min-width: 300px; }}
+div[data-testid="stPopoverBody"] div[role="radiogroup"] {{ gap: 2px; width: 100%; }}
+div[data-testid="stPopoverBody"] div[role="radiogroup"] > div {{ width: 100%; }}
+div[data-testid="stPopoverBody"] label[data-testid="stRadioOption"] {{ width: 100%; padding: 8px 10px;
+  border-radius: 8px; cursor: pointer; margin: 0; }}
+div[data-testid="stPopoverBody"] label[data-testid="stRadioOption"] > div > div:first-child:not([data-testid]) {{
+  display: none; }}
+div[data-testid="stPopoverBody"] label[data-testid="stRadioOption"]:hover,
+div[data-testid="stPopoverBody"] label[data-testid="stRadioOption"][data-selected="true"] {{ background: var(--voile); }}
+div[data-testid="stPopoverBody"] label[data-testid="stRadioOption"] p {{ font-size: var(--t1); color: var(--gris); }}
+div[data-testid="stPopoverBody"] label[data-testid="stRadioOption"] p strong {{ font-size: var(--t2);
+  color: var(--encre); font-weight: 600; }}
+div[data-testid="stPopoverBody"] label[data-testid="stWidgetLabel"] p {{ font-size: var(--t1); font-weight: 600;
+  color: var(--gris); }}
+
 /* ---------- titres de page ---------- */
 .stApp .glc-titre {{ margin: 6px 0 2px 0; }}
 .stApp .glc-titre h1 {{ font-size: var(--t4); font-weight: 700; margin: 0; line-height: 1.25; }}
@@ -116,6 +133,17 @@ div[class*="st-key-carte"] {{ background: var(--surface); border: 1px solid var(
 .stApp .glc-faits {{ display: flex; gap: 28px; flex-wrap: wrap; margin-top: 14px; }}
 .stApp .glc-faits div span {{ display: block; font-size: var(--t1); color: var(--gris); }}
 .stApp .glc-faits div b {{ font-size: var(--t2); font-weight: 600; color: var(--encre); font-variant-numeric: tabular-nums; }}
+
+/* ---------- accueil ---------- */
+div[class*="st-key-accueil"] {{ background: var(--voile); border-radius: var(--rayon); padding: 22px 24px; }}
+.stApp .glc-accueil p {{ margin: 0; font-size: var(--t2); color: var(--encre); }}
+.stApp .glc-accueil p:first-child {{ font-size: var(--t3); font-weight: 700; margin-bottom: 4px; }}
+.stApp .glc-pas {{ display: grid; grid-template-columns: 28px 1fr; gap: 4px 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--filet); }}
+.stApp .glc-pas:last-child {{ border-bottom: 0; }}
+.stApp .glc-pas .no {{ font-size: var(--t1); font-weight: 600; color: var(--gris); padding-top: 2px; }}
+.stApp .glc-pas b {{ font-weight: 700; }}
+.stApp .glc-pas p {{ margin: 0; font-size: var(--t2); }}
 
 /* ---------- pastilles ---------- */
 .stApp .glc-pastille {{ display: inline-flex; align-items: center; gap: 6px; font-size: var(--t1); font-weight: 600;
@@ -159,10 +187,13 @@ div[class*="st-key-carte"] {{ background: var(--surface); border: 1px solid var(
 .stApp table.glc-table td {{ padding: 9px 12px 9px 0; line-height: 1.35; border-bottom: 1px solid var(--filet); color: var(--encre);
   vertical-align: middle; }}
 .stApp table.glc-table tr:last-child td {{ border-bottom: 0; }}
-.stApp table.glc-table .n {{ text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; padding-right: 0; }}
+.stApp table.glc-table .n {{ text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; padding-right: 0;
+  padding-left: 12px; }}
 .stApp table.glc-table th.n {{ padding-right: 0; }}
 .stApp .glc-table .s {{ color: var(--gris); font-size: var(--t1); }}
 .stApp .glc-table b {{ font-weight: 600; }}
+.stApp table.glc-table .nb {{ white-space: nowrap; }}
+.stApp table.glc-table .s {{ color: var(--gris); font-size: var(--t1); line-height: 1.45; display: inline-block; }}
 .stApp .glc-barre {{ display: inline-block; width: 72px; height: 6px; border-radius: 6px; background: var(--voile);
   vertical-align: middle; margin-right: 10px; overflow: hidden; }}
 .stApp .glc-barre i {{ display: block; height: 100%; border-radius: 6px; background: var(--encre); }}
@@ -331,6 +362,7 @@ div[class*="st-key-carte_fiche"] {{ gap: 0.5rem; }}
 hr {{ border-color: var(--bord); }}
 
 @media (max-width: 640px) {{
+  .stApp .glc-barre {{ display: none; }}
   .stMainBlockContainer {{ padding: 0 14px 56px 14px; }}
   .glc-marque .sous {{ display: none; }}
   .st-key-page div[role="radiogroup"] {{ margin: 0; overflow-x: auto; max-width: 100%; }}

@@ -89,7 +89,7 @@ Quand `GLC_BUCKET` est configuré, les fichiers de référence sont lus dans le 
 .venv/bin/streamlit run app.py --server.address localhost
 ```
 
-L'application s'ouvre sur http://localhost:8501. Choisissez un client (Robert, Mateo, Amira, ou un nouveau client), préparez un ordre (instrument, achat ou vente, montant, opération), puis cliquez sur « Analyser l'ordre ». L'analyse donne le verdict, la note de chaque angle et l'angle déterminant, l'explication et les pistes testées.
+L'application s'ouvre sur http://localhost:8501. Le premier écran dit en trois lignes ce que fait le service ; « Essayer avec un exemple » mène au billet d'ordre déjà rempli d'un client enregistré. Sinon, choisissez un client dans le menu du compte, en haut à droite (Robert, Mateo, Amira, ou un nouveau client), ouvrez « Négocier », préparez un ordre (instrument, achat ou vente, montant, opération), puis cliquez sur « Analyser l'ordre ». L'analyse donne le verdict, la note de chaque angle et l'angle déterminant, l'explication et les pistes testées.
 
 ### Tests
 
@@ -187,7 +187,8 @@ Chaque résultat du moteur porte ses sources, publiées ou hypothèses ; la list
 ## Organisation du dépôt
 
 ```
-app.py                 interface Streamlit (écran de courtage simulé)
+app.py                 interface Streamlit (écran de courtage simulé) : monte l'en-tête et la page choisie
+interface/             le thème, les composants, les mots, l'état de session et une page par destination
 moteur/                moteur de calcul : fiche, politique, notation, simulation ; point d'entrée moteur/api.py
 agent/                 les deux agents (Strands), leurs consignes (agent/prompts/), le garde-fou, le suivi en direct
 reference/             fichiers de référence : profils, limites, thèmes, clients d'exemple, fiches d'instruments, sources

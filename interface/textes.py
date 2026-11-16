@@ -45,6 +45,33 @@ LIBELLES_PHASES = {
     "correction": "Je corrige mon texte.",
 }
 
+ACCUEIL = ["Garder le cap analyse un ordre avant que vous le passiez.",
+           "Il le regarde sous cinq angles, face à votre propre politique de placement.",
+           "Il renseigne, il ne conseille pas. Vous décidez."]
+BOUTON_ESSAI = "Essayer avec un exemple"
+# Comment le service fonctionne, en mots simples. Rien n'est dit ici qui ne soit construit.
+FONCTIONNEMENT = [
+    ("Votre fiche", "Quatorze réponses : votre objectif, votre horizon, le risque que vous acceptez et celui que "
+                    "votre situation permet, vos contraintes, vos préférences."),
+    ("Votre politique de placement", "Le service la tire de votre fiche : un profil, une répartition par classe "
+                                     "d'actif, des limites. Chaque limite vient d'une source publiée, ou porte la "
+                                     "marque « hypothèse »."),
+    ("Cinq angles", "Avant de passer un ordre, le service le note sous chaque angle : objectif, risque, liquidité, "
+                    "diversification, préférences. L'angle le plus bas décide du verdict."),
+    ("Le code calcule", "Chaque note, chaque verdict et chaque piste testée vient du moteur de calcul. "
+                        "Aucun chiffre ne vient d'un modèle de langage."),
+    ("Deux agents expliquent", "Le premier lit votre cas, dirige la recherche et rédige l'explication. "
+                               "Le second cherche et teste des pistes. Ils ne conseillent rien."),
+    ("Un garde-fou", "Il refuse le conseil personnalisé et les transactions réelles, et vérifie que "
+                     "l'explication s'appuie sur les calculs."),
+]
+SERVICES_AWS = [
+    ("Amazon Bedrock", "Le modèle de langage des deux agents."),
+    ("Strands Agents", "Le kit qui donne aux agents leurs outils : les appels au moteur de calcul."),
+    ("Amazon Bedrock Guardrails", "Le garde-fou : refus du conseil et des transactions, contrôle de l'explication."),
+    ("Amazon S3", "Un espace privé qui garde les fichiers de référence."),
+    ("Amazon EC2", "La machine qui sert cette application."),
+]
 MISSION = "Un placement est un moyen. Pas un objectif. Garder le cap renseigne, il ne conseille pas."
 
 # Clients enregistrés : les trois exemples de l'énoncé ont la même forme qu'un nouveau client.

@@ -195,6 +195,16 @@ def etat_vide(titre: str, texte: str, puces: list[str]) -> str:
             f'<div class="puces">{p}</div></div>')
 
 
+def accueil(lignes: list[str]) -> str:
+    return '<div class="glc-accueil">' + "".join(f"<p>{e(l)}</p>" for l in lignes) + "</div>"
+
+
+def pas(lignes: list[tuple[str, str]]) -> str:
+    """Une suite d'étapes numérotées : un titre, une phrase."""
+    return "".join(f'<div class="glc-pas"><span class="no">{i:02d}</span><p><b>{e(t)}.</b> {e(x)}</p></div>'
+                   for i, (t, x) in enumerate(lignes, start=1))
+
+
 def coche(texte: str, ok: bool = True) -> str:
     couleur = SAUGE if ok else OR
     trace = "M4.4 8.2 7 10.8 11.6 5.6" if ok else "M8 4.5v4.2M8 11.2v.3"

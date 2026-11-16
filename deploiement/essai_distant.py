@@ -1,5 +1,5 @@
-"""Une vraie analyse par l'adresse publique, comme un navigateur : connexion au flux Streamlit (websocket), choix du
-client par défaut, clic sur « Analyser l'ordre », lecture de ce que l'écran affiche jusqu'à la fin de l'analyse.
+"""Une vraie analyse par l'adresse publique, comme un navigateur : connexion au flux Streamlit (websocket), page
+« Négocier » du client par défaut, clic sur « Analyser l'ordre », lecture de l'écran jusqu'à la fin de l'analyse.
 
     python deploiement/essai_distant.py http://adresse/
 
@@ -8,6 +8,7 @@ Code de sortie 0 si le rapport s'affiche avec l'explication de l'agent, 1 sinon.
 from __future__ import annotations
 
 import asyncio
+import re
 import sys
 import time
 
@@ -15,6 +16,8 @@ import websockets
 from streamlit.proto import BackMsg_pb2, ForwardMsg_pb2
 
 BOUTON = "inspecter"
+PAGE = "page=negocier"                      # la page du billet d'ordre, demandée par l'adresse
+EXPLICATION = 'class="glc-explication"'     # le bloc de l'explication des agents, en paragraphes titrés
 AVIS_SANS_AGENT = "Explication de l'agent indisponible"
 DELAI_S = 360
 
@@ -38,7 +41,7 @@ def bouton(delta) -> str | None:
 
 async def executer(ws, etats: list) -> tuple[list, str | None]:
     msg = BackMsg_pb2.BackMsg()
-    msg.rerun_script.query_string = ""
+    msg.rerun_script.query_string = PAGE
     msg.rerun_script.page_script_hash = ""
     for e in etats:
         msg.rerun_script.widget_states.widgets.append(e)
@@ -53,6 +56,9 @@ async def executer(ws, etats: list) -> tuple[list, str | None]:
             textes(f.delta, vus)
             bid = bid or bouton(f.delta)
         if f.HasField("script_finished"):
+            # L'application se redessine d'elle-même quand les agents ont fini : on attend la dernière passe.
+            if f.script_finished == ForwardMsg_pb2.ForwardMsg.FINISHED_EARLY_FOR_RERUN:
+                continue
             return vus, bid
     raise TimeoutError
 
@@ -70,12 +76,12 @@ async def principal(adresse: str) -> int:
         debut = time.monotonic()
         vus, _ = await executer(ws, [clic])
     texte = "\n".join(vus)
-    # Le paragraphe d'ouverture de l'explication des agents (« **Verdict** : », « **Le verdict.** », …).
-    explication = next((t for t in vus if t.lstrip().startswith("**") and "verdict" in t.lstrip()[:20].lower()
-                        and len(t.split()) >= 30), "")
-    agent = bool(explication) and AVIS_SANS_AGENT not in texte
+    # Le bloc de l'explication des agents, ramené à son texte.
+    bloc = next((t for t in reversed(vus) if EXPLICATION in t), "")
+    explication = " ".join(re.sub(r"<[^>]+>", " ", bloc.split(EXPLICATION, 1)[-1].partition(">")[2]).split())
+    agent = len(explication.split()) >= 30 and AVIS_SANS_AGENT not in texte
     print(f"Analyse affichée en {time.monotonic() - debut:.0f} s ; explication de l'agent : "
-          + (f"oui (« {explication.splitlines()[0][:140]} »)" if agent else "non"))
+          + (f"oui (« {explication[:140]} »)" if agent else "non"))
     return 0 if agent else 1
 
 
