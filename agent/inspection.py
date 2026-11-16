@@ -509,7 +509,17 @@ def cle_analyse(client, ticker, sens, pourcentage, operation, modele, equipe, ch
         montant = round(float(pourcentage), 4)
     except (TypeError, ValueError):
         montant = str(pourcentage)
+    # Empreinte de la réponse du moteur pour cette fiche et cet ordre (verdict, notes, mesures, solidité, montant
+    # compatible) : un changement de code ou de données qui change un chiffre change la clé. Sans réponse, pas de clé.
+    simulation = _api_moteur.simuler_ordre(client, ticker, sens, pourcentage, operation or "comptant")
+    taille = _api_moteur.chercher_taille_compatible(client, ticker, sens, pourcentage, operation or "comptant")
+    if not isinstance(simulation, dict) or "erreur" in simulation or not isinstance(taille, dict) or "erreur" in taille:
+        return None
+    moteur = {"simulation": {k: v for k, v in simulation.items() if k != "sources"},
+              "taille": {k: v for k, v in taille.items() if k != "sources"}}
     contenu = {"client": {k: v for k, v in fiche.items() if k != "sources"},
+               "moteur": hashlib.sha256(json.dumps(moteur, sort_keys=True, ensure_ascii=False,
+                                                   default=str).encode()).hexdigest(),
                "ordre": [str(ticker).strip().upper(), str(sens).strip().lower(), montant,
                          str(operation or "comptant").strip().lower()],
                "reglages": [nom_modele(modele), equipe, chef, EFFORT, EFFORT_EXPLORATEUR, config.get("version")],

@@ -150,21 +150,23 @@ def partager(cle: str, calculer, sur_etape=None, relancer: bool = False) -> dict
             courant = _en_cours[cle] = _EnCours()
     if not proprietaire:
         courant.ecouter(sur_etape)
-        if courant.fini.wait(ATTENTE_MAX_S) and courant.resultat is not None:
+        if courant.fini.wait(ATTENTE_MAX_S) and courant.resultat is not None:   # sinon : sa propre analyse
             r = copy.deepcopy(courant.resultat)
             r["memoire"] = {"statut": "partagee", "message": "Analyse partagée avec une demande identique en cours."}
             return r
         proprietaire = True                      # l'analyse partagée n'a pas fini à temps : on en fait une
         courant = _EnCours()
     courant.ecouter(sur_etape)
+    resultat = None
     try:
         resultat = calculer(courant.diffuser)
     finally:
+        # Toujours : l'auditeur ne reste jamais à attendre, même si le calcul a levé (il fera alors le sien).
+        courant.resultat = resultat
         with _verrou:
             if _en_cours.get(cle) is courant:
                 del _en_cours[cle]
-    courant.resultat = resultat
-    courant.fini.set()
+        courant.fini.set()
     if gardable(resultat):
         _garder(cle, copy.deepcopy(resultat), list(courant.evenements))
     r = dict(resultat)

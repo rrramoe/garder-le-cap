@@ -102,3 +102,45 @@ def test_taille_bornee(monkeypatch):
 def test_sans_memoire_par_defaut_pour_un_modele_simule():
     r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(SCENARIO_ROBERT), equipe=False)
     assert r["memoire"] is None
+
+
+def test_autre_reponse_du_moteur_refait_l_analyse(monkeypatch):
+    _analyser(ModeleSimule(SCENARIO_ROBERT))
+    vrai = inspection._api_moteur.simuler_ordre
+
+    def autre(*args, **kwargs):            # même demande, mais le moteur répond un autre chiffre
+        r = vrai(*args, **kwargs)
+        return {**r, "score": (r.get("score") or 0) + 1}
+    monkeypatch.setattr(inspection._api_moteur, "simuler_ordre", autre)
+    modele = ModeleSimule(SCENARIO_ROBERT)
+    assert _analyser(modele)["memoire"]["statut"] == "nouvelle" and modele.appels > 0
+
+
+def test_pas_de_memoire_si_le_moteur_ne_repond_pas(monkeypatch):
+    monkeypatch.setattr(inspection._api_moteur, "chercher_taille_compatible", lambda *a, **k: {"erreur": "x"})
+    assert _analyser(ModeleSimule(SCENARIO_ROBERT))["memoire"] is None
+
+
+def test_auditeur_sans_resultat_fait_sa_propre_analyse():
+    commence = threading.Event()
+
+    def proprietaire(diffuser):
+        commence.set()
+        time.sleep(0.3)
+        raise RuntimeError("panne")
+
+    erreurs, resultats = [], []
+
+    def lancer_proprietaire():
+        try:
+            memoire.partager("cle-essai", proprietaire)
+        except RuntimeError as e:
+            erreurs.append(e)
+    fil = threading.Thread(target=lancer_proprietaire)
+    fil.start()
+    commence.wait(5)
+    debut = time.monotonic()
+    r = memoire.partager("cle-essai", lambda diffuser: {"explication": "ok", "erreur": None})
+    fil.join(5)
+    assert erreurs and time.monotonic() - debut < 5                      # pas d'attente de 300 s
+    assert r["explication"] == "ok" and r["memoire"]["statut"] == "nouvelle"
