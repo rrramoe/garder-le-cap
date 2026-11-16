@@ -346,7 +346,8 @@ def test_pistes_testees_et_correction(equipe_simulee):
     assert "Finalité supposée de l'achat (hypothèse de l'agent) :* l'achat semble viser" in texte
     assert "**Combinaison** : achat de 6,0 % de TSLA (" in texte and "achat de 4,0 % de SPY (" in texte
     assert "compatible</b> ; angle le plus faible : diversification (poids des liquidités)" in texte
-    assert "score" not in texte.split("Pistes testées")[1].split("Des possibilités testées par le moteur")[0]
+    ligne = next(l for l in texte.splitlines() if "**Combinaison**" in l)
+    assert "score" not in ligne
     assert "Garde une part de croissance" in texte
     assert "pas des recommandations" in texte and "L'agent a aussi testé" not in texte
     assert "L'agent a corrigé son texte après vérification." in texte
