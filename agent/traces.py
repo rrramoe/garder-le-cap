@@ -4,8 +4,8 @@
     construire(resultat, client, ordre, reglages, identifiant) -> dict
 
 Une analyse faite (pas un rejeu de la mémoire) laisse une trace JSON dans le bucket privé, sous
-`traces/<date UTC>/<identifiant>.json`, et une ligne compacte dans Amazon CloudWatch Logs (groupe `garder-le-cap`,
-un flux par jour). L'écriture se fait dans un fil à part, avec des délais courts et sans jamais lever : une trace
+`traces/<date UTC>/<identifiant>.json`, et une ligne compacte dans Amazon CloudWatch Logs (groupe du réglage
+`GLC_JOURNAL_GROUPE`, un flux par jour). L'écriture se fait dans un fil à part, avec des délais courts et sans jamais lever : une trace
 qui échoue ne retarde, ne change ni ne casse une analyse, et le visiteur n'en voit rien.
 
 Ce que la trace contient : l'identifiant, l'heure UTC, la version de l'application si elle est connue, une empreinte
@@ -16,7 +16,9 @@ garde-fou, le verdict et l'angle déterminant donnés par le moteur, l'explicati
 Aucune adresse de visiteur, aucun identifiant AWS, aucun secret. Les poids du portefeuille sont retirés des réponses
 du moteur.
 
-Réglage : `GLC_TRACES` (actif par défaut quand un bucket est configuré, `0` l'éteint) ; sans bucket, rien n'est fait.
+Réglages : `GLC_TRACES` (actif par défaut quand un bucket est configuré, `0` l'éteint ; sans bucket, rien n'est
+fait) et `GLC_JOURNAL_GROUPE` (le groupe CloudWatch Logs ; vide, aucune ligne). Droits utilisés, et seuls : s3:PutObject
+sous traces/, logs:CreateLogStream et logs:PutLogEvents sur ce groupe.
 """
 from __future__ import annotations
 
@@ -33,7 +35,9 @@ from pathlib import Path
 from moteur import configuration
 
 PREFIXE = "traces/"
-GROUPE_LOGS = "garder-le-cap"
+def groupe_journal() -> str | None:
+    """Le groupe CloudWatch Logs, reçu par le réglage `GLC_JOURNAL_GROUPE` ; vide : aucune ligne envoyée."""
+    return configuration.valeur("GLC_JOURNAL_GROUPE")
 RACINE = Path(__file__).resolve().parent.parent
 # Clés retirées des réponses du moteur : le contenu de la fiche (poids du portefeuille, réponses, nom).
 CLES_PRIVEES = {"portefeuille_pct", "portefeuille_avant_pct", "portefeuille_apres_pct", "questionnaire", "nom",
@@ -158,14 +162,18 @@ def ecrire(trace: dict, s3=None, logs=None) -> dict:
         etat["s3"] = True
     except Exception:
         pass
+    groupe = groupe_journal()
+    if not groupe:
+        return etat
     try:
-        for creer, kwargs in ((logs.create_log_group, {"logGroupName": GROUPE_LOGS}),
-                              (logs.create_log_stream, {"logGroupName": GROUPE_LOGS, "logStreamName": jour})):
-            try:
-                creer(**kwargs)
-            except Exception:
-                pass                       # déjà créé, ou pas le droit : l'écriture dira si elle passe
-        logs.put_log_events(logGroupName=GROUPE_LOGS, logStreamName=jour,
+        # Seuls droits : CreateLogStream et PutLogEvents sur ce groupe. Le flux du jour est créé ; « existe déjà »
+        # vaut succès. Ni création de groupe, ni lecture des flux, ni jeton de séquence.
+        try:
+            logs.create_log_stream(logGroupName=groupe, logStreamName=jour)
+        except Exception as e:
+            if "ResourceAlreadyExists" not in f"{type(e).__name__} {getattr(e, 'response', '')} {e}":
+                raise
+        logs.put_log_events(logGroupName=groupe, logStreamName=jour,
                             logEvents=[{"timestamp": int(time.time() * 1000), "message": ligne_compacte(trace)}])
         etat["logs"] = True
     except Exception:

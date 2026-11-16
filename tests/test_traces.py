@@ -27,11 +27,18 @@ class FauxLogs:
     def __init__(self, panne=False):
         self.lignes, self.panne = [], panne
 
-    def create_log_group(self, **kwargs):
-        raise RuntimeError("existe déjà")
+    flux_existants = set()
 
-    def create_log_stream(self, **kwargs):
-        pass
+    def create_log_group(self, **kwargs):
+        raise AssertionError("aucun droit de créer un groupe")
+
+    def create_log_stream(self, logGroupName, logStreamName):
+        if (logGroupName, logStreamName) in self.flux_existants:
+            raise RuntimeError("ResourceAlreadyExistsException: The specified log stream already exists")
+        self.flux_existants = self.flux_existants | {(logGroupName, logStreamName)}
+
+    def describe_log_streams(self, **kwargs):
+        raise AssertionError("aucun droit de lister les flux")
 
     def put_log_events(self, logGroupName, logStreamName, logEvents):
         if self.panne:
@@ -42,6 +49,7 @@ class FauxLogs:
 @pytest.fixture
 def faux_aws(tmp_path, monkeypatch):
     monkeypatch.setenv("GLC_BUCKET", "bucket-essai")
+    monkeypatch.setenv("GLC_JOURNAL_GROUPE", "/garder-le-cap/analyses")
     monkeypatch.delenv("GLC_TRACES", raising=False)
     monkeypatch.setenv("GLC_MEMOIRE_FICHIER", str(tmp_path / "analyses.json"))
     memoire.oublier()
@@ -78,7 +86,9 @@ def test_une_trace_ecrite_avec_ses_champs(faux_aws):
     assert trace["chef_de_dossier"]["jugements"][0]["decision"] == "suffisant"
     assert trace["verdict_du_moteur"] == "en_tension" and trace["angle_determinant"]["angle"]
     assert trace["etapes"][3]["reponse_du_moteur"]["verdict"]["code"] == "en_tension"   # la réponse du moteur reçue
-    assert logs.lignes and logs.lignes[0][0] == "garder-le-cap" and logs.lignes[0][2]["id"] == r["trace_aws"]["id"]
+    assert logs.lignes and logs.lignes[0][0] == "/garder-le-cap/analyses" and logs.lignes[0][2]["id"] == r["trace_aws"]["id"]
+    _analyser(relancer=True)                       # le flux du jour existe déjà : la ligne passe quand même
+    assert len(logs.lignes) == 2 and len(s3.objets) == 2
 
 
 def test_aucun_contenu_de_la_fiche(faux_aws):
@@ -122,3 +132,10 @@ def test_pas_de_trace_par_defaut_pour_un_modele_simule(faux_aws):
     s3, _ = faux_aws
     r = inspection.inspecter("robert", "TSLA", "achat", 15, modele=ModeleSimule(SCENARIO_ROBERT), equipe=False)
     assert r["trace_aws"] is None and not s3.objets
+
+
+def test_sans_groupe_aucune_ligne(faux_aws, monkeypatch):
+    s3, logs = faux_aws
+    monkeypatch.setenv("GLC_JOURNAL_GROUPE", "")
+    _analyser()
+    assert len(s3.objets) == 1 and not logs.lignes
